@@ -1,0 +1,131 @@
+
+[1m[0;34m════════════════════════════════════════════════[0m
+[1m[0;34m  Marina API — 54-Test Suite  (2026-03-14 16:57:31)[0m
+[1m[0;34m════════════════════════════════════════════════[0m
+BASE : http://localhost:4000
+Log  : ./results.txt
+  Server reachable ✓
+  Flushed 9 Redis rate-limit key(s) ✓
+
+[1m── 1. HEALTH CHECK ──[0m
+  [0;32m✓ PASS[0m [1] [1] GET /health — HTTP 200
+
+[1m── 2–6. REGISTRATION ──[0m
+  [0;32m✓ PASS[0m [2] [2] Register — valid payload — HTTP 201
+  [0;32m✓ PASS[0m [3] [3] Register — duplicate email → 201 (no enumeration) — HTTP 201
+  [0;32m✓ PASS[0m [4] [4] Register — missing password & name → 400 — HTTP 400
+  [0;32m✓ PASS[0m [5] [5] Register — password < 8 chars → 400 — HTTP 400
+  [0;32m✓ PASS[0m [6] [6] Register — invalid email format → 400 — HTTP 400
+
+[1m── 7–11. LOGIN ──[0m
+  [0;32m✓ PASS[0m [7] [7] Login — valid credentials → 200 — HTTP 200
+       access_token captured: eyJhbGciOiJSUzI1NiJ9.eyJyb2xlcyI6WyJ1c2V...
+  [0;32m✓ PASS[0m [8] [8] Login — wrong password → 401 — HTTP 401
+       Timing — non-existent: 0m0.127s  |  existing (wrong pass): 0m0.131s
+       [9] Verify manually that both times are similar (~argon2 duration). Large gap = timing leak.
+  [0;32m✓ PASS[0m [9] [10] Login — uppercase email normalised → 200 — HTTP 200
+  [0;32m✓ PASS[0m [10] [11] Login — missing password → 400 — HTTP 400
+
+[1m── 12–16. GET /auth/me — JWT SECURITY ──[0m
+  [0;32m✓ PASS[0m [11] [12] GET /me — valid token → 200 — HTTP 200
+  [0;32m✓ PASS[0m [12] [13] GET /me — no token → 401 — HTTP 401
+  [0;32m✓ PASS[0m [13] [14] GET /me — malformed JWT → 401 — HTTP 401
+  [0;32m✓ PASS[0m [14] [15] GET /me — tampered JWT payload → 401 — HTTP 401
+  [0;32m✓ PASS[0m [15] [16] GET /me — alg:none attack → 401 — HTTP 401
+
+[1m── 17–19. PUT /auth/me — PROFILE UPDATE ──[0m
+  [0;32m✓ PASS[0m [16] [17] PUT /me — valid update → 200 — HTTP 200
+  [0;32m✓ PASS[0m [17] [18] PUT /me — empty body → 400 — HTTP 400
+  [0;32m✓ PASS[0m [18] [19] PUT /me — imo_number > 20 chars → 400 — HTTP 400
+
+[1m── 20–24. TOKEN REFRESH ──[0m
+  [0;32m✓ PASS[0m [19] [20] Refresh — valid token → 200 (token rotation) — HTTP 200
+       new refresh_token captured: s9b0xzwzNFAAbj763ksm...
+  [0;32m✓ PASS[0m [20] [21] Refresh — reuse old token → 401 (reuse detected) — HTTP 401
+  [0;32m✓ PASS[0m [21] [21] Refresh — 'Token reuse detected' in body
+  [0;32m✓ PASS[0m [22] [22] Refresh — token family correctly revoked after reuse detection → 401
+  [0;32m✓ PASS[0m [23] [23] Refresh — fake token → 401 — HTTP 401
+  [0;32m✓ PASS[0m [24] [23] Refresh — 'Token not found' message
+  [0;32m✓ PASS[0m [25] [24] Refresh — missing token → 401 — HTTP 401
+
+[1m── 25–27. LOGOUT ──[0m
+  [0;32m✓ PASS[0m [26] [25] Logout — valid token → 200 — HTTP 200
+  [0;32m✓ PASS[0m [27] [26] Logout — revoked token rejected on refresh → 401 — HTTP 401
+  [0;32m✓ PASS[0m [28] [26] Logout — 'Token not found' after logout
+  [0;32m✓ PASS[0m [29] [27] Logout — no token → 200 (graceful no-op) — HTTP 200
+
+[1m── 28–30. FORGOT PASSWORD ──[0m
+  [0;32m✓ PASS[0m [30] [28] Forgot password — existing email → 200 (no enumeration) — HTTP 200
+  [0;32m✓ PASS[0m [31] [28] Forgot password — non-revealing message
+  [0;32m✓ PASS[0m [32] [29] Forgot password — non-existent email → 200 (no enumeration) — HTTP 200
+  [0;32m✓ PASS[0m [33] [29] Forgot password — identical message for non-existent
+  [0;32m✓ PASS[0m [34] [30] Forgot password — invalid email format → 400 — HTTP 400
+
+[1m── 31–32. SQL INJECTION ──[0m
+  [0;32m✓ PASS[0m [35] [31] SQLi — injection in email field → 400 (Zod rejects non-email) — HTTP 400
+  [0;32m✓ PASS[0m [36] [32] SQLi — injection in password field → 401 (parameterized query) — HTTP 401
+
+[1m── 33. SQL INJECTION IN REGISTER NAME ──[0m
+  [0;32m✓ PASS[0m [37] [33] SQLi — DROP TABLE in name handled safely (HTTP 201, parameterized query)
+
+[1m── 34. XSS IN NAME FIELD ──[0m
+  [0;32m✓ PASS[0m [38] [34] XSS — script tag in name accepted/rate-limited (HTTP 201) — CSP prevents execution
+
+[1m── 35–36. CORS ──[0m
+  [0;32m✓ PASS[0m [39] [35] CORS — disallowed origin blocked with HTTP 403
+  [0;32m✓ PASS[0m [40] [36] CORS — whitelisted origin allowed with correct ACAO header
+
+[1m── 37–38. HTTP METHOD HANDLING ──[0m
+  [0;32m✓ PASS[0m [41] [37] GET on POST-only /auth/login → 404 — HTTP 404
+  [0;32m✓ PASS[0m [42] [38] Unknown route → 404 — HTTP 404
+
+[1m── 39. RATE LIMITING — BRUTE FORCE ──[0m
+       Firing 7 login attempts (limit=5 per 15 min per IP+email)
+       Attempt 1 → HTTP 401  (X-RateLimit-Remaining: 3)
+       Attempt 2 → HTTP 401  (X-RateLimit-Remaining: 1)
+       Attempt 3 → HTTP 401  (X-RateLimit-Remaining: 0)
+       Attempt 4 → HTTP 429  (X-RateLimit-Remaining: 0)
+       Attempt 5 → HTTP 429  (X-RateLimit-Remaining: 0)
+       Attempt 6 → HTTP 429  (X-RateLimit-Remaining: 0)
+       Attempt 7 → HTTP 429  (X-RateLimit-Remaining: 0)
+  [0;32m✓ PASS[0m [43] [39] Rate limit — brute force blocked at attempt 4 (limit=5)
+
+[1m── 40–42. EMAIL VERIFICATION ──[0m
+  [0;32m✓ PASS[0m [44] [40] Verify email — invalid token → 400 — HTTP 400
+  [0;32m✓ PASS[0m [45] [41] Verify email — malformed token (no dot) → 400 — HTTP 400
+  [0;32m✓ PASS[0m [46] [42] Verify email — missing token → 400 — HTTP 400
+
+[1m── 43–44. RESEND EMAIL VERIFICATION ──[0m
+  [0;32m✓ PASS[0m [47] [43] Resend verify — existing unverified email → 200 — HTTP 200
+  [0;32m✓ PASS[0m [48] [44] Resend verify — non-existent email → 200 (no enumeration) — HTTP 200
+
+[1m── 45–47. RESET PASSWORD ──[0m
+  [0;32m✓ PASS[0m [49] [45] Reset password — invalid token → 400 — HTTP 400
+  [0;32m✓ PASS[0m [50] [45] Reset password — correct error message returned
+  [0;32m✓ PASS[0m [51] [46] Reset password — password too short → 400 — HTTP 400
+  [0;32m✓ PASS[0m [52] [47] Reset password — missing password → 400 — HTTP 400
+
+[1m── 48–53. SECURITY HEADERS ──[0m
+  [0;32m✓ PASS[0m [53] [48] HSTS present and max-age=31536000
+  [0;32m✓ PASS[0m [54] [49] Content-Security-Policy present
+  [0;32m✓ PASS[0m [55] [50] X-Content-Type-Options: nosniff
+  [0;32m✓ PASS[0m [56] [51] Referrer-Policy present
+  [0;32m✓ PASS[0m [57] [52] Cross-Origin-Opener-Policy present
+  [0;32m✓ PASS[0m [58] [53] X-Frame-Options: DENY
+
+[1m── 54. PAYLOAD SIZE LIMIT ──[0m
+  [0;32m✓ PASS[0m [59] [54] Oversized payload → 413 Request Entity Too Large
+
+[1m[0;34m════════════════════════════════════════════════[0m
+[1m[0;34m  RESULTS[0m
+[1m[0;34m════════════════════════════════════════════════[0m
+
+  Total : 59
+  [0;32mPass  : 59[0m
+  [0;31mFail  : 0[0m
+  [1;33mWarn  : 0[0m
+
+[0;32m[1mRESULT: ALL TESTS PASSED[0m
+
+Results saved to: ./results.txt
+Run date: 2026-03-14 16:57:40
