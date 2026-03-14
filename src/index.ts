@@ -117,3 +117,8 @@ start().catch((err) => {
   console.error('[startup] fatal error:', err.message);
   process.exit(1);
 });
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+  process.exit(1);
+});

@@ -134,7 +134,7 @@ const ResendVerifySchema = z.object({
 const UpdateProfileSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   ship_name: z.string().max(255).optional(),
-  imo_number: z.string().max(20).optional(),
+  imo_number: z.string().regex(/^\d{7}$/, 'IMO number must be exactly 7 digits').optional(),
   company: z.string().max(255).optional(),
 });
 
@@ -156,6 +156,9 @@ const loginRateLimit = rateLimit({
 const registerRateLimit = rateLimit({ prefix: 'register', limit: 10, windowSeconds: 60 * 60 });
 const forgotPasswordRateLimit = rateLimit({ prefix: 'forgot', limit: 3, windowSeconds: 60 * 60 });
 const resendVerifyRateLimit = rateLimit({ prefix: 'resend', limit: 3, windowSeconds: 60 * 60 });
+const refreshRateLimit = rateLimit({ prefix: 'refresh', limit: 30, windowSeconds: 15 * 60 });
+const resetPasswordRateLimit = rateLimit({ prefix: 'reset-pw', limit: 5, windowSeconds: 60 * 60 });
+const verifyEmailRateLimit = rateLimit({ prefix: 'verify-email', limit: 10, windowSeconds: 60 * 60 });
 
 // ---------------------------------------------------------------------------
 // POST /auth/register
@@ -240,7 +243,8 @@ authRouter.post('/login', loginRateLimit, async (req: Request, res: Response): P
   const valid = await verifyPasswordConstantTime(storedHash, password);
 
   if (!valid) {
-    await auditLog('login_failed', req, user?.id ?? null, { email: normalizedEmail });
+    // Do not store plaintext email in audit log — hash it to avoid PII exposure in logs
+    await auditLog('login_failed', req, user?.id ?? null, { email_hash: sha256hex(normalizedEmail) });
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
@@ -294,7 +298,7 @@ authRouter.post('/logout', async (req: Request, res: Response): Promise<void> =>
 // POST /auth/refresh
 // ---------------------------------------------------------------------------
 
-authRouter.post('/refresh', async (req: Request, res: Response): Promise<void> => {
+authRouter.post('/refresh', refreshRateLimit, async (req: Request, res: Response): Promise<void> => {
   const incomingToken: string | undefined =
     req.cookies?.refresh_token ??
     req.body?.refresh_token;
@@ -457,7 +461,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimit, async (req: Request
 // POST /auth/reset-password
 // ---------------------------------------------------------------------------
 
-authRouter.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
+authRouter.post('/reset-password', resetPasswordRateLimit, async (req: Request, res: Response): Promise<void> => {
   const parsed = ResetPasswordSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
@@ -468,37 +472,42 @@ authRouter.post('/reset-password', async (req: Request, res: Response): Promise<
     const { token, password } = parsed.data;
     const { userId, version } = verifySignedToken(token, config.hmac.resetSecret);
 
-    // Check version matches stored version (one-time enforcement)
-    const result = await query<Pick<User, 'id' | 'reset_token_version'>>(
-      'SELECT id, reset_token_version FROM users WHERE id = $1',
-      [userId]
-    );
+    // Hash the new password before entering the transaction (argon2id is slow)
+    const newHash = await hashPassword(password);
 
-    const user = result.rows[0];
-    if (!user) {
+    // Wrap version check + update in a transaction with FOR UPDATE to prevent
+    // concurrent requests using the same token (race condition fix)
+    const updated = await transaction(async (client) => {
+      const { rows } = await client.query<Pick<User, 'id' | 'reset_token_version'>>(
+        'SELECT id, reset_token_version FROM users WHERE id = $1 FOR UPDATE',
+        [userId]
+      );
+
+      const user = rows[0];
+      if (!user) return false;
+
+      if (version !== undefined && version !== user.reset_token_version) return false;
+
+      await client.query(
+        `UPDATE users
+         SET password = $1,
+             password_hash_algo = 'argon2id',
+             reset_token_version = reset_token_version + 1,
+             reset_requested_at = NULL
+         WHERE id = $2`,
+        [newHash, userId]
+      );
+
+      // Revoke all refresh tokens for this user (force re-login everywhere)
+      await client.query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
+
+      return true;
+    });
+
+    if (!updated) {
       res.status(400).json({ error: 'Invalid or expired reset token' });
       return;
     }
-
-    if (version !== undefined && version !== user.reset_token_version) {
-      res.status(400).json({ error: 'Reset token has already been used' });
-      return;
-    }
-
-    const newHash = await hashPassword(password);
-
-    await query(
-      `UPDATE users
-       SET password = $1,
-           password_hash_algo = 'argon2id',
-           reset_token_version = reset_token_version + 1,
-           reset_requested_at = NULL
-       WHERE id = $2`,
-      [newHash, userId]
-    );
-
-    // Revoke all refresh tokens for this user (force re-login everywhere)
-    await query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
 
     await auditLog('password_reset_completed', req, userId);
 
@@ -512,7 +521,7 @@ authRouter.post('/reset-password', async (req: Request, res: Response): Promise<
 // POST /auth/verify-email
 // ---------------------------------------------------------------------------
 
-authRouter.post('/verify-email', async (req: Request, res: Response): Promise<void> => {
+authRouter.post('/verify-email', verifyEmailRateLimit, async (req: Request, res: Response): Promise<void> => {
   const parsed = VerifyEmailSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
@@ -606,7 +615,12 @@ authRouter.put('/me', requireAuth, async (req: Request, res: Response): Promise<
   }
 
   const updates = parsed.data;
-  const fields = Object.keys(updates) as (keyof typeof updates)[];
+
+  // Explicit allowlist prevents prototype pollution or unexpected field names
+  // from reaching the SQL string, even if Zod behaviour changes.
+  const ALLOWED_FIELDS = ['name', 'ship_name', 'imo_number', 'company'] as const;
+  type AllowedField = typeof ALLOWED_FIELDS[number];
+  const fields = ALLOWED_FIELDS.filter((f) => f in updates && updates[f] !== undefined);
 
   if (fields.length === 0) {
     res.status(400).json({ error: 'No fields to update' });
@@ -614,7 +628,7 @@ authRouter.put('/me', requireAuth, async (req: Request, res: Response): Promise<
   }
 
   const setClauses = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
-  const values = fields.map((f) => updates[f]);
+  const values = fields.map((f) => updates[f as AllowedField]);
 
   await query(
     `UPDATE users SET ${setClauses}, updated_at = NOW() WHERE id = $1`,

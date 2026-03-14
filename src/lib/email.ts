@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
     pass: config.smtp.pass,
   },
   tls: {
-    ciphers: 'SSLv3',
+    minVersion: 'TLSv1.2',
   },
 });
 
