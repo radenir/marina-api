@@ -61,4 +61,10 @@ export const config = {
     baseUrl: optional_env('NEBIUS_BASE_URL', 'https://api.studio.nebius.com/v1'),
     model:   optional_env('NEBIUS_MODEL', 'minimax/MiniMax-Text-01'),
   },
+
+  whisper: {
+    apiKey:  require_env('WHISPER_API_KEY'),
+    baseUrl: require_env('WHISPER_BASE_URL'),
+    model:   optional_env('WHISPER_MODEL', 'whisper-1'),
+  },
 } as const;

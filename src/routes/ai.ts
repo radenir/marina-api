@@ -1,10 +1,13 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
+import { toFile } from 'openai';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireActiveUser } from '../middleware/requireActiveUser.js';
 import { requireVerifiedEmail } from '../middleware/requireVerifiedEmail.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
+import { whisper } from '../lib/whisper.js';
 import { query } from '../lib/db.js';
 import { config } from '../config.js';
 import { sha256hex } from '../lib/tokens.js';
@@ -50,6 +53,34 @@ const summarizeRateLimit = rateLimit({
   limit: 20,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
+});
+
+const transcribeRateLimit = rateLimit({
+  prefix: 'ai-transcribe',
+  limit: 50,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
+// ---------------------------------------------------------------------------
+// Multer — memory storage, 25MB limit, audio MIME types only
+// ---------------------------------------------------------------------------
+
+const ALLOWED_AUDIO_MIME_TYPES = new Set([
+  'audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg',
+  'audio/wav', 'audio/x-wav', 'audio/m4a', 'audio/x-m4a',
+]);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_AUDIO_MIME_TYPES.has(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(Object.assign(new Error('Unsupported audio format'), { status: 400 }));
+    }
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -121,3 +152,71 @@ aiRouter.post(
     res.json({ summary });
   }
 );
+
+// ---------------------------------------------------------------------------
+// POST /ai/transcribe
+// Middleware order: requireAuth → transcribeRateLimit → requireVerifiedEmail → requireActiveUser → upload.single('audio') → handler
+// ---------------------------------------------------------------------------
+
+aiRouter.post(
+  '/transcribe',
+  requireAuth,
+  transcribeRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  upload.single('audio'),
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.file) {
+      res.status(400).json({ error: 'No audio file provided' });
+      return;
+    }
+
+    const language = typeof req.body.language === 'string' && req.body.language.length === 2
+      ? req.body.language
+      : undefined;
+
+    let transcription: string;
+    try {
+      const file = await toFile(req.file.buffer, req.file.originalname, {
+        type: req.file.mimetype,
+      });
+
+      const result = await whisper.audio.transcriptions.create({
+        model: config.whisper.model,
+        file,
+        ...(language ? { language } : {}),
+      });
+      if (!result.text) {
+        console.error('[ai/transcribe] empty response from Whisper');
+        res.status(502).json({ error: 'Transcription service unavailable' });
+        return;
+      }
+      transcription = result.text;
+    } catch (err) {
+      console.error('[ai/transcribe] Whisper API error:', (err as Error).message);
+      res.status(502).json({ error: 'Transcription service unavailable' });
+      return;
+    }
+
+    await auditLog('audio_transcribed', req, req.user!.id, {
+      size_bytes: req.file.size,
+      language: language ?? 'auto',
+    });
+
+    res.json({ transcription });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// Multer error handler (must be 4-arg middleware after routes)
+// ---------------------------------------------------------------------------
+
+aiRouter.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'Audio file too large (max 25MB)' });
+  }
+  if (err.status === 400) {
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});

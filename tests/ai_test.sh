@@ -16,6 +16,16 @@ BASE="${1:-http://localhost:4000}"
 RESULTS_FILE="$(dirname "$0")/ai_results.txt"
 TS=$(date +%s)
 
+# Load .env so DATABASE_* vars are available for psql operations
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/../.env"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
 PASS=0
 FAIL=0
 WARN=0
@@ -112,6 +122,21 @@ if [[ -n "$ACCESS_TOKEN" ]]; then
   info "access_token captured: ${ACCESS_TOKEN:0:40}..."
 else
   log "${RED}WARNING: access_token empty — authenticated tests will fail${NC}"
+fi
+
+# Verify the test user's email directly via DB so requireVerifiedEmail passes
+if command -v psql &>/dev/null; then
+  DB_HOST="${DATABASE_HOST:-localhost}"
+  DB_PORT="${DATABASE_PORT:-5432}"
+  DB_USER="${DATABASE_USER:-postgres}"
+  DB_PASS="${DATABASE_PASSWORD:-}"
+  DB_NAME="${DATABASE_NAME:-marina-auth}"
+  PGPASSWORD="$DB_PASS" psql \
+    -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+    -c "UPDATE users SET email_verified = TRUE WHERE email = '$EMAIL_AI'" &>/dev/null
+  log "  Email verified for test user ✓"
+else
+  log "  ${YELLOW}psql not found — email_verified NOT set; authenticated tests will return 403${NC}"
 fi
 
 # =============================================================================
@@ -270,6 +295,125 @@ R=$(req POST "$BASE/ai/summarize" \
   -H "Content-Type: application/json" \
   -d "{\"conversation\":[{\"role\":\"user\",\"content\":\"$BIGPAYLOAD\"}]}")
 assert_status "[10] POST /ai/summarize — oversized payload (>10kb)" "413" "$(http_code "$R")"
+
+# =============================================================================
+# Flush transcribe rate-limit keys so transcription tests always run fresh
+# =============================================================================
+if command -v redis-cli &>/dev/null; then
+  COUNT=$(redis-cli keys "rl:ai-transcribe:*" 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$COUNT" -gt 0 ]]; then
+    redis-cli keys "rl:ai-transcribe:*" 2>/dev/null | xargs redis-cli del &>/dev/null
+    log "  Flushed $COUNT transcribe rate-limit key(s) ✓"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# Generate a minimal valid WAV file (44-byte header, 1 second silence at 8kHz)
+# ---------------------------------------------------------------------------
+AUDIO_FILE=$(mktemp /tmp/marina_test_XXXXXX.wav)
+python3 - "$AUDIO_FILE" <<'PYEOF'
+import struct, sys, wave
+
+path = sys.argv[1]
+with wave.open(path, 'w') as wf:
+    wf.setnchannels(1)
+    wf.setsampwidth(2)
+    wf.setframerate(8000)
+    wf.writeframes(b'\x00\x00' * 8000)  # 1 second of silence
+PYEOF
+
+# ---------------------------------------------------------------------------
+# Generate a >25MB dummy file for the size-limit test
+# ---------------------------------------------------------------------------
+BIG_FILE=$(mktemp /tmp/marina_test_big_XXXXXX.wav)
+dd if=/dev/zero bs=1024 count=26000 2>/dev/null > "$BIG_FILE"
+
+# =============================================================================
+section "T1. TRANSCRIBE — valid WAV audio (happy path)"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/transcribe" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -F "audio=@${AUDIO_FILE};type=audio/wav")
+CODE=$(http_code "$R")
+if [[ "$CODE" == "200" ]]; then
+  pass "[T1] POST /ai/transcribe — valid WAV — HTTP 200"
+  TR=$(json_field "$(body "$R")" "transcription")
+  if [[ -n "$TR" || "$TR" == "" ]]; then
+    # transcription may be empty string for silence — field must exist
+    if body "$R" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); exit(0 if 'transcription' in d else 1)" 2>/dev/null; then
+      pass "[T1] POST /ai/transcribe — 'transcription' field present in response"
+    else
+      fail "[T1] POST /ai/transcribe — 'transcription' field missing from response"
+    fi
+  fi
+elif [[ "$CODE" == "502" ]]; then
+  warn "[T1] POST /ai/transcribe — Whisper service unavailable (502) — check WHISPER_* env vars"
+else
+  fail "[T1] POST /ai/transcribe — expected HTTP 200 or 502, got HTTP $CODE"
+fi
+
+# =============================================================================
+section "T2. TRANSCRIBE — no auth token → 401"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/transcribe" \
+  -F "audio=@${AUDIO_FILE};type=audio/wav")
+assert_status "[T2] POST /ai/transcribe — no auth token" "401" "$(http_code "$R")"
+
+# =============================================================================
+section "T3. TRANSCRIBE — no file → 400"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/transcribe" \
+  -H "Authorization: Bearer $ACCESS_TOKEN")
+assert_status "[T3] POST /ai/transcribe — no file" "400" "$(http_code "$R")"
+assert_contains "[T3] POST /ai/transcribe — error message" "No audio file provided" "$(body "$R")"
+
+# =============================================================================
+section "T4. TRANSCRIBE — wrong MIME type (image/png) → 400"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/transcribe" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -F "audio=@${AUDIO_FILE};type=image/png")
+assert_status "[T4] POST /ai/transcribe — wrong MIME type" "400" "$(http_code "$R")"
+assert_contains "[T4] POST /ai/transcribe — error message" "Unsupported audio format" "$(body "$R")"
+
+# =============================================================================
+section "T5. TRANSCRIBE — with explicit language=en"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/transcribe" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -F "audio=@${AUDIO_FILE};type=audio/wav" \
+  -F "language=en")
+CODE=$(http_code "$R")
+if [[ "$CODE" == "200" ]]; then
+  pass "[T5] POST /ai/transcribe — language=en — HTTP 200"
+  if body "$R" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); exit(0 if 'transcription' in d else 1)" 2>/dev/null; then
+    pass "[T5] POST /ai/transcribe — 'transcription' field present"
+  else
+    fail "[T5] POST /ai/transcribe — 'transcription' field missing"
+  fi
+elif [[ "$CODE" == "502" ]]; then
+  warn "[T5] POST /ai/transcribe — Whisper service unavailable (502)"
+else
+  fail "[T5] POST /ai/transcribe — expected HTTP 200 or 502, got HTTP $CODE"
+fi
+
+# =============================================================================
+section "T6. TRANSCRIBE — file too large (>25MB) → 413"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/transcribe" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -F "audio=@${BIG_FILE};type=audio/wav")
+assert_status "[T6] POST /ai/transcribe — file too large" "413" "$(http_code "$R")"
+assert_contains "[T6] POST /ai/transcribe — error message" "too large" "$(body "$R")"
+
+# Cleanup temp files
+rm -f "$AUDIO_FILE" "$BIG_FILE"
 
 # =============================================================================
 header "RESULTS"
