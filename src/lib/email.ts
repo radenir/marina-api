@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import type { Attachment } from 'nodemailer/lib/mailer';
 import { config } from '../config';
 
 const transporter = nodemailer.createTransport({
@@ -19,6 +20,7 @@ interface SendOptions {
   subject: string;
   html: string;
   text?: string;
+  attachments?: Attachment[];
 }
 
 export async function sendEmail(opts: SendOptions): Promise<void> {
@@ -28,6 +30,7 @@ export async function sendEmail(opts: SendOptions): Promise<void> {
     subject: opts.subject,
     html: opts.html,
     text: opts.text ?? opts.html.replace(/<[^>]*>/g, ''),
+    ...(opts.attachments ? { attachments: opts.attachments } : {}),
   });
 }
 

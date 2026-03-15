@@ -10,7 +10,11 @@ import { nebius } from '../lib/nebius.js';
 import { whisper } from '../lib/whisper.js';
 import { parallelExtract } from '../lib/medicalExtract.js';
 import type { UserProfile } from '../lib/medicalExtract.js';
+import { fillRmdFormPdftk, checkPdftkAvailable } from '../lib/pdftk.js';
+import { mapSummaryToRmdFields, extractMedicationFields } from '../lib/rmdMapper.js';
+import * as fs from 'fs';
 import { query } from '../lib/db.js';
+import { sendEmail } from '../lib/email.js';
 import { config } from '../config.js';
 import { sha256hex } from '../lib/tokens.js';
 import type { AuditEventType } from '../types/index.js';
@@ -74,6 +78,20 @@ const translateRateLimit = rateLimit({
 const extractRateLimit = rateLimit({
   prefix: 'ai-extract',
   limit: 20,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
+const pdfRateLimit = rateLimit({
+  prefix: 'ai-pdf',
+  limit: 10,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
+const pdfEmailRateLimit = rateLimit({
+  prefix: 'ai-pdf-email',
+  limit: 5,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
@@ -388,6 +406,154 @@ aiRouter.post(
     });
 
     res.json({ summary });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/generate-pdf
+// Middleware order: requireAuth → pdfRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// ---------------------------------------------------------------------------
+
+const GeneratePdfSchema = z.object({
+  summary: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])),
+});
+
+aiRouter.post(
+  '/generate-pdf',
+  requireAuth,
+  pdfRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = GeneratePdfSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const available = await checkPdftkAvailable();
+    if (!available) {
+      res.status(503).json({ error: 'pdftk not available on this server' });
+      return;
+    }
+
+    const { summary } = parsed.data;
+    const medFields = extractMedicationFields(summary.currentMedications);
+    const summaryWithMeds = { ...summary, ...medFields };
+    const rmdFields = mapSummaryToRmdFields(summaryWithMeds);
+
+    const outputPath = `/tmp/marina_rmd_${Date.now()}.pdf`;
+    let pdfBuffer: Buffer;
+    try {
+      pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
+    } catch (err) {
+      console.error('[ai/generate-pdf] pdftk error:', (err as Error).message);
+      res.status(502).json({ error: 'PDF generation failed' });
+      return;
+    } finally {
+      try {
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+      } catch { /* ignore cleanup errors */ }
+    }
+
+    const fieldsPopulated = Object.values(summary).filter(
+      v => v !== '' && v !== false && v !== null && v !== undefined
+    ).length;
+
+    await auditLog('pdf_generated', req, req.user!.id, {
+      fields_populated: fieldsPopulated,
+      file_size_bytes: pdfBuffer.length,
+    });
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="rmd-maritime-medical-report.pdf"',
+      'Content-Length': pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/email-pdf
+// Middleware order: requireAuth → pdfEmailRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// ---------------------------------------------------------------------------
+
+aiRouter.post(
+  '/email-pdf',
+  requireAuth,
+  pdfEmailRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = GeneratePdfSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const available = await checkPdftkAvailable();
+    if (!available) {
+      res.status(503).json({ error: 'pdftk not available on this server' });
+      return;
+    }
+
+    const { rows } = await query('SELECT email FROM users WHERE id = $1', [req.user!.id]);
+    if (!rows[0]?.email) {
+      res.status(500).json({ error: 'Could not retrieve user email' });
+      return;
+    }
+    const userEmail: string = rows[0].email;
+
+    const { summary } = parsed.data;
+    const medFields = extractMedicationFields(summary.currentMedications);
+    const summaryWithMeds = { ...summary, ...medFields };
+    const rmdFields = mapSummaryToRmdFields(summaryWithMeds);
+
+    const outputPath = `/tmp/marina_rmd_email_${Date.now()}.pdf`;
+    let pdfBuffer: Buffer;
+    try {
+      pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
+    } catch (err) {
+      console.error('[ai/email-pdf] pdftk error:', (err as Error).message);
+      res.status(502).json({ error: 'PDF generation failed' });
+      return;
+    } finally {
+      try {
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+      } catch { /* ignore cleanup errors */ }
+    }
+
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    try {
+      await sendEmail({
+        to: userEmail,
+        subject: 'Your RMD Maritime Medical Report',
+        html: `<p>Please find your RMD maritime medical report attached.</p><p>Generated by Marina Health on ${dateStr}.</p>`,
+        attachments: [
+          {
+            filename: 'rmd-maritime-medical-report.pdf',
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ],
+      });
+    } catch (err) {
+      console.error('[ai/email-pdf] sendEmail error:', (err as Error).message);
+      res.status(502).json({ error: 'Failed to send email' });
+      return;
+    }
+
+    const fieldsPopulated = Object.values(summary).filter(
+      v => v !== '' && v !== false && v !== null && v !== undefined
+    ).length;
+
+    await auditLog('pdf_emailed', req, req.user!.id, {
+      fields_populated: fieldsPopulated,
+      file_size_bytes: pdfBuffer.length,
+    });
+
+    res.json({ message: 'Report sent to your email address' });
   }
 );
 

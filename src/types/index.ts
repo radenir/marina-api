@@ -52,7 +52,9 @@ export type AuditEventType =
   | 'conversation_summarized'
   | 'audio_transcribed'
   | 'text_translated'
-  | 'medical_record_extracted';
+  | 'medical_record_extracted'
+  | 'pdf_generated'
+  | 'pdf_emailed';
 
 export interface JWTPayload {
   sub: string;       // userId
