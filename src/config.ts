@@ -55,4 +55,10 @@ export const config = {
 
   appUrl: optional_env('APP_URL', 'http://localhost:3000'),
   apiUrl: optional_env('API_URL', 'http://localhost:4000'),
+
+  nebius: {
+    apiKey: require_env('NEBIUS_API_KEY'),
+    baseUrl: optional_env('NEBIUS_BASE_URL', 'https://api.studio.nebius.com/v1'),
+    model:   optional_env('NEBIUS_MODEL', 'minimax/MiniMax-Text-01'),
+  },
 } as const;

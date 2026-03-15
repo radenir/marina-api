@@ -48,7 +48,8 @@ export type AuditEventType =
   | 'password_reset_completed'
   | 'email_verified'
   | 'email_verification_resent'
-  | 'profile_updated';
+  | 'profile_updated'
+  | 'conversation_summarized';
 
 export interface JWTPayload {
   sub: string;       // userId

@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { config } from './config';
 import { authRouter } from './routes/auth';
+import { aiRouter } from './routes/ai';
 import { pool } from './lib/db';
 import { redis } from './lib/redis';
 
@@ -74,6 +75,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/auth', authRouter);
+app.use('/ai', aiRouter);
 
 // ---------------------------------------------------------------------------
 // 404
