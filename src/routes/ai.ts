@@ -8,6 +8,8 @@ import { requireVerifiedEmail } from '../middleware/requireVerifiedEmail.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
 import { whisper } from '../lib/whisper.js';
+import { parallelExtract } from '../lib/medicalExtract.js';
+import type { UserProfile } from '../lib/medicalExtract.js';
 import { query } from '../lib/db.js';
 import { config } from '../config.js';
 import { sha256hex } from '../lib/tokens.js';
@@ -69,6 +71,13 @@ const translateRateLimit = rateLimit({
   keyFn: (req) => req.user!.id,
 });
 
+const extractRateLimit = rateLimit({
+  prefix: 'ai-extract',
+  limit: 20,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
 // ---------------------------------------------------------------------------
 // Multer — memory storage, 25MB limit, audio MIME types only
 // ---------------------------------------------------------------------------
@@ -108,6 +117,27 @@ const TranslateSchema = z.object({
   text:     z.string().min(1).max(5000),
   fromLang: z.enum(LANG_CODES),
   toLang:   z.enum(LANG_CODES),
+});
+
+const ExtractSchema = z.object({
+  conversation: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant']),
+      content: z.string().min(1).max(10000),
+    })
+  ).min(1).max(100),
+  userProfile: z.object({
+    ship_name:       z.string().optional(),
+    call_sign:       z.string().optional(),
+    satellite_phone: z.string().optional(),
+    company:         z.string().optional(),
+    email:           z.string().optional(),
+    first_name:      z.string().optional(),
+    last_name:       z.string().optional(),
+    date_of_birth:   z.string().optional(),
+    gender:          z.string().optional(),
+    nationality:     z.string().optional(),
+  }).optional(),
 });
 
 const SummarizeSchema = z.object({
@@ -318,6 +348,46 @@ aiRouter.post(
     });
 
     res.json({ translation });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/extract
+// Middleware order: requireAuth → extractRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// ---------------------------------------------------------------------------
+
+aiRouter.post(
+  '/extract',
+  requireAuth,
+  extractRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ExtractSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { conversation, userProfile } = parsed.data;
+
+    let summary: Record<string, string | boolean>;
+    try {
+      summary = await parallelExtract(conversation, userProfile as UserProfile | undefined);
+    } catch (err) {
+      console.error('[ai/extract] extraction error:', (err as Error).message);
+      res.status(502).json({ error: 'Extraction service unavailable' });
+      return;
+    }
+
+    const fieldsPopulated = Object.values(summary).filter(v => v !== '' && v !== false && v !== null && v !== undefined).length;
+
+    await auditLog('medical_record_extracted', req, req.user!.id, {
+      message_count: conversation.length,
+      fields_populated: fieldsPopulated,
+    });
+
+    res.json({ summary });
   }
 );
 

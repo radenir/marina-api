@@ -51,7 +51,8 @@ export type AuditEventType =
   | 'profile_updated'
   | 'conversation_summarized'
   | 'audio_transcribed'
-  | 'text_translated';
+  | 'text_translated'
+  | 'medical_record_extracted';
 
 export interface JWTPayload {
   sub: string;       // userId

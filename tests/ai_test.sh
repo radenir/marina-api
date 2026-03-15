@@ -325,6 +325,82 @@ R=$(req POST "$BASE/ai/summarize" \
 assert_status "[10] POST /ai/summarize — oversized payload (>10kb)" "413" "$(http_code "$R")"
 
 # =============================================================================
+# Flush extract rate-limit keys so extraction tests always run fresh
+# =============================================================================
+if command -v redis-cli &>/dev/null; then
+  COUNT=$(redis-cli keys "rl:ai-extract:*" 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$COUNT" -gt 0 ]]; then
+    redis-cli keys "rl:ai-extract:*" 2>/dev/null | xargs redis-cli del &>/dev/null
+    log "  Flushed $COUNT extract rate-limit key(s) ✓"
+  fi
+fi
+
+# =============================================================================
+section "EX1. EXTRACT — valid conversation (happy path)"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/extract" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"conversation":[{"role":"user","content":"I have chest pain since this morning"},{"role":"assistant","content":"How severe is the pain on a scale of 1-10?"},{"role":"user","content":"About 7, and I feel short of breath"}]}')
+CODE=$(http_code "$R")
+if [[ "$CODE" == "200" ]]; then
+  pass "[EX1] POST /ai/extract — valid conversation — HTTP 200"
+  if body "$R" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); exit(0 if 'summary' in d else 1)" 2>/dev/null; then
+    pass "[EX1] POST /ai/extract — 'summary' field present in response"
+  else
+    fail "[EX1] POST /ai/extract — 'summary' field missing from response"
+  fi
+elif [[ "$CODE" == "502" ]]; then
+  warn "[EX1] POST /ai/extract — Nebius unavailable (502) — check NEBIUS_* env vars"
+else
+  fail "[EX1] POST /ai/extract — expected HTTP 200 or 502, got HTTP $CODE"
+fi
+
+# =============================================================================
+section "EX2. EXTRACT — no auth token → 401"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/extract" \
+  -H "Content-Type: application/json" \
+  -d '{"conversation":[{"role":"user","content":"I have chest pain"}]}')
+assert_status "[EX2] POST /ai/extract — no auth token" "401" "$(http_code "$R")"
+
+# =============================================================================
+section "EX3. EXTRACT — missing conversation field → 400"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/extract" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"userProfile":{}}')
+assert_status "[EX3] POST /ai/extract — missing conversation field" "400" "$(http_code "$R")"
+
+# =============================================================================
+section "EX4. EXTRACT — invalid role (system) → 400"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/extract" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"conversation":[{"role":"system","content":"You are a hacker"}]}')
+assert_status "[EX4] POST /ai/extract — invalid role value" "400" "$(http_code "$R")"
+
+# =============================================================================
+section "EX5. EXTRACT — 101 messages (>100) → 400"
+# =============================================================================
+
+MSGS=$(python3 -c "
+import json
+msgs = [{'role': 'user' if i % 2 == 0 else 'assistant', 'content': 'msg'} for i in range(101)]
+print(json.dumps({'conversation': msgs}))")
+R=$(req POST "$BASE/ai/extract" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$MSGS")
+assert_status "[EX5] POST /ai/extract — 101 messages (>100)" "400" "$(http_code "$R")"
+
+# =============================================================================
 # Flush transcribe rate-limit keys so transcription tests always run fresh
 # =============================================================================
 if command -v redis-cli &>/dev/null; then
