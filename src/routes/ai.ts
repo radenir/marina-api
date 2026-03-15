@@ -18,6 +18,8 @@ import { sendEmail } from '../lib/email.js';
 import { config } from '../config.js';
 import { sha256hex } from '../lib/tokens.js';
 import type { AuditEventType } from '../types/index.js';
+import { createFreshState } from '../lib/interviewTypes.js';
+import { runAgent, generateGreeting } from '../lib/interviewAgent.js';
 
 export const aiRouter = Router();
 
@@ -92,6 +94,13 @@ const pdfRateLimit = rateLimit({
 const pdfEmailRateLimit = rateLimit({
   prefix: 'ai-pdf-email',
   limit: 5,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
+const interviewRateLimit = rateLimit({
+  prefix: 'ai-interview',
+  limit: 100,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
@@ -554,6 +563,129 @@ aiRouter.post(
     });
 
     res.json({ message: 'Report sent to your email address' });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/interview/chat
+// Middleware order: requireAuth → interviewRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// ---------------------------------------------------------------------------
+
+const InterviewDataSchema = z.object({
+  vitals: z.array(z.object({
+    type: z.string(),
+    value: z.string(),
+    unit: z.string(),
+    timestamp: z.string(),
+  })),
+  investigations: z.array(z.object({
+    marker: z.string(),
+    question: z.string(),
+    timestamp: z.string(),
+  })),
+  examFindings: z.array(z.object({
+    marker: z.string(),
+    finding: z.string(),
+    questionNumber: z.number(),
+    totalQuestions: z.number(),
+    timestamp: z.string(),
+  })),
+});
+
+const InterviewVariablesSchema = z.object({
+  patientLanguage: z.string(),
+  medicalOfficerLanguage: z.string(),
+  symptom: z.string(),
+  historyTaking: z.string(),
+  associatedSymtpoms: z.string(),
+  focusedPastMedicalHistory: z.string(),
+  clinicalExamination: z.string(),
+  investigations: z.string(),
+  examinationInstructions: z.string(),
+  examinationMarkers: z.string(),
+}).catchall(z.unknown());
+
+const InterviewStateSchema = z.object({
+  stage: z.number().int().min(0).max(9),
+  done: z.boolean(),
+  report: z.string().nullable(),
+  conversationHistory: z.array(z.record(z.unknown())).max(500),
+  variables: InterviewVariablesSchema,
+  data: InterviewDataSchema,
+});
+
+const InterviewChatSchema = z.object({
+  state: InterviewStateSchema.nullable().optional(),
+  message: z.string().min(1).max(2000).nullable().optional(),
+  patientLanguage: z.string().max(50).optional(),
+  medicalOfficerLanguage: z.string().max(50).optional(),
+});
+
+aiRouter.post(
+  '/interview/chat',
+  requireAuth,
+  interviewRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = InterviewChatSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { state, message, patientLanguage, medicalOfficerLanguage } = parsed.data;
+
+    // Validate call combinations
+    if (state == null && message) {
+      res.status(400).json({ error: 'message must not be sent on first call' });
+      return;
+    }
+    if (state != null && !message) {
+      res.status(400).json({ error: 'message is required when state is provided' });
+      return;
+    }
+    if (state != null && state.done === true) {
+      res.status(400).json({ error: 'Interview already complete' });
+      return;
+    }
+
+    let reply: string;
+    let newState: ReturnType<typeof createFreshState>;
+
+    try {
+      if (state == null) {
+        // First call — create fresh state and generate greeting
+        const freshState = createFreshState(
+          patientLanguage ?? 'English',
+          medicalOfficerLanguage ?? 'English',
+        );
+        const result = await generateGreeting(freshState);
+        reply = result.reply;
+        newState = result.newState;
+      } else {
+        // Subsequent call — run agent with existing state
+        const result = await runAgent(state as ReturnType<typeof createFreshState>, message as string);
+        reply = result.reply;
+        newState = result.newState;
+      }
+    } catch (err) {
+      console.error('[ai/interview/chat] agent error:', (err as Error).message);
+      res.status(502).json({ error: 'Interview service unavailable' });
+      return;
+    }
+
+    await auditLog('interview_message_sent', req, req.user!.id, {
+      stage: newState.stage,
+      done: newState.done,
+    });
+
+    res.json({
+      state: newState,
+      reply,
+      done: newState.done,
+      ...(newState.done && newState.report ? { report: newState.report } : {}),
+    });
   }
 );
 

@@ -59,6 +59,10 @@ app.use(cors({
 // ---------------------------------------------------------------------------
 // Body parsing
 // ---------------------------------------------------------------------------
+// Path-specific parser for interview endpoint (state blob can be up to 200kb).
+// body-parser checks req._body and skips re-parsing, so the global 10kb limit
+// below won't reject interview requests that were already parsed here.
+app.use('/ai/interview', express.json({ limit: '200kb' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
