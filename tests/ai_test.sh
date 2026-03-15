@@ -82,6 +82,34 @@ assert_contains() {
   fi
 }
 
+# assert_translation: extract translation field, then grep -qi for keyword.
+# On 502 warns instead of failing (Nebius may be down).
+# Usage: assert_translation LABEL PAYLOAD KEYWORD
+assert_translation() {
+  local label="$1" payload="$2" keyword="$3"
+  local resp code translation
+  resp=$(req POST "$BASE/ai/translate" \
+    -H "Authorization: Bearer $ACCESS_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$payload")
+  code=$(http_code "$resp")
+  if [[ "$code" == "502" ]]; then
+    warn "$label — Nebius unavailable (502)"
+    return
+  fi
+  if [[ "$code" != "200" ]]; then
+    fail "$label — expected HTTP 200, got HTTP $code"
+    return
+  fi
+  translation=$(printf '%s' "$(body "$resp")" | python3 -c \
+    "import sys,json; d=json.loads(sys.stdin.read()); print(d.get('translation',''))" 2>/dev/null)
+  if printf '%s' "$translation" | grep -qi "$keyword"; then
+    pass "$label — translation contains '$keyword' (got: $translation)"
+  else
+    fail "$label — '$keyword' not found in translation: $translation"
+  fi
+}
+
 # =============================================================================
 header "Marina AI — 10-Test Suite  ($(date '+%Y-%m-%d %H:%M:%S'))"
 log "BASE : $BASE"
@@ -307,6 +335,17 @@ if command -v redis-cli &>/dev/null; then
   fi
 fi
 
+# =============================================================================
+# Flush translate rate-limit keys so translation tests always run fresh
+# =============================================================================
+if command -v redis-cli &>/dev/null; then
+  COUNT=$(redis-cli keys "rl:ai-translate:*" 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$COUNT" -gt 0 ]]; then
+    redis-cli keys "rl:ai-translate:*" 2>/dev/null | xargs redis-cli del &>/dev/null
+    log "  Flushed $COUNT translate rate-limit key(s) ✓"
+  fi
+fi
+
 # ---------------------------------------------------------------------------
 # Generate a minimal valid WAV file (44-byte header, 1 second silence at 8kHz)
 # ---------------------------------------------------------------------------
@@ -414,6 +453,130 @@ assert_contains "[T6] POST /ai/transcribe — error message" "too large" "$(body
 
 # Cleanup temp files
 rm -f "$AUDIO_FILE" "$BIG_FILE"
+
+# =============================================================================
+section "TR1. TRANSLATE — valid translation (happy path)"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/translate" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"I have a headache","fromLang":"en","toLang":"pl"}')
+CODE=$(http_code "$R")
+if [[ "$CODE" == "200" ]]; then
+  pass "[TR1] POST /ai/translate — valid translation — HTTP 200"
+  if body "$R" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); exit(0 if 'translation' in d else 1)" 2>/dev/null; then
+    pass "[TR1] POST /ai/translate — 'translation' field present in response"
+  else
+    fail "[TR1] POST /ai/translate — 'translation' field missing from response"
+  fi
+elif [[ "$CODE" == "502" ]]; then
+  warn "[TR1] POST /ai/translate — Nebius service unavailable (502) — check NEBIUS_* env vars"
+else
+  fail "[TR1] POST /ai/translate — expected HTTP 200 or 502, got HTTP $CODE"
+fi
+
+# =============================================================================
+section "TR2. TRANSLATE — no auth token → 401"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/translate" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"I have a headache","fromLang":"en","toLang":"pl"}')
+assert_status "[TR2] POST /ai/translate — no auth token" "401" "$(http_code "$R")"
+
+# =============================================================================
+section "TR3. TRANSLATE — missing text field → 400"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/translate" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"fromLang":"en","toLang":"pl"}')
+assert_status "[TR3] POST /ai/translate — missing text field" "400" "$(http_code "$R")"
+
+# =============================================================================
+section "TR4. TRANSLATE — invalid language code → 400"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/translate" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hello","fromLang":"xx","toLang":"pl"}')
+assert_status "[TR4] POST /ai/translate — invalid fromLang code" "400" "$(http_code "$R")"
+
+# =============================================================================
+section "TR5. TRANSLATE — fromLang equals toLang → 400"
+# =============================================================================
+
+R=$(req POST "$BASE/ai/translate" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hello","fromLang":"en","toLang":"en"}')
+assert_status "[TR5] POST /ai/translate — fromLang === toLang" "400" "$(http_code "$R")"
+assert_contains "[TR5] POST /ai/translate — error message contains 'must be different'" "must be different" "$(body "$R")"
+
+# =============================================================================
+section "TR6. TRANSLATE — text exceeds 5000 chars → 400"
+# =============================================================================
+
+LONG_TEXT=$(python3 -c "print('A' * 5001)")
+R=$(req POST "$BASE/ai/translate" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"text\":\"$LONG_TEXT\",\"fromLang\":\"en\",\"toLang\":\"pl\"}")
+assert_status "[TR6] POST /ai/translate — text > 5000 chars" "400" "$(http_code "$R")"
+
+# =============================================================================
+section "TQ1. TRANSLATE QUALITY — headache en→pl"
+# =============================================================================
+# "headache" in Polish is "ból głowy" — stem "głow" covers all inflected forms
+assert_translation "[TQ1] headache en→pl — contains 'głow'" \
+  '{"text":"headache","fromLang":"en","toLang":"pl"}' \
+  "głow"
+
+# =============================================================================
+section "TQ2. TRANSLATE QUALITY — chest pain en→es"
+# =============================================================================
+# "chest pain" → "dolor de pecho" — "pecho" (chest) is the key medical term
+assert_translation "[TQ2] chest pain en→es — contains 'pecho'" \
+  '{"text":"chest pain","fromLang":"en","toLang":"es"}' \
+  "pecho"
+
+# =============================================================================
+section "TQ3. TRANSLATE QUALITY — fever en→de"
+# =============================================================================
+# "fever" → "Fieber" — straightforward German medical term
+assert_translation "[TQ3] fever en→de — contains 'fieber'" \
+  '{"text":"fever","fromLang":"en","toLang":"de"}' \
+  "fieber"
+
+# =============================================================================
+section "TQ4. TRANSLATE QUALITY — nausea en→fr"
+# =============================================================================
+# "nausea" → "nausée" — stem "naus" avoids encoding issues with accented chars
+assert_translation "[TQ4] nausea en→fr — contains 'naus'" \
+  '{"text":"nausea","fromLang":"en","toLang":"fr"}' \
+  "naus"
+
+# =============================================================================
+section "TQ5. TRANSLATE QUALITY — reverse: Polish symptom → English"
+# =============================================================================
+# "Mam gorączkę" (I have a fever) pl→en — expect "fever" in output
+assert_translation "[TQ5] 'Mam gorączkę' pl→en — contains 'fever'" \
+  '{"text":"Mam gor\u0105czk\u0119","fromLang":"pl","toLang":"en"}' \
+  "fever"
+
+# =============================================================================
+section "TQ6. TRANSLATE QUALITY — dosage preservation en→pl"
+# =============================================================================
+# Numeric dose and unit must survive translation unchanged
+assert_translation "[TQ6] dosage '500mg every 8 hours' en→pl — contains '500'" \
+  '{"text":"Take 500mg every 8 hours","fromLang":"en","toLang":"pl"}' \
+  "500"
+assert_translation "[TQ6] dosage '500mg every 8 hours' en→pl — contains 'mg'" \
+  '{"text":"Take 500mg every 8 hours","fromLang":"en","toLang":"pl"}' \
+  "mg"
 
 # =============================================================================
 header "RESULTS"

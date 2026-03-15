@@ -62,6 +62,13 @@ const transcribeRateLimit = rateLimit({
   keyFn: (req) => req.user!.id,
 });
 
+const translateRateLimit = rateLimit({
+  prefix: 'ai-translate',
+  limit: 100,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
 // ---------------------------------------------------------------------------
 // Multer — memory storage, 25MB limit, audio MIME types only
 // ---------------------------------------------------------------------------
@@ -86,6 +93,22 @@ const upload = multer({
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
+
+const LANG_MAP: Record<string, string> = {
+  en: 'English', pl: 'Polish',     es: 'Spanish',    de: 'German',
+  fr: 'French',  it: 'Italian',    pt: 'Portuguese',  ru: 'Russian',
+  zh: 'Chinese', ja: 'Japanese',   da: 'Danish',      hi: 'Hindi',
+  ur: 'Urdu',    fa: 'Farsi',      ar: 'Arabic',      tr: 'Turkish',
+  nl: 'Dutch',   sv: 'Swedish',    no: 'Norwegian',   fi: 'Finnish',
+  ko: 'Korean',  vi: 'Vietnamese', th: 'Thai',        id: 'Indonesian',
+};
+const LANG_CODES = Object.keys(LANG_MAP) as [string, ...string[]];
+
+const TranslateSchema = z.object({
+  text:     z.string().min(1).max(5000),
+  fromLang: z.enum(LANG_CODES),
+  toLang:   z.enum(LANG_CODES),
+});
 
 const SummarizeSchema = z.object({
   conversation: z.array(
@@ -204,6 +227,97 @@ aiRouter.post(
     });
 
     res.json({ transcription });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/translate
+// Middleware order: requireAuth → translateRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// ---------------------------------------------------------------------------
+
+function createTranslationPrompt(fromLanguageName: string, toLanguageName: string): string {
+  return `You are a professional accurate medical translator. You never change the meaning of the message and always translate accurately. If the user's message is in ${toLanguageName} translate to ${fromLanguageName}.
+  If the user's message is in ${fromLanguageName} translate to ${toLanguageName}.
+
+CRITICAL INSTRUCTIONS:
+1. The user's message IS the text to translate
+2. Translate it immediately to ${toLanguageName} or ${fromLanguageName}
+3. Output ONLY the translation - nothing else
+4. Do NOT ask "what text should I translate"
+5. Do NOT say "here's the translation"
+6. Do NOT add quotes or explanations
+7. Just output the direct ${toLanguageName} or ${fromLanguageName} translation.
+8. You never output translation in the same language as user's message.
+
+SPECIAL RULES FOR MEDICAL TRANSLATION:
+- This is a MEDICAL conversation - translate medical terms accurately
+- Be extremely careful with symptom names (headache, sore throat, chest pain, etc.)
+- Pay close attention to words indicating time/onset (suddenly, gradually, etc.)
+- Preserve the exact medical meaning - do NOT guess or substitute similar words
+- Translate everything to ${toLanguageName} with medical precision
+- If you don't know how to translate output '-'
+- CRITICAL: When translating language references (e.g., "in Polish", "he speaks German"), translate the language name literally - do NOT substitute with the target language
+
+The text to translate will be in the user message. Start translating immediately with medical accuracy.`;
+}
+
+aiRouter.post(
+  '/translate',
+  requireAuth,
+  translateRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = TranslateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { text, fromLang, toLang } = parsed.data;
+
+    if (fromLang === toLang) {
+      res.status(400).json({ error: 'fromLang and toLang must be different' });
+      return;
+    }
+
+    const fromLanguageName = LANG_MAP[fromLang];
+    const toLanguageName = LANG_MAP[toLang];
+
+    let translation: string;
+    try {
+      const completion = await nebius.chat.completions.create({
+        model: config.nebius.model,
+        temperature: 0.3,
+        top_p: 0.9,
+        max_tokens: 1000,
+        messages: [
+          { role: 'system', content: createTranslationPrompt(fromLanguageName, toLanguageName) },
+          { role: 'user', content: text },
+        ],
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        console.error('[ai/translate] empty response from Nebius');
+        res.status(502).json({ error: 'Translation service unavailable' });
+        return;
+      }
+
+      translation = content;
+    } catch (err) {
+      console.error('[ai/translate] Nebius API error:', (err as Error).message);
+      res.status(502).json({ error: 'Translation service unavailable' });
+      return;
+    }
+
+    await auditLog('text_translated', req, req.user!.id, {
+      from_lang: fromLang,
+      to_lang: toLang,
+      char_count: text.length,
+    });
+
+    res.json({ translation });
   }
 );
 
