@@ -144,7 +144,7 @@ const UpdateProfileSchema = z.object({
 
 const loginRateLimit = rateLimit({
   prefix: 'login',
-  limit: 5,
+  limit: 50,
   windowSeconds: 15 * 60,
   keyFn: (req) => {
     const ip = getIp(req);
@@ -153,11 +153,11 @@ const loginRateLimit = rateLimit({
   },
 });
 
-const registerRateLimit = rateLimit({ prefix: 'register', limit: 10, windowSeconds: 60 * 60 });
-const forgotPasswordRateLimit = rateLimit({ prefix: 'forgot', limit: 3, windowSeconds: 60 * 60 });
-const resendVerifyRateLimit = rateLimit({ prefix: 'resend', limit: 3, windowSeconds: 60 * 60 });
-const refreshRateLimit = rateLimit({ prefix: 'refresh', limit: 30, windowSeconds: 15 * 60 });
-const resetPasswordRateLimit = rateLimit({ prefix: 'reset-pw', limit: 5, windowSeconds: 60 * 60 });
+const registerRateLimit = rateLimit({ prefix: 'register', limit: 100, windowSeconds: 60 * 60 });
+const forgotPasswordRateLimit = rateLimit({ prefix: 'forgot', limit: 10, windowSeconds: 60 * 60 });
+const resendVerifyRateLimit = rateLimit({ prefix: 'resend', limit: 5, windowSeconds: 60 * 60 });
+const refreshRateLimit = rateLimit({ prefix: 'refresh', limit: 100, windowSeconds: 15 * 60 });
+const resetPasswordRateLimit = rateLimit({ prefix: 'reset-pw', limit: 100, windowSeconds: 60 * 60 });
 const verifyEmailRateLimit = rateLimit({ prefix: 'verify-email', limit: 10, windowSeconds: 60 * 60 });
 
 // ---------------------------------------------------------------------------

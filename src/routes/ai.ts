@@ -58,49 +58,49 @@ async function auditLog(
 
 const summarizeRateLimit = rateLimit({
   prefix: 'ai-summarize',
-  limit: 20,
+  limit: 50,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
 
 const transcribeRateLimit = rateLimit({
   prefix: 'ai-transcribe',
-  limit: 50,
+  limit: 500,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
 
 const translateRateLimit = rateLimit({
   prefix: 'ai-translate',
-  limit: 100,
+  limit: 500,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
 
 const extractRateLimit = rateLimit({
   prefix: 'ai-extract',
-  limit: 20,
+  limit: 50,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
 
 const pdfRateLimit = rateLimit({
   prefix: 'ai-pdf',
-  limit: 10,
+  limit: 50,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
 
 const pdfEmailRateLimit = rateLimit({
   prefix: 'ai-pdf-email',
-  limit: 5,
+  limit: 10,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
 
 const interviewRateLimit = rateLimit({
   prefix: 'ai-interview',
-  limit: 100,
+  limit: 1000,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
