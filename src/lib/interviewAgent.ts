@@ -13,6 +13,7 @@ const MAX_TOKENS = 2048;
 const MAX_TOOL_ITERATIONS = 40;
 const TEMPERATURE = 0.3;
 const FREQUENCY_PENALTY = 0.5;
+const STAGE_ADVANCING_TOOLS = new Set(['completeStage', 'logPrimarySymptom']);
 
 interface AgentResult {
   reply: string;
@@ -53,6 +54,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
   let stageTools = getToolDefs(STAGES[Math.min(currentState.stage, 8)]?.tools || ['completeStage']);
 
   let iterations = 0;
+  let lastToolName: string | null = null;
 
   // ── Tool-use loop ─────────────────────────────────────────────────────────
   while (iterations < MAX_TOOL_ITERATIONS) {
@@ -92,7 +94,42 @@ export async function runAgent(state: InterviewState, userText: string): Promise
 
     // ── No tool calls → done with this user turn ──────────────────────────
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
-      return buildResult(currentState, msg.content || '');
+      const replyText = msg.content?.trim() || '';
+
+      // If reply is empty and last tool was a non-stage-advancing logger (e.g.
+      // logVitalSign, logInvestigation), force a text-only call so the user
+      // never sees a blank message bubble.
+      // We also remove the empty assistant entry we just stored so the forced
+      // response replaces it cleanly — avoids two consecutive assistant entries
+      // with the first having null content.
+      if (replyText === '' && lastToolName !== null && !STAGE_ADVANCING_TOOLS.has(lastToolName)) {
+        const cleanHistory = currentState.conversationHistory.slice(0, -1);
+        const forcedResponse = await nebius.chat.completions.create({
+          model: config.nebius.model,
+          max_tokens: MAX_TOKENS,
+          temperature: TEMPERATURE,
+          frequency_penalty: FREQUENCY_PENALTY,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...toMessages(cleanHistory),
+            {
+              role: 'user',
+              content: '[The last value has been recorded. Please acknowledge briefly and ask for the next measurement now.]',
+            },
+          ],
+        });
+        const forcedMsg = forcedResponse.choices[0].message;
+        currentState = {
+          ...currentState,
+          conversationHistory: [
+            ...cleanHistory,
+            { role: 'assistant', content: forcedMsg.content ?? null },
+          ],
+        };
+        return buildResult(currentState, forcedMsg.content?.trim() || '');
+      }
+
+      return buildResult(currentState, replyText);
     }
 
     // ── Tool calls → execute each, push tool result messages ─────────────
@@ -109,6 +146,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
       }
       const toolCallId = (toolCall as { id: string }).id;
 
+      lastToolName = toolName;
       const stageBefore = currentState.stage;
       const { result, newState } = executeTool(toolName, toolInput, currentState);
 

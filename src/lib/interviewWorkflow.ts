@@ -303,9 +303,18 @@ Ask questions like this:
 Conduct a systematic interview asking questions on:
 {{investigations}}. After all questions on investigations have been asked, call completeStage to go to Physical Exam.
 
+## CRITICAL: THE FIRST MESSAGE YOU RECEIVE MAY ALREADY BE AN ANSWER
+
+When this stage begins, the very first message from the medical officer may already contain the answer to the first investigation question. This happens because that question was asked at the end of the previous stage transition.
+
+YOU MUST:
+1. Call logInvestigation IMMEDIATELY for that first answer — even if YOU did not ask the question during this stage.
+2. Then continue with any remaining investigation questions in order.
+3. NEVER skip logInvestigation for any answered investigation, regardless of which turn the question was asked in.
+
 ## Tools
 
-With each question, call logInvestigation to record the investigation marker and question asked.`,
+With each answered investigation — whether you asked it in this stage or it arrived as the opening message — call logInvestigation to record the investigation marker and the question that was asked.`,
   },
   {
     id: 8,
