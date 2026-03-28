@@ -179,13 +179,22 @@ export async function runAgent(state: InterviewState, userText: string): Promise
 
       // Inject a stage-open trigger so the new stage LLM doesn't mistake the
       // previous "nothing to add" as completing this stage.
+      // For stages 6-8 the medical officer takes over — reinforce the MO language
+      // right here so it is the most recent instruction before the LLM responds.
+      // Only reinforce MO language for stages 6-8 — patient stages were already
+      // working correctly and adding a language reminder there conflicts with the
+      // "call completeStage with no text output" completion rule.
+      const isMOStage = currentState.stage >= 6;
+      const langReminder = isMOStage && currentState.variables.medicalOfficerLanguage
+        ? ` You MUST respond in ${currentState.variables.medicalOfficerLanguage} only — do not use any other language.`
+        : '';
       currentState = {
         ...currentState,
         conversationHistory: [
           ...currentState.conversationHistory,
           {
             role: 'user',
-            content: '[Stage transition complete. You MUST ask the first question of this new stage now. Do NOT call completeStage until all questions have been asked and answered.]',
+            content: `[Stage transition complete. You MUST ask the first question of this new stage now. Do NOT call completeStage until all questions have been asked and answered.${langReminder}]`,
           },
         ],
       };

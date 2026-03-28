@@ -100,7 +100,7 @@ const pdfEmailRateLimit = rateLimit({
 
 const interviewRateLimit = rateLimit({
   prefix: 'ai-interview',
-  limit: 1000,
+  limit: 50000,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
