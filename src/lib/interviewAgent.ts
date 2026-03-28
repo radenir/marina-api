@@ -96,19 +96,11 @@ export async function runAgent(state: InterviewState, userText: string): Promise
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       const replyText = msg.content?.trim() || '';
 
-      // If reply is empty and no stage-advancing tool was the last action,
-      // force a retry call so the user never sees a blank message bubble.
-      // This covers both: (a) LLM called a logger then returned empty content,
-      // and (b) LLM returned empty without calling any tool at all.
-      // We also remove the empty assistant entry we just stored so the forced
-      // response replaces it cleanly — avoids two consecutive assistant entries
-      // with the first having null content.
-      // IMPORTANT: pass stageTools so the LLM can still call completeStage or
-      // other stage tools (e.g. if patient just said "nothing to add" and the
-      // LLM needs to advance — without tools it falls back to text and loops).
+      // If reply is empty, discard the empty assistant entry and retry once
+      // with a nudge so the LLM has something new to react to.
       if (replyText === '' && !STAGE_ADVANCING_TOOLS.has(lastToolName ?? '')) {
         const cleanHistory = currentState.conversationHistory.slice(0, -1);
-        const forcedParams: Parameters<typeof nebius.chat.completions.create>[0] = {
+        const retryParams: Parameters<typeof nebius.chat.completions.create>[0] = {
           model: config.nebius.model,
           max_tokens: MAX_TOKENS,
           temperature: TEMPERATURE,
@@ -116,36 +108,27 @@ export async function runAgent(state: InterviewState, userText: string): Promise
           messages: [
             { role: 'system', content: systemPrompt },
             ...toMessages(cleanHistory),
-            {
-              role: 'user',
-              content: '[Your last response was empty. Please call the appropriate tool now or ask your next required question.]',
-            },
+            { role: 'user', content: '[continue]' },
           ],
         };
         if (stageTools.length > 0) {
-          forcedParams.tools = stageTools as Parameters<typeof nebius.chat.completions.create>[0]['tools'];
-          forcedParams.tool_choice = 'auto';
+          retryParams.tools = stageTools as Parameters<typeof nebius.chat.completions.create>[0]['tools'];
+          retryParams.tool_choice = 'auto';
         }
-        const forcedResponse = await nebius.chat.completions.create(forcedParams) as ChatCompletion;
-        const forcedMsg = forcedResponse.choices[0].message;
+        const retryResponse = await nebius.chat.completions.create(retryParams) as ChatCompletion;
+        const retryMsg = retryResponse.choices[0].message;
 
-        // If the forced call itself returned a tool call, loop back to handle it
-        // rather than returning — store the assistant entry and continue the loop.
-        if (forcedMsg.tool_calls && forcedMsg.tool_calls.length > 0) {
-          const forcedEntry: Record<string, unknown> = { role: 'assistant', content: forcedMsg.content ?? null, tool_calls: forcedMsg.tool_calls };
-          currentState = { ...currentState, conversationHistory: [...cleanHistory, forcedEntry] };
-          // Re-enter the tool execution flow by continuing the while loop
+        if (retryMsg.tool_calls && retryMsg.tool_calls.length > 0) {
+          const retryEntry: Record<string, unknown> = { role: 'assistant', content: retryMsg.content ?? null, tool_calls: retryMsg.tool_calls };
+          currentState = { ...currentState, conversationHistory: [...cleanHistory, retryEntry] };
           continue;
         }
 
         currentState = {
           ...currentState,
-          conversationHistory: [
-            ...cleanHistory,
-            { role: 'assistant', content: forcedMsg.content ?? null },
-          ],
+          conversationHistory: [...cleanHistory, { role: 'assistant', content: retryMsg.content ?? null }],
         };
-        return buildResult(currentState, forcedMsg.content?.trim() || '');
+        return buildResult(currentState, retryMsg.content?.trim() || '');
       }
 
       return buildResult(currentState, replyText);
