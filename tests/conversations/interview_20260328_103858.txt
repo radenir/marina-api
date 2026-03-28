@@ -1,0 +1,218 @@
+
+[1m[0;34m════════════════════════════════════════════════════[0m
+[1m[0;34m  Marina API — Full Interview Test  (2026-03-28 10:38:58)[0m
+[1m[0;34m════════════════════════════════════════════════════[0m
+BASE     : https://api.marinahealth.eu
+SYMPTOM  : I have chest pain in the center of my chest, it started this morning
+LANG     : patient=English  MO=English
+MODEL    : moonshotai/Kimi-K2-Instruct  (patient LLM)
+Results  : /Users/marinahealth/Documents/marina-api/tests/interview_results.txt
+
+[1m── LOGIN ──[0m
+  [0;32m✓ Logged in as radomski.adr@gmail.com  (547ms)[0m
+    Token expires in ~15 min. Refresh threshold: 12 min.
+
+[1m── STAGE 0 — PATHWAY  (starting interview) ──[0m
+  [0;32m✓ Interview started[0m  (908ms)
+    Marina: "Hello, I'm Marina, your maritime health assistant. What brings you here today?"
+
+  Turn  Stage  Label                      BodyKB      ms  Message / Event
+  ──────────────────────────────────────────────────────────────────────────────────────────
+
+[1m── STAGE 0 — PATHWAY AI ──[0m
+     1      0  Pathway AI                   0.5K    1489  'Thank you for sharing that. Can you describe the chest pain in more detail - wha...'
+                                                          [1;33m  [Pt] 'I have chest pain in the center of my chest, started this morning.'[0m
+     2      0  Pathway AI                   0.8K    1075  'I understand. Are you experiencing any other symptoms along with this chest pain...'
+                                                          [1;33m  [Pt] 'It’s a dull, heavy pressure right in the center, and it’s been constant since it...'[0m
+     3      0  Pathway AI                   1.1K    1977  'If I understand correctly, the main complaint is Chest pain. Do you confirm?'
+                                                          [1;33m  [Pt] 'No, none of those.'[0m
+     4      0  Pathway AI                   1.2K    2048  'I need to gather some information about your chest pain. First, may I ask how ol...'
+                                                          [1;33m  [Pt] 'Yes, that is correct.'[0m
+                                                            [0;32m→ stage 1 (History Taking AI)[0m
+
+[1m── STAGE 1 — HISTORY TAKING AI ──[0m
+     5      1  History Taking AI            6.2K     820  'Thank you. Are you male or female?'
+                                                          [1;33m  [Pt] "I'm 42 years old."[0m
+     6      1  History Taking AI            6.3K    1080  'When the chest pain started this morning, did it come on suddenly all at once, o...'
+                                                          [1;33m  [Pt] 'I’m male.'[0m
+     7      1  History Taking AI            6.5K    1308  'Where exactly is the pain located in the center of your chest, and does it sprea...'
+                                                          [1;33m  [Pt] 'It came on suddenly—sharp pain right when I woke up.'[0m
+     8      1  History Taking AI            6.8K    1639  'You mentioned it started as sharp pain, but earlier you described it as dull, he...'
+                                                          [1;33m  [Pt] "Right in the middle of my chest, doesn't spread anywhere else."[0m
+     9      1  History Taking AI            7.1K    1641  'On a scale from 0 to 10, where 0 is no pain and 10 is the worst pain you can ima...'
+                                                          [1;33m  [Pt] 'It’s a heavy pressure, like something’s sitting on my chest.'[0m
+    10      1  History Taking AI            7.4K     909  'Is this chest pressure constant throughout, or does it come and go in waves?'
+                                                          [1;33m  [Pt] 'About a 6.'[0m
+    11      1  History Taking AI            7.5K    1235  'Does anything make the chest pressure worse - for example, does it increase when...'
+                                                          [1;33m  [Pt] 'It’s constant, not coming and going.'[0m
+    12      1  History Taking AI            7.8K    1120  'Does anything help relieve the chest pressure - such as resting, changing positi...'
+                                                          [1;33m  [Pt] "It feels worse when I take a deep breath, but moving around doesn't seem to chan..."[0m
+    13      1  History Taking AI            8.1K     919  'Have you been immobilized for a long period recently, such as during travel or b...'
+                                                          [1;33m  [Pt] 'Resting helps a little, but the pressure is still there. Changing position or mo...'[0m
+    14      1  History Taking AI            8.3K     920  'Have you experienced any trauma to your chest or back recently, such as a fall, ...'
+                                                          [1;33m  [Pt] 'No, I’ve been active on the ship all week.'[0m
+    15      1  History Taking AI            8.6K    2684  'Based on our conversation, you are a 42-year-old male who experienced sudden ons...'
+                                                          [1;33m  [Pt] 'No, I haven’t had any injuries or trauma to my chest or back.'[0m
+    16      1  History Taking AI            9.3K    1332  'Are you experiencing any shortness of breath or difficulty breathing?'
+                                                          [1;33m  [Pt] 'No, nothing to add.'[0m
+                                                            [0;32m→ stage 2 (Associated Symptoms AI)[0m
+
+[1m── STAGE 2 — ASSOCIATED SYMPTOMS AI ──[0m
+    17      2  Associated Symptoms AI      10.1K     940  'Are you experiencing any sweating or have you noticed your skin feeling unusuall...'
+                                                          [1;33m  [Pt] 'No, I’m breathing fine.'[0m
+    18      2  Associated Symptoms AI      10.3K    1022  'Do you have any cough at all?'
+                                                          [1;33m  [Pt] 'No, I’m not sweating and my skin feels normal.'[0m
+    19      2  Associated Symptoms AI      10.4K     919  'Are you feeling nauseous or have you experienced any nausea since the chest pain...'
+                                                          [1;33m  [Pt] 'No cough.'[0m
+    20      2  Associated Symptoms AI      10.6K     806  'Are you experiencing any heart palpitations or irregular heartbeat sensations?'
+                                                          [1;33m  [Pt] "No, I haven't felt nauseous at all."[0m
+    21      2  Associated Symptoms AI      10.8K     892  'Have you experienced any fainting, dizziness, or loss of consciousness?'
+                                                          [1;33m  [Pt] 'No, I’m not noticing any palpitations or irregular beats.'[0m
+    22      2  Associated Symptoms AI      11.0K    1533  'Based on our discussion, you have not experienced any shortness of breath, no sw...'
+                                                          [1;33m  [Pt] 'No, I haven’t had any fainting or dizziness.'[0m
+    23      2  Associated Symptoms AI      11.3K    1431  'Have you ever been diagnosed with hypertension or high blood pressure?'
+                                                          [1;33m  [Pt] 'No, nothing else to add.'[0m
+                                                            [0;32m→ stage 3 (Past Medical History AI)[0m
+
+[1m── STAGE 3 — PAST MEDICAL HISTORY AI ──[0m
+    24      3  Past Medical History AI     12.1K     697  'Have you ever been diagnosed with heart disease?'
+                                                          [1;33m  [Pt] 'No, never.'[0m
+    25      3  Past Medical History AI     12.3K     775  'Have you ever been diagnosed with any cardiovascular disease?'
+                                                          [1;33m  [Pt] 'No, never.'[0m
+    26      3  Past Medical History AI     12.4K    1119  'Have you ever had deep vein thrombosis or blood clots in your legs?'
+                                                          [1;33m  [Pt] 'No, never.'[0m
+    27      3  Past Medical History AI     12.6K     967  'Have you ever had a pulmonary embolism or blood clots in your lungs?'
+                                                          [1;33m  [Pt] 'No, never had that.'[0m
+    28      3  Past Medical History AI     12.7K     877  'Do you smoke cigarettes or have you ever smoked in the past?'
+                                                          [1;33m  [Pt] 'No, never.'[0m
+    29      3  Past Medical History AI     12.9K    1455  'Based on our discussion, you have never been diagnosed with hypertension, heart ...'
+                                                          [1;33m  [Pt] 'I quit smoking five years ago and haven’t touched a cigarette since.'[0m
+    30      3  Past Medical History AI     13.3K    1778  'Are you taking any medications regularly?'
+                                                          [1;33m  [Pt] 'No, nothing to add.'[0m
+                                                            [0;32m→ stage 4 (Medications AI)[0m
+
+[1m── STAGE 4 — MEDICATIONS AI ──[0m
+    31      4  Medications AI              14.0K    1054  'Just to confirm, your current medications are: no medications at all. Is this co...'
+                                                          [1;33m  [Pt] 'No, I’m not on any regular medications.'[0m
+    32      4  Medications AI              14.2K    1512  'Do you have any known allergies to medications, foods, or other substances?'
+                                                          [1;33m  [Pt] 'Yes, that is correct.'[0m
+                                                            [0;32m→ stage 5 (Allergies AI)[0m
+
+[1m── STAGE 5 — ALLERGIES AI ──[0m
+    33      5  Allergies AI                15.0K    1107  'Based on our discussion, you have no known allergies to medications, foods, or o...'
+                                                          [1;33m  [Pt] 'No, I don’t have any known allergies.'[0m
+    34      5  Allergies AI                15.3K    2301  '**Medical Officer takes over now. Language is English.**  Medical Officer, pleas...'
+                                                          [1;33m  [Pt] 'No, nothing to add.'[0m
+                                                            [0;32m→ stage 6 (Vital Signs AI)[0m
+
+[1m── STAGE 6 — VITAL SIGNS AI ──[0m
+    35      6  Vital Signs AI              16.1K    1603  "Medical Officer, what is the patient's respiratory rate in breaths per minute?"
+                                                          [1;33m  [MO] 'Oxygen saturation is 98%.'[0m
+    36      6  Vital Signs AI              16.8K    9550  ''
+                                                          [1;33m  [MO] '16 breaths per minute'[0m
+    37      6  Vital Signs AI              16.9K    1656  "Medical Officer, what is the patient's heart rate or pulse in beats per minute?"
+                                                          [1;33m  [MO] 'No, nothing to add.'[0m
+    38      6  Vital Signs AI              17.6K    2285  "Medical Officer, what is the patient's blood pressure - both systolic and diasto..."
+                                                          [1;33m  [MO] '78 bpm'[0m
+    39      6  Vital Signs AI              18.2K    1327  ''
+                                                          [1;33m  [MO] '125/82 mmHg'[0m
+    40      6  Vital Signs AI              18.4K     857  ''
+                                                          [1;33m  [MO] 'I am a medical officer on a maritime vessel reporting on a 42-year-old male pati...'[0m
+    41      6  Vital Signs AI              18.5K     914  "Medical Officer, what is the patient's temperature in degrees Celsius?"
+                                                          [1;33m  [MO] "I'm ready to report the patient's vitals and findings."[0m
+    42      6  Vital Signs AI              18.7K    2017  "Medical Officer, what is the patient's AVPU level - Alert, Verbal, Pain, or Unre..."
+                                                          [1;33m  [MO] '36.9°C'[0m
+    43      6  Vital Signs AI              19.4K    1959  ''
+                                                          [1;33m  [MO] 'Alert'[0m
+    44      6  Vital Signs AI              19.5K    1786  'Based on the vital signs assessment, the 42-year-old male patient has oxygen sat...'
+                                                          [1;33m  [MO] "I am ready to report the patient's vital signs and findings."[0m
+    45      6  Vital Signs AI              19.9K    1849  'Medical Officer, did you take an ECG test, and if yes, what was the result?'
+                                                          [1;33m  [MO] 'No, nothing to add.'[0m
+                                                            [0;32m→ stage 7 (Investigations AI)[0m
+
+[1m── STAGE 7 — INVESTIGATIONS AI ──[0m
+    46      7  Investigations AI           20.7K    1274  'Medical Officer, did you take a CRP test, and if yes, what was the result?'
+                                                          [1;33m  [MO] 'No ECG test taken.'[0m
+    47      7  Investigations AI           20.8K     988  'Medical Officer, did you take a blood sugar test, and if yes, what was the resul...'
+                                                          [1;33m  [MO] 'No CRP test taken.'[0m
+    48      7  Investigations AI           21.0K    1170  'Medical Officer, did you take a COVID test, and if yes, what was the result?'
+                                                          [1;33m  [MO] 'No blood sugar test taken.'[0m
+    49      7  Investigations AI           21.2K    1171  'Medical Officer, did you take any other investigations or tests for this patient...'
+                                                          [1;33m  [MO] 'No COVID test taken.'[0m
+    50      7  Investigations AI           21.4K    1418  'Based on our discussion, no investigations have been conducted - no ECG, CRP tes...'
+                                                          [1;33m  [MO] 'No other investigations or tests taken.'[0m
+    51      7  Investigations AI           21.7K    2397  'Can the patient talk freely and answer clearly?'
+                                                          [1;33m  [MO] 'No, nothing to add.'[0m
+                                                            [0;32m→ stage 8 (Physical Exam AI)[0m
+
+[1m── STAGE 8 — PHYSICAL EXAM AI ──[0m
+    52      8  Physical Exam AI            22.5K    9269  'Is breathing difficult? Does the patient breathe through their mouth?'
+                                                          [1;33m  [MO] 'Yes, the patient is alert and able to answer questions appropriately.'[0m
+    53      8  Physical Exam AI            23.5K    2382  'Does the person look more pale or grey than usual?'
+                                                          [1;33m  [MO] 'Respiratory rate is 16 breaths/min with no apparent mouth breathing noted.'[0m
+    54      8  Physical Exam AI            24.5K    2597  'Is the skin sweaty or warm to the touch?'
+                                                          [1;33m  [MO] 'No, he appears slightly diaphoretic but not pale or grey.'[0m
+    55      8  Physical Exam AI            25.4K    2086  'Are there any signs of trauma, such as wounds or bruising?'
+                                                          [1;33m  [MO] 'Skin is slightly diaphoretic; no mention of warmth.'[0m
+    56      8  Physical Exam AI            26.4K    2189  'Ask them to stand up and walk a few meters. Can they do it without assistance?'
+                                                          [1;33m  [MO] 'No wounds or bruising noted.'[0m
+    57      8  Physical Exam AI            27.3K    3732  'Based on the physical examination, the 42-year-old male patient is alert and abl...'
+                                                          [1;33m  [MO] 'He stood and walked 3 m unassisted without difficulty or increased distress.'[0m
+    58      8  Physical Exam AI            28.7K    3156  'Interview complete.   We have systematically covered the patient’s history, asso...'
+                                                          [1;33m  [MO] 'No, nothing to add.'[0m
+                                                            [0;32m→ stage 9 (?)[0m
+    59      9  DONE                        28.7K       0  Interview marked done
+
+[1m── GENERATED REPORT ──[0m
+  ============================================================
+         MARINA MARITIME HEALTH — CLINICAL REPORT
+  ============================================================
+  Generated : Sat, 28 Mar 2026 09:41:16 GMT
+  
+  ────────────────────────────────────────────────────────────
+  PRIMARY SYMPTOM
+  ────────────────────────────────────────────────────────────
+  Symptom: Chest pain
+  
+  ────────────────────────────────────────────────────────────
+  VITAL SIGNS
+  ────────────────────────────────────────────────────────────
+    Oxygen          : 98 %
+    Respiration     : 16 breaths/min
+    Pulse           : 78 bpm
+    Temperature     : 36.9 °C
+  
+  ────────────────────────────────────────────────────────────
+  INVESTIGATIONS
+  ────────────────────────────────────────────────────────────
+  No investigations recorded.
+  
+  ────────────────────────────────────────────────────────────
+  PHYSICAL EXAMINATION FINDINGS
+  ────────────────────────────────────────────────────────────
+  
+    PHYSICAL_EXAMINATION:General appearance
+      Q1/6: Patient is alert and able to answer questions appropriately
+      Q2/6: Respiratory rate is 16 breaths/min with no apparent mouth breathing noted.
+  ... (308 lines total)
+
+[1m[0;34m════════════════════════════════════════════════════[0m
+[1m[0;34m  SUMMARY[0m
+[1m[0;34m════════════════════════════════════════════════════[0m
+  Total turns  : 58
+  Max body size: 28.7 KB  (limit: 200 KB)
+  Token age    : 2.3 min  (expires: 15 min)
+
+  Stage  Label                      Turns    MaxKB   Errors
+  ────────────────────────────────────────────────────────────
+      0  Pathway AI                     4     1.2K        0
+      1  History Taking AI             12     9.3K        0
+      2  Associated Symptoms AI         7    11.3K        0
+      3  Past Medical History AI        7    13.3K        0
+      4  Medications AI                 2    14.2K        0
+      5  Allergies AI                   2    15.3K        0
+      6  Vital Signs AI                11    19.9K        0
+      7  Investigations AI              6    21.7K        0
+      8  Physical Exam AI               8    28.7K        0
+
+  [0;32m[1mRESULT: INTERVIEW COMPLETED SUCCESSFULLY[0m

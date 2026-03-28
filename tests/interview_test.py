@@ -54,6 +54,7 @@ MAX_TURNS_PER_STAGE = 40   # abort if stuck in same stage for this many turns
 MAX_TURNS_TOTAL     = 300  # hard cap
 TOKEN_REFRESH_SECS  = 12 * 60  # proactively refresh at 12 min (JWT expires at 15)
 RESULTS_FILE        = os.path.join(os.path.dirname(__file__), "interview_results.txt")
+CONVERSATIONS_DIR   = os.path.join(os.path.dirname(__file__), "conversations")
 
 # ANSI colours
 RED    = "\033[0;31m"
@@ -73,6 +74,11 @@ def log(msg=""):
 
 def save_results():
     with open(RESULTS_FILE, "w") as f:
+        f.write("\n".join(lines) + "\n")
+    os.makedirs(CONVERSATIONS_DIR, exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    conv_file = os.path.join(CONVERSATIONS_DIR, f"interview_{ts}.txt")
+    with open(conv_file, "w") as f:
         f.write("\n".join(lines) + "\n")
 
 def hdr(title):
@@ -384,6 +390,13 @@ def main():
             reply_preview += "..."
 
         log(fmt_row(total_turns, stage, stage_label, payload_kb, ms, f"{reply_preview!r}"))
+
+        # Show patient / MO response
+        role = "MO" if stage >= 6 else "Pt"
+        msg_preview = message.replace("\n", " ")[:80]
+        if len(message) > 80:
+            msg_preview += "..."
+        log(f"  {'':>4}  {'':>5}  {'':>24}  {'':>7}  {'':>6}  {YELLOW}  [{role}] {msg_preview!r}{NC}")
 
         if advance:
             log(f"  {'':>4}  {'':>5}  {'':>24}  {'':>7}  {'':>6}  {advance}")
