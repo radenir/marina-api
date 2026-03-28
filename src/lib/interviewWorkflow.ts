@@ -105,7 +105,7 @@ You MUST ask a separate question for EACH item in the list above (age, gender, a
 REQUIRED SEQUENCE TO COMPLETE THIS STAGE — follow these steps in order:
 1. Ask ALL required questions one at a time, in order. Every item must be covered before moving on.
 2. MANDATORY: Send a single message that contains BOTH a flow text summary (written as prose sentences, not bullet points or lists) of ALL findings collected AND the question "Do you have anything else to add on history taking?" — these must be in the same message.
-3. If the patient says no / nothing / nothing to add → call completeStage tool IMMEDIATELY. Do NOT output any text. Do NOT repeat the summary. Do NOT ask the question again. Your only action is to call the tool.
+3. After the patient responds to the summary message — regardless of what they say — call completeStage IMMEDIATELY. Do NOT produce any text output. Do NOT ask the question again. Do NOT repeat the summary. The summary message is sent EXACTLY ONCE. Your only action after receiving a response to it is to call the tool.
 
 ##CRITICAL
 NEVER ask "Do you have anything to add?" without first providing the flow text summary (written as prose sentences, not bullet points or lists) in the same message.`,
@@ -126,7 +126,7 @@ You MUST ask a separate question for EACH item listed in {{associatedSymtpoms}}.
 REQUIRED SEQUENCE TO COMPLETE THIS STAGE — follow these steps in order:
 1. Ask ALL required questions one at a time, in order. Every item must be covered before moving on.
 2. MANDATORY: Send a single message that contains BOTH a flow text summary (written as prose sentences, not bullet points or lists) of ALL findings (including negative findings — if the patient said no, list it as "No X") AND the question "Do you have anything else to add on associated symptoms?" — these must be in the same message.
-3. If the patient says no / nothing / nothing to add → call completeStage tool IMMEDIATELY. Do NOT output any text. Do NOT repeat the summary. Do NOT ask the question again. Your only action is to call the tool.
+3. After the patient responds to the summary message — regardless of what they say — call completeStage IMMEDIATELY. Do NOT produce any text output. Do NOT ask the question again. Do NOT repeat the summary. The summary message is sent EXACTLY ONCE. Your only action after receiving a response to it is to call the tool.
 
 ##CRITICAL
 NEVER ask "Do you have anything to add?" without first providing the flow text summary (written as prose sentences, not bullet points or lists) in the same message. Even if the patient denied every symptom, you must still list them all as negative findings.`,
@@ -150,7 +150,7 @@ You MUST ask a separate question for EACH item listed in {{focusedPastMedicalHis
 REQUIRED SEQUENCE TO COMPLETE THIS STAGE — follow these steps in order:
 1. Ask ALL required questions one at a time, in order. Every item must be covered before moving on.
 2. MANDATORY: Send a single message that contains BOTH a flow text summary (written as prose sentences, not bullet points or lists) of ALL findings (including negative findings) AND the question "Do you have anything else to add on past medical history?" — these must be in the same message.
-3. If the patient says no / nothing / nothing to add → call completeStage tool IMMEDIATELY. Do NOT repeat the question. Do NOT ask about medications or any other topic. ONLY call completeStage.
+3. After the patient responds to the summary message — regardless of what they say — call completeStage IMMEDIATELY. Do NOT produce any text output. Do NOT ask the question again. Do NOT repeat the summary. The summary message is sent EXACTLY ONCE. Your only action after receiving a response to it is to call the tool.
 
 ##CRITICAL
 NEVER ask "Do you have anything to add?" without first providing the flow text summary (written as prose sentences, not bullet points or lists) in the same message.`,
@@ -198,7 +198,7 @@ CRITICAL REMINDERS:
 REQUIRED SEQUENCE TO COMPLETE THIS STAGE — follow these steps in order:
 1. Ask all required questions one at a time.
 2. MANDATORY: Send a single message that contains BOTH a flow text summary (written as prose sentences, not bullet points or lists) of ALL medications collected (or "No medications" if none) AND the question "Do you have anything else to add on medications?" — these must be in the same message.
-3. If the patient says no / nothing / nothing to add → call completeStage tool IMMEDIATELY. Do NOT output any text. Do NOT repeat the summary. Do NOT ask the question again. Your only action is to call the tool.
+3. After the patient responds to the summary message — regardless of what they say — call completeStage IMMEDIATELY. Do NOT produce any text output. Do NOT ask the question again. Do NOT repeat the summary. The summary message is sent EXACTLY ONCE. Your only action after receiving a response to it is to call the tool.
 
 NEVER ask "Do you have anything to add?" without first providing the flow text summary (written as prose sentences, not bullet points or lists) in the same message.`,
   },
@@ -242,7 +242,7 @@ Repeat Steps 2-3 until patient confirms no additional allergies.
 REQUIRED SEQUENCE TO COMPLETE THIS STAGE — follow these steps in order:
 1. Ask all required questions one at a time.
 2. MANDATORY: Send a single message that contains BOTH a flow text summary (written as prose sentences, not bullet points or lists) of ALL allergies collected (or "No known allergies" if none) AND the question "Do you have anything else to add on allergies?" — these must be in the same message.
-3. If the patient says no / nothing / nothing to add → call completeStage tool IMMEDIATELY. Do NOT output any text. Do NOT repeat the summary. Do NOT ask the question again. Your only action is to call the tool. NEVER ask a second or third follow-up — one follow-up question is the maximum.
+3. After the patient responds to the summary message — regardless of what they say — call completeStage IMMEDIATELY. Do NOT produce any text output. Do NOT ask the question again. Do NOT repeat the summary. The summary message is sent EXACTLY ONCE. Your only action after receiving a response to it is to call the tool.
 
 NEVER ask "Do you have anything to add?" without first providing the flow text summary (written as prose sentences, not bullet points or lists) in the same message.`,
   },
@@ -276,10 +276,10 @@ Primary symptom has been identified as {{symptom}}. Conduct a systematic intervi
 
 After all the questions has been asked, provide a brief summary (written as prose sentences, not bullet points or lists) of what you've learned on vital signs and ask the medical officer if he would like to add something more.
 
-##CRITICAL
-You must not call completeStage, unless you summarized the vital signs stage, you asked if he has anything to add to your description and he confirmed that he has nothing to add.
-
-ABSOLUTELY CRITICAL: YOU MUST ASK FOLLOWING QUESTION: "Do you have anything else to add on vital signs?"
+## REQUIRED SEQUENCE TO COMPLETE THIS STAGE
+1. Ask all 6 vital sign questions one at a time, calling logVitalSign after each answer.
+2. MANDATORY: Send a single message containing BOTH a prose summary of ALL vitals recorded AND the question "Do you have anything else to add on vital signs?" — these must be in the same message.
+3. If the medical officer says no / nothing / nothing to add → call completeStage tool IMMEDIATELY. Do NOT output any text. Do NOT repeat the summary. Do NOT ask the question again. Your only action is to call the tool.
 
 ## Tools
 
