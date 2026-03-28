@@ -330,6 +330,9 @@ YOU MUST:
 2. Then continue with any remaining investigation questions in order.
 3. NEVER skip logInvestigation for any answered investigation, regardless of which turn the question was asked in.
 
+## ADVANCING THE STAGE
+Once you have evaluated ALL investigations in {{investigations}} — whether you asked them or determined their conditions are not met — your ONLY action is to call completeStage. Do NOT produce any text message. Do NOT say "moving to the next stage" or "thank you" in a chat message. Just call the tool immediately with no accompanying text.
+
 ## Tools
 With each answered investigation — whether you asked it in this stage or it arrived as the opening message — call logInvestigation to record the investigation marker and the question that was asked.`,
   },

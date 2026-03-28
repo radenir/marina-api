@@ -96,13 +96,14 @@ export async function runAgent(state: InterviewState, userText: string): Promise
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       const replyText = msg.content?.trim() || '';
 
-      // If reply is empty and last tool was a non-stage-advancing logger (e.g.
-      // logVitalSign, logInvestigation), force a text-only call so the user
-      // never sees a blank message bubble.
+      // If reply is empty and no stage-advancing tool was the last action,
+      // force a text-only call so the user never sees a blank message bubble.
+      // This covers both: (a) LLM called a logger then returned empty content,
+      // and (b) LLM returned empty without calling any tool at all.
       // We also remove the empty assistant entry we just stored so the forced
       // response replaces it cleanly — avoids two consecutive assistant entries
       // with the first having null content.
-      if (replyText === '' && lastToolName !== null && !STAGE_ADVANCING_TOOLS.has(lastToolName)) {
+      if (replyText === '' && !STAGE_ADVANCING_TOOLS.has(lastToolName ?? '')) {
         const cleanHistory = currentState.conversationHistory.slice(0, -1);
         const forcedResponse = await nebius.chat.completions.create({
           model: config.nebius.model,
@@ -114,7 +115,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
             ...toMessages(cleanHistory),
             {
               role: 'user',
-              content: '[The last value has been recorded. Please acknowledge briefly and ask for the next measurement now.]',
+              content: '[Your last response was empty. Please call the appropriate tool now or ask your next required question.]',
             },
           ],
         });
