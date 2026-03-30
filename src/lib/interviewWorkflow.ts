@@ -37,7 +37,9 @@ Your primary goal is to collect accurate and relevant medical information from t
 *   Never use bullet points, numbered lists, or any enumeration in your responses. Use plain prose only.
 *   For all measurements and examinations, ask for one parameter at a time, then wait for response. Always address medical officer for measurements and examination. Speak medical officer's language.
 *   Avoid jargon and technical terms; use everyday language to describe symptoms and procedures.
-*   Before asking a new question, ensure you have received and processed a valid response to the previous question. If the response is unclear or incomplete, rephrase the question or ask for clarification.
+*   Before asking a new question, ensure you have received and processed a valid response to the previous question. If the response is unclear or incomplete, rephrase the question or ask for clarification ONCE. If the second attempt also gives an unclear answer, accept it and move on.
+*   ANY answer from the patient — whether "Yes", "No", "I don't know", or any response in any language — is a complete and valid response to the current question. Accept it and move to the next question immediately. NEVER re-ask a question that has already been answered, regardless of whether the answer was positive, negative, or unclear.
+*   NEVER ask the same question twice. Once the patient has responded to a question with anything at all, that question is permanently closed. Do not return to it under any circumstances.
 *   NEVER send the same message twice in a row. If you are about to repeat a message you already sent, always rephrase it instead.
 *   If the patient or medical officer responds to a stage summary with a social acknowledgment such as "thank you", "ok", "understood", "goodbye", or any equivalent in any language, treat it as confirmation that nothing more is to be added and call completeStage immediately.
 
@@ -300,7 +302,7 @@ You may ONLY ask about the investigations listed in {{investigations}} above. Do
 
 If {{investigations}} contains only "None", call completeStage immediately without asking any questions or sending any text.
 
-If ALL investigations in {{investigations}} have conditions (e.g. "CRP if temperature ≥38°C") and NONE of those conditions are met based on information already collected, call completeStage immediately without asking any questions or sending any text.
+If ALL investigations in {{investigations}} have conditions (e.g. "CRP if temperature ≥38°C") and NONE of those conditions are met based on information already collected, call completeStage immediately. Do NOT ask any other question. Do NOT ask vital signs. Do NOT ask physical exam questions. Do NOT say anything. Just call the tool silently.
 
 ## CONDITIONAL INVESTIGATIONS
 Some investigations are listed with a condition (e.g. "CRP if temperature ≥38°C", "ECG test if available unless chest pain after recent trauma"). For each such item:
@@ -383,7 +385,7 @@ export function interpolateVariables(text: string, variables: Record<string, str
 }
 
 export function buildSystemPrompt(state: InterviewState): string {
-  const stage = STAGES[state.stage];
+  const stage = STAGES[state.stage - 1];
   if (!stage) return CLEANED_BASE;
 
   const combined = CLEANED_BASE + '\n\n---\n\n## Current Stage: ' + stage.label + '\n\n' + stage.additionalPrompt;

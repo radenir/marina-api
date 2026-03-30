@@ -51,7 +51,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
   };
 
   let systemPrompt = buildSystemPrompt(currentState);
-  let stageTools = getToolDefs(STAGES[Math.min(currentState.stage, 8)]?.tools || ['completeStage']);
+  let stageTools = getToolDefs(STAGES[Math.min(currentState.stage - 1, 8)]?.tools || ['completeStage']);
 
   let iterations = 0;
   let lastToolName: string | null = null;
@@ -175,7 +175,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
       if (currentState.done) {
         break;
       }
-      stageTools = getToolDefs(STAGES[Math.min(currentState.stage, 8)]?.tools || ['completeStage']);
+      stageTools = getToolDefs(STAGES[Math.min(currentState.stage - 1, 8)]?.tools || ['completeStage']);
 
       // Inject a stage-open trigger so the new stage LLM doesn't mistake the
       // previous "nothing to add" as completing this stage.
@@ -184,23 +184,26 @@ export async function runAgent(state: InterviewState, userText: string): Promise
       // Only reinforce MO language for stages 6-8 — patient stages were already
       // working correctly and adding a language reminder there conflicts with the
       // "call completeStage with no text output" completion rule.
-      const isMOStage = currentState.stage >= 6;
+      const isMOStage = currentState.stage >= 7;
       const langReminder = isMOStage && currentState.variables.medicalOfficerLanguage
         ? ` You MUST respond in ${currentState.variables.medicalOfficerLanguage} only — do not use any other language.`
         : '';
+      // Patient stages: force the first question. MO stages: allow completeStage immediately
+      // (needed when stage 7 has no applicable investigations — all conditions unmet).
+      const stageInstruction = isMOStage
+        ? `[Stage transition complete. Proceed according to this stage's instructions.${langReminder}]`
+        : `[Stage transition complete. You MUST ask the first question of this new stage now.${langReminder}]`;
       currentState = {
         ...currentState,
         conversationHistory: [
           ...currentState.conversationHistory,
-          {
-            role: 'user',
-            content: `[Stage transition complete. You MUST ask the first question of this new stage now. Do NOT call completeStage until all questions have been asked and answered.${langReminder}]`,
-          },
+          { role: 'user', content: stageInstruction },
         ],
       };
 
-      // Force a text-only response to get the opening question of the new stage.
-      const openingResponse = await nebius.chat.completions.create({
+      // MO stages include tools so the model can call completeStage immediately if needed
+      // (e.g. stage 7 when all conditional investigations are unmet).
+      const openingRequestParams: Parameters<typeof nebius.chat.completions.create>[0] = {
         model: config.nebius.model,
         max_tokens: MAX_TOKENS,
         temperature: TEMPERATURE,
@@ -209,12 +212,28 @@ export async function runAgent(state: InterviewState, userText: string): Promise
           { role: 'system', content: systemPrompt },
           ...toMessages(currentState.conversationHistory),
         ],
-      });
+      };
+      if (isMOStage && stageTools.length > 0) {
+        openingRequestParams.tools = stageTools as Parameters<typeof nebius.chat.completions.create>[0]['tools'];
+        openingRequestParams.tool_choice = 'auto';
+      }
+      const openingResponse = await nebius.chat.completions.create(openingRequestParams) as ChatCompletion;
       const openingMsg = openingResponse.choices[0].message;
+
+      const openingEntry: Record<string, unknown> = { role: 'assistant', content: openingMsg.content ?? null };
+      if (openingMsg.tool_calls && openingMsg.tool_calls.length > 0) {
+        openingEntry.tool_calls = openingMsg.tool_calls;
+      }
       currentState = {
         ...currentState,
-        conversationHistory: [...currentState.conversationHistory, { role: 'assistant', content: openingMsg.content ?? null }],
+        conversationHistory: [...currentState.conversationHistory, openingEntry],
       };
+
+      // If model called a tool (e.g. completeStage for empty investigations), process it in the main loop
+      if (openingMsg.tool_calls && openingMsg.tool_calls.length > 0) {
+        continue;
+      }
+
       return buildResult(currentState, openingMsg.content || '');
     }
 

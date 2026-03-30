@@ -53,7 +53,7 @@ export function createFreshState(
   medicalOfficerLanguage = 'English',
 ): InterviewState {
   return {
-    stage: 0,
+    stage: 1,
     done: false,
     report: null,
     conversationHistory: [],

@@ -606,7 +606,7 @@ const InterviewVariablesSchema = z.object({
 }).catchall(z.unknown());
 
 const InterviewStateSchema = z.object({
-  stage: z.number().int().min(0).max(9),
+  stage: z.number().int().min(1).max(10),
   done: z.boolean(),
   report: z.string().nullable(),
   conversationHistory: z.array(z.record(z.unknown())).max(500),

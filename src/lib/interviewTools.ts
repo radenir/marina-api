@@ -202,7 +202,7 @@ export function executeTool(
 
       const newState: InterviewState = {
         ...state,
-        stage: 1,
+        stage: 2,
         variables: {
           ...state.variables,
           symptom: primarySymptomAI,
@@ -221,7 +221,7 @@ export function executeTool(
           success: true,
           symptom: primarySymptomAI,
           message: `Primary symptom logged as "${primarySymptomAI}". Medical protocol loaded. Stage advanced to History Taking AI.`,
-          nextStage: 1,
+          nextStage: 2,
           nextStageLabel: STAGES[1]?.label || 'History Taking AI',
         },
         newState,
@@ -232,7 +232,7 @@ export function executeTool(
       const prevStage = state.stage;
       const nextStage = state.stage + 1;
 
-      if (nextStage > 8) {
+      if (nextStage > 9) {
         const stateWithAdvancedStage: InterviewState = { ...state, stage: nextStage };
         const report = generateReport(stateWithAdvancedStage);
         const newState: InterviewState = {
@@ -249,7 +249,7 @@ export function executeTool(
         };
       }
 
-      const nextLabel = STAGES[nextStage]?.label || 'Next Stage';
+      const nextLabel = STAGES[nextStage - 1]?.label || 'Next Stage';
       return {
         result: {
           success: true,
