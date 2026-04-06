@@ -184,8 +184,6 @@ ABSOLUTE REQUIREMENT: Only extract information that is EXPLICITLY stated in the 
 - Better to leave a field blank than to fabricate data
 
 EXTRACT THESE FIELDS (look for the semantic meaning):
-- treatment (treatment provided)
-- notes (additional notes)
 - redFlag (red flag yes/no)
 - redFlagType (type of red flag if present)
 - performed_actions_time (time when actions were performed, HH:MM format)
@@ -197,8 +195,6 @@ VESSEL INFO (if mentioned):
 
 Return JSON format:
 {
-  "treatment": "",
-  "notes": "",
   "redFlag": "",
   "redFlagType": "",
   "performed_actions_time": "",
