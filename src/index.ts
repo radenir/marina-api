@@ -67,7 +67,7 @@ app.use(cors({
 // /ai/extract  — visible conversation (user+assistant text only) sent after
 //   a full interview can be 50-100kb.
 app.use('/ai/interview', express.json({ limit: '1mb' }));
-app.use('/ai/extract', express.json({ limit: '100kb' }));
+app.use('/ai/extract', express.json({ limit: '1mb' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
