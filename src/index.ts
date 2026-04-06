@@ -59,10 +59,15 @@ app.use(cors({
 // ---------------------------------------------------------------------------
 // Body parsing
 // ---------------------------------------------------------------------------
-// Path-specific parser for interview endpoint (state blob can be up to 200kb).
-// body-parser checks req._body and skips re-parsing, so the global 10kb limit
-// below won't reject interview requests that were already parsed here.
-app.use('/ai/interview', express.json({ limit: '200kb' }));
+// Path-specific body size limits. body-parser checks req._body and skips
+// re-parsing, so the global 10kb limit below won't override these.
+//
+// /ai/interview — conversationHistory accumulates all tool-use messages across
+//   9 stages and can reach ~400kb by the final stage.
+// /ai/extract  — visible conversation (user+assistant text only) sent after
+//   a full interview can be 50-100kb.
+app.use('/ai/interview', express.json({ limit: '1mb' }));
+app.use('/ai/extract', express.json({ limit: '100kb' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 

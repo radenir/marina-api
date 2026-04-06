@@ -233,10 +233,11 @@ export function executeTool(
       const nextStage = state.stage + 1;
 
       if (nextStage > 9) {
-        const stateWithAdvancedStage: InterviewState = { ...state, stage: nextStage };
-        const report = generateReport(stateWithAdvancedStage);
+        // Keep stage at 9 (the last real stage) — do not advance to 10.
+        // Sending stage 10 to the client caused the progress bar to show "10/9".
+        const report = generateReport(state);
         const newState: InterviewState = {
-          ...stateWithAdvancedStage,
+          ...state,
           done: true,
           report,
         };
