@@ -146,13 +146,14 @@ CRITICAL: Translate all non-English input to English.
 - NEVER guess or infer values
 - Extract the NUMERIC VALUE only (no units in the field)
 
-EXTRACT THESE 6 VITAL SIGNS:
+EXTRACT THESE 6 VITAL SIGNS + AVPU:
 - circulation_pulse_per_min: Heart rate/pulse in beats per minute (just the number, e.g., "72")
 - circulation_systole: Systolic blood pressure (just the number, e.g., "120")
 - circulation_diastole: Diastolic blood pressure (just the number, e.g., "80")
 - breathing_num_breaths_per_min: Respiratory rate per minute (just the number, e.g., "16")
 - breathing_oxygen_saturation: Oxygen saturation percentage (just the number, e.g., "98")
 - expose_temperature_measured_mouth: Temperature in Celsius (just the number, e.g., "37.5")
+- avpu: Level of consciousness - ONLY one of: "Alert", "Voice", "Pain", "Unresponsive" (or "" if not mentioned)
 
 Return JSON format:
 {
@@ -161,7 +162,8 @@ Return JSON format:
   "circulation_diastole": "",
   "breathing_num_breaths_per_min": "",
   "breathing_oxygen_saturation": "",
-  "expose_temperature_measured_mouth": ""
+  "expose_temperature_measured_mouth": "",
+  "avpu": ""
 }`,
   },
   {
@@ -444,7 +446,9 @@ export async function parallelExtract(
       blood_pressure_systolic: parseNum(merged.circulation_systole),
       oxygen_saturation_percent: parseNum(merged.breathing_oxygen_saturation),
       oxygen_requirements: null as null,
-      avpu: null as null,
+      avpu: (['Alert', 'Voice', 'Pain', 'Unresponsive'].includes(merged.avpu as string)
+        ? merged.avpu as 'Alert' | 'Voice' | 'Pain' | 'Unresponsive'
+        : null),
     };
     const hasAnyVital = Object.values(mewsInput).some(v => v !== null);
     if (hasAnyVital) {
