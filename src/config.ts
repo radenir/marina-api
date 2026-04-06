@@ -34,8 +34,8 @@ export const config = {
     // Newlines stored as \n literals in env — unescape them
     privateKey: require_env('JWT_PRIVATE_KEY').replace(/\\n/g, '\n'),
     publicKey: require_env('JWT_PUBLIC_KEY').replace(/\\n/g, '\n'),
-    accessTokenTtl: 15 * 60,       // 15 minutes in seconds
-    refreshTokenTtlDays: 30,
+    accessTokenTtl: 30 * 24 * 60 * 60, // 30 days in seconds
+    refreshTokenTtlDays: 90,
   },
 
   hmac: {
