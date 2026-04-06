@@ -1,5 +1,6 @@
 import { nebius } from './nebius.js';
 import { config } from '../config.js';
+import { calculateMEWS } from './mewsCalculator.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -19,7 +20,9 @@ export interface UserProfile {
 }
 
 // ---------------------------------------------------------------------------
-// Batch definitions (verbatim prompts from parallelExtraction.ts)
+// Batch definitions — mirrors parallelExtraction.ts in the web app exactly
+// Active batches: core_identification, medical_history, vitalSignsSimple,
+//                 treatment_medications, problemAndActions
 // ---------------------------------------------------------------------------
 
 interface BatchConfig {
@@ -85,184 +88,87 @@ Return JSON format:
     name: 'medical_history',
     prompt: `⚠️ OUTPUT MUST BE IN ENGLISH ONLY - TRANSLATE ALL INPUT ⚠️
 
-Extract ONLY the following medical history fields from the conversation. Return JSON only.
+Extract medical history fields from the conversation. Return JSON only.
 
-CRITICAL: If input is in any non-English language, TRANSLATE ALL CONTENT TO ENGLISH before extraction. ALL OUTPUT FIELDS MUST BE IN ENGLISH.
+CRITICAL: Translate all non-English input to English. ALL OUTPUT MUST BE IN ENGLISH.
 
-🚨 ANTI-HALLUCINATION RULE - NEVER FABRICATE INFORMATION 🚨
-ABSOLUTE REQUIREMENT: Only extract information that is EXPLICITLY stated in the conversation.
-- Extract the ACTUAL VALUES from what was said
-- If information was NOT discussed → Leave field as empty string ""
-- If you're unsure about a value → Leave it as empty string ""
+🚨 ANTI-HALLUCINATION RULE 🚨
+- ONLY include information EXPLICITLY stated in the conversation
 - NEVER guess, infer, or make up information
-- NEVER use placeholder values like "Unknown", "N/A", or "Not mentioned"
-- Better to leave a field blank than to fabricate data
 
-EXTRACT THESE FIELDS (look for the semantic meaning):
-- history (how the illness/problem started and developed)
-- pastHistory (previous medical conditions, surgeries)
-- allergies (known allergies - if mentioned)
-- currentMedications (medications currently taking - if mentioned)
+📋 FIELDS TO EXTRACT:
 
-⚠️ CHECKBOX LOGIC - ONLY CHECK IF ABSOLUTELY CERTAIN ⚠️
-CRITICAL: Better to leave checkboxes UNCHECKED (false) than to check them incorrectly. Only set to true if you have EXPLICIT, CLEAR evidence from the conversation.
+**history** - How the illness/problem started and developed. Leave empty if not discussed.
 
-- "no_medicine": true → ONLY if patient EXPLICITLY states "I don't take any medications" or similar clear statement
-- "dont_know_medicine": true → ONLY if patient EXPLICITLY states "I don't know what medications I take" OR medications were clearly asked about but patient couldn't answer
-- "no_allergies": true → ONLY if patient EXPLICITLY states "I have no allergies" or "no known allergies"
-- "dont_know_allergies": true → ONLY if patient EXPLICITLY states "I don't know if I have allergies" OR allergies were clearly asked about but patient couldn't answer
+**pastHistory** - Previous medical conditions, surgeries, hospitalizations. Leave empty if not discussed.
 
-WHEN IN DOUBT: Leave checkbox as false. Missing a checkbox is better than checking it incorrectly.
+**currentMedications** - MUST ALWAYS HAVE CONTENT. Follow these rules:
+- If patient provided medication information: Include ALL details mentioned:
+  * Brand name and/or generic name
+  * Dosage (e.g., 500mg, 10mg)
+  * Frequency (e.g., twice daily, once at bedtime, as needed)
+  * Any recent changes to medications
+  * Any medications not taken recently or additional medications used
+  * Include prescriptions, over-the-counter drugs, supplements, vitamins
+  * Example: "Metformin 500mg twice daily, Lisinopril 10mg once daily in the morning, Vitamin D supplement daily"
+- If patient stated they take NO medications: Write "Patient states they do not take any medications."
+- If patient was unsure or couldn't remember: Write "Patient was asked about medications but was unsure/could not remember."
+- If medications were NOT discussed at all: Write "Information on medications was not provided."
+- NEVER leave this field empty.
+
+**allergies** - MUST ALWAYS HAVE CONTENT. Follow these rules:
+- If patient provided allergy information: Include ALL allergies mentioned with reactions if specified.
+  * Example: "Penicillin (causes rash), shellfish (anaphylaxis), latex"
+- If patient stated they have NO allergies: Write "Patient states they have no known allergies."
+- If patient was unsure or couldn't remember: Write "Patient was asked about allergies but was unsure/could not remember."
+- If allergies were NOT discussed at all: Write "Information on allergies was not provided."
+- NEVER leave this field empty.
 
 Return JSON format:
 {
   "history": "",
   "pastHistory": "",
   "allergies": "",
-  "currentMedications": "",
-  "no_medicine": false,
-  "dont_know_medicine": false,
-  "no_allergies": false,
-  "dont_know_allergies": false
+  "currentMedications": ""
 }`,
   },
   {
-    name: 'vitals_abc',
+    name: 'vitalSignsSimple',
     prompt: `⚠️ OUTPUT MUST BE IN ENGLISH ONLY - TRANSLATE ALL INPUT ⚠️
 
-Extract ONLY vital signs and ABC assessment if explicitly discussed. Return JSON only.
+Extract ONLY vital sign values from the conversation. Return JSON only.
 
-CRITICAL: If input is in any non-English language, TRANSLATE ALL CONTENT TO ENGLISH before extraction. ALL OUTPUT FIELDS MUST BE IN ENGLISH.
+CRITICAL: Translate all non-English input to English.
 
-🚨 ANTI-HALLUCINATION RULE - NEVER FABRICATE INFORMATION 🚨
-ABSOLUTE REQUIREMENT: Only extract information that is EXPLICITLY stated in the conversation.
-- Extract the ACTUAL VALUES from what was said
-- If information was NOT discussed → Leave field as empty string ""
-- If you're unsure about a value → Leave it as empty string ""
-- NEVER guess, infer, or make up information
-- NEVER use placeholder values like "Unknown", "N/A", or "Not mentioned"
-- Better to leave a field blank than to fabricate data
+🚨 ANTI-HALLUCINATION RULE 🚨
+- ONLY extract values that are EXPLICITLY stated in the conversation
+- If a vital sign was NOT mentioned → Leave field as empty string ""
+- NEVER guess or infer values
+- Extract the NUMERIC VALUE only (no units in the field)
 
-AIRWAY (A):
-- airway_cpr_start, airway_admin_oxygen_liters_per_min
-- CHECKBOXES: checkbox_airway_clear_yes, checkbox_airway_clear_no, checkbox_airway_jaw_lift, checkbox_airway_suction, checkbox_airway_guedal
-
-BREATHING (B):
-- breathing_description, breathing_num_breaths_per_min, breathing_oxygen_saturation
-- CHECKBOXES: checkbox_breathing_fast, checkbox_breathing_slow, checkbox_breathing_shallow
-
-CIRCULATION (C):
-- circulation_capillary_response, circulation_skin_temp_and_humidity
-- circulation_pulse_per_min, circulation_systole, circulation_diastole
-
-⚠️ CHECKBOX RULES - ONLY CHECK IF ABSOLUTELY CERTAIN ⚠️
-CRITICAL: Better to leave checkboxes UNCHECKED (false) than to check them incorrectly.
-
-ONLY set checkbox to true if:
-- The specific condition is EXPLICITLY mentioned in the conversation
-- You have CLEAR, UNAMBIGUOUS evidence for that exact checkbox
-- Example: Only check "checkbox_airway_clear_yes" if airway was assessed and explicitly stated as clear
-
-WHEN IN DOUBT: Leave checkbox as false. Missing a checkbox is better than checking it incorrectly.
-
-LEGACY (for backward compatibility):
-- vitals (summary of vital signs)
-- exam (physical examination findings)
+EXTRACT THESE 6 VITAL SIGNS:
+- circulation_pulse_per_min: Heart rate/pulse in beats per minute (just the number, e.g., "72")
+- circulation_systole: Systolic blood pressure (just the number, e.g., "120")
+- circulation_diastole: Diastolic blood pressure (just the number, e.g., "80")
+- breathing_num_breaths_per_min: Respiratory rate per minute (just the number, e.g., "16")
+- breathing_oxygen_saturation: Oxygen saturation percentage (just the number, e.g., "98")
+- expose_temperature_measured_mouth: Temperature in Celsius (just the number, e.g., "37.5")
 
 Return JSON format:
 {
-  "airway_cpr_start": "",
-  "airway_admin_oxygen_liters_per_min": "",
-  "checkbox_airway_clear_yes": false,
-  "checkbox_airway_clear_no": false,
-  "checkbox_airway_jaw_lift": false,
-  "checkbox_airway_suction": false,
-  "checkbox_airway_guedal": false,
-  "breathing_description": "",
-  "breathing_num_breaths_per_min": "",
-  "breathing_oxygen_saturation": "",
-  "checkbox_breathing_fast": false,
-  "checkbox_breathing_slow": false,
-  "checkbox_breathing_shallow": false,
-  "circulation_capillary_response": "",
-  "circulation_skin_temp_and_humidity": "",
   "circulation_pulse_per_min": "",
   "circulation_systole": "",
   "circulation_diastole": "",
-  "vitals": "",
-  "exam": ""
-}`,
-  },
-  {
-    name: 'neuro_exposure',
-    prompt: `⚠️ OUTPUT MUST BE IN ENGLISH ONLY - TRANSLATE ALL INPUT ⚠️
-
-Extract ONLY neurological and exposure assessment if explicitly discussed. Return JSON only.
-
-CRITICAL: If input is in any non-English language, TRANSLATE ALL CONTENT TO ENGLISH before extraction. ALL OUTPUT FIELDS MUST BE IN ENGLISH.
-
-🚨 ANTI-HALLUCINATION RULE - NEVER FABRICATE INFORMATION 🚨
-ABSOLUTE REQUIREMENT: Only extract information that is EXPLICITLY stated in the conversation.
-- Extract the ACTUAL VALUES from what was said
-- If information was NOT discussed → Leave field as empty string ""
-- If you're unsure about a value → Leave it as empty string ""
-- NEVER guess, infer, or make up information
-- NEVER use placeholder values like "Unknown", "N/A", or "Not mentioned"
-- Better to leave a field blank than to fabricate data
-
-DISABILITY (D - Neurological):
-- disability_pupil_reaction_description
-- AVPU CHECKBOXES: checkbox_disability_avpu_awake, checkbox_disability_avpu_visual, checkbox_disability_avpu_pain, checkbox_disability_avpu_unconscious
-- OTHER CHECKBOXES: checkbox_disability_convulsions_yes/no, checkbox_disability_paralysis_yes/no
-
-EXPOSURE (E):
-- expose_top_to_toe_examination_description
-- expose_hypothermia_overheating_description
-- expose_temperature_measured_mouth
-- expose_temperature_measured_alternatively
-- expose_temperature_measured_place
-- CHECKBOXES: expose_top_to_toe_examination_performed_yes/no, expose_hypothermia_overheating_performed_yes/no, expose_temperature_performed_yes/no
-
-⚠️ CHECKBOX RULES - ONLY CHECK IF ABSOLUTELY CERTAIN ⚠️
-CRITICAL: Better to leave checkboxes UNCHECKED (false) than to check them incorrectly.
-
-ONLY set checkbox to true if:
-- The specific condition is EXPLICITLY mentioned in the conversation
-- You have CLEAR, UNAMBIGUOUS evidence for that exact checkbox
-- Example: Only check "checkbox_disability_avpu_awake" if consciousness level was explicitly assessed as alert/awake
-- For yes/no pairs: Only check if explicitly stated (don't assume "no" if "yes" wasn't mentioned)
-
-WHEN IN DOUBT: Leave checkbox as false. Missing a checkbox is better than checking it incorrectly.
-
-Return JSON format:
-{
-  "disability_pupil_reaction_description": "",
-  "checkbox_disability_avpu_awake": false,
-  "checkbox_disability_avpu_visual": false,
-  "checkbox_disability_avpu_pain": false,
-  "checkbox_disability_avpu_unconscious": false,
-  "checkbox_disability_convulsions_yes": false,
-  "checkbox_disability_convulsions_no": false,
-  "checkbox_disability_paralysis_yes": false,
-  "checkbox_disability_paralysis_no": false,
-  "expose_top_to_toe_examination_description": "",
-  "expose_top_to_toe_examination_performed_yes": false,
-  "expose_top_to_toe_examination_performed_no": false,
-  "expose_hypothermia_overheating_description": "",
-  "expose_hypothermia_overheating_performed_yes": false,
-  "expose_hypothermia_overheating_performed_no": false,
-  "expose_temperature_measured_mouth": "",
-  "expose_temperature_performed_yes": false,
-  "expose_temperature_performed_no": false,
-  "expose_temperature_measured_alternatively": "",
-  "expose_temperature_measured_place": ""
+  "breathing_num_breaths_per_min": "",
+  "breathing_oxygen_saturation": "",
+  "expose_temperature_measured_mouth": ""
 }`,
   },
   {
     name: 'treatment_medications',
     prompt: `⚠️ OUTPUT MUST BE IN ENGLISH ONLY - TRANSLATE ALL INPUT ⚠️
 
-Extract treatment, medications, observation chart, and vessel information. Return JSON only.
+Extract treatment and vessel information. Return JSON only.
 
 CRITICAL: If input is in any non-English language, TRANSLATE ALL CONTENT TO ENGLISH before extraction. ALL OUTPUT FIELDS MUST BE IN ENGLISH.
 
@@ -277,16 +183,10 @@ ABSOLUTE REQUIREMENT: Only extract information that is EXPLICITLY stated in the 
 
 EXTRACT THESE FIELDS (look for the semantic meaning):
 - treatment (treatment provided)
-- plan (recommendations and plan)
 - notes (additional notes)
 - redFlag (red flag yes/no)
 - redFlagType (type of red flag if present)
-- performed_actions_time (time when actions were performed)
-- documentation_of_prescriptions_and_actions
-
-MEDICATIONS ADMINISTERED (up to 4):
-- medications_field1, medications_field2, medications_field3, medications_field4
-- Format: "Drug name dosage - given at HH:MM"
+- performed_actions_time (time when actions were performed, HH:MM format)
 
 VESSEL INFO (if mentioned):
 - patientNationality, patientUtc, patientCompany, patientEmail
@@ -296,16 +196,10 @@ VESSEL INFO (if mentioned):
 Return JSON format:
 {
   "treatment": "",
-  "plan": "",
   "notes": "",
   "redFlag": "",
   "redFlagType": "",
   "performed_actions_time": "",
-  "documentation_of_prescriptions_and_actions": "",
-  "medications_field1": "",
-  "medications_field2": "",
-  "medications_field3": "",
-  "medications_field4": "",
   "patientNationality": "",
   "patientUtc": "",
   "patientCompany": "",
@@ -317,107 +211,152 @@ Return JSON format:
 }`,
   },
   {
-    name: 'problem_description',
+    name: 'problemAndActions',
     prompt: `⚠️ OUTPUT MUST BE IN ENGLISH ONLY - TRANSLATE ALL INPUT ⚠️
 
-Generate a comprehensive PROBLEM DESCRIPTION narrative. This is the PRIMARY description of what happened to the patient. Return JSON only.
+Generate TWO fields: problemDescription and performedActions. Return JSON only.
 
-CRITICAL: If input is in any non-English language (Polish, Danish, Spanish, etc.), TRANSLATE ALL CONTENT TO ENGLISH before extraction. ALL OUTPUT FIELDS MUST BE IN ENGLISH.
+🚫🚫🚫 VITAL SIGNS BAN - READ THIS FIRST 🚫🚫🚫
+DO NOT INCLUDE ANY VITAL SIGNS IN YOUR OUTPUT. THIS IS MANDATORY.
+- NO blood pressure (e.g., 120/80, 220/100)
+- NO pulse or heart rate (e.g., 72 bpm, 150 beats per minute)
+- NO respiratory rate or breathing rate (e.g., 19 breaths per minute)
+- NO oxygen saturation or SpO2 (e.g., 95%, 98%)
+- NO temperature (e.g., 39 degrees, 37.5°C)
+Vital signs are extracted separately into dedicated fields. NEVER mention them here.
+If vital signs appear in your output, you have failed this task.
 
-🚨 ANTI-HALLUCINATION RULE - NEVER FABRICATE INFORMATION 🚨
-ABSOLUTE REQUIREMENT: Only include information that is EXPLICITLY stated in the conversation.
-- ONLY write about what was actually discussed
-- Extract and synthesize the ACTUAL VALUES from the conversation
-- If information is missing (e.g., no date mentioned, no medical history discussed), OMIT that part entirely
-- NEVER guess, infer, assume, or make up information
-- NEVER use placeholder text like "[date]", "[age]", "Unknown", "N/A"
-- NEVER use template structures with missing data
-- Write a narrative ONLY from what was actually said - if very little was discussed, write very little
-- Better to have a SHORT, ACCURATE description than a LONG, FABRICATED one
+CRITICAL: Translate all non-English input to English. ALL OUTPUT MUST BE IN ENGLISH.
 
-IMPORTANT: This is a SYNTHESIS task - combine information from the conversation into a coherent narrative, but only using ACTUAL stated information.
+🚨 ANTI-HALLUCINATION RULE 🚨
+- ONLY include information EXPLICITLY stated in the conversation
+- NEVER guess, infer, or make up information
+- NEVER use placeholders like "Unknown", "N/A", "Not assessed"
 
-TASK: Write "problemDescription" as a comprehensive narrative describing:
+🚫 DO NOT USE MEDICAL ABBREVIATIONS 🚫
+- Write everything in full, clear English
+- Do NOT use: "c/o", "h/o", "yo", "SOB", "N/V", "BP", "HR", "w/", "b/l", "pt", "IV", "IM", "PO", etc.
+- Write "complains of" not "c/o", "history of" not "h/o", "year-old" not "yo"
+- Write "shortness of breath" not "SOB", "intravenous" not "IV"
+- The readers (ship medical officers and Danish shore doctors) may not know medical abbreviations
 
-INCLUDE:
-- What happened (chief complaint, primary symptoms)
-- When it happened (incident date and time)
-- Where it happened (location on vessel, circumstances)
-- Patient's relevant medical history (past conditions, current medications, allergies)
-- Current symptom progression and timeline
-- How the incident was reported and by whom
+🚨🚨🚨 CRITICAL: DOCUMENT ALL RELEVANT FINDINGS - POSITIVE AND NEGATIVE 🚨🚨🚨
+This is the most important rule. You MUST document:
+- EVERY symptom the patient CONFIRMS having (positive findings)
+- EVERY symptom the patient EXPLICITLY DENIES having (negative findings) - e.g., "I didn't vomit" → "Denies vomiting"
+- EVERY question asked where patient was UNSURE or couldn't remember
+- If a symptom was asked about and patient said NO, this MUST appear in the report
+- Missing negative findings is a FAILURE - they are as important as positive findings
+- Every question asked in the conversation should have its answer (or lack thereof) reflected in the report
 
-FORMAT: Write as a clear, structured medical narrative. Use professional clinical language. Include temporal markers (e.g., "The incident occurred on [date] at [time]...").
+⚠️ CRITICAL DISTINCTION - DO NOT CONFUSE THESE:
+- "Not discussed" ≠ "No" - If something was NEVER ASKED or NEVER MENTIONED, do NOT write "No X" or "Denies X"
+- ONLY write "Denies X" or "No X" if the patient EXPLICITLY said no, or was asked and answered negatively
+- If medications/procedures/tests were not discussed → OMIT entirely (do not write "No medications given")
+- If patient was asked about vomiting and said "no" → Write "Denies vomiting"
+- NEVER assume absence of discussion means "no" - this is HALLUCINATION
 
-EXAMPLE STRUCTURE:
-"The incident occurred on [date] at [time] when the patient, a [age]-year-old [gender] [position on vessel], experienced [chief complaint]. [Describe symptoms, progression, circumstances]. Patient has a history of [relevant past medical history]. Current medications include [list]. [Known allergies or no known allergies]. The incident was reported by [name/role] at [time]."
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 FIELD 1: problemDescription
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This field describes the patient's problem and history. EXCLUDE: vital signs, allergies (dedicated field), daily medications list (dedicated field).
+
+🚨 CRITICAL: DOCUMENT ALL QUESTIONS AND ANSWERS 🚨
+- If the patient was asked a question but could not remember or was unsure, THIS MUST BE DOCUMENTED
+- Example: "Patient could not recall previous migraines."
+- Example: "Family history uncertain."
+- Every question asked in the conversation should have its answer (or lack thereof) reflected in the report
+- DO NOT omit this section - document what was asked and answered
+
+CONTENT TO INCLUDE:
+
+**1. Patient Introduction & Past Medical History:**
+- ONLY include age/gender if EXPLICITLY stated in the conversation - NEVER guess or fabricate
+- If age/gender not stated, simply omit them and start with medical history or "Patient" or "The patient"
+- Chronic conditions from TWO sources (if mentioned):
+  a) Inferred from daily medications (antihypertensives → hypertension, statins → hypercholesterolemia, metformin/insulin → diabetes, inhalers → asthma/COPD)
+  b) Explicitly stated past medical history (previous conditions, surgeries, hospitalizations)
+- If no chronic conditions mentioned → "previously healthy" or omit this part
+Examples when age/gender IS stated:
+- "57-year-old male with hypertension, diabetes, previous appendectomy 2015."
+- "42-year-old female, previously healthy."
+Examples when age/gender is NOT stated (DO NOT FABRICATE):
+- "Patient with history of hypertension presents with..."
+- "Previously healthy patient presents with..."
+- "The patient reports..." (when no medical history mentioned either)
+
+**2. Current Condition - ALL Information Discussed:**
+- Include EVERYTHING discussed about the current problem
+- This includes: main complaint, onset, duration, character, location, severity, radiation, aggravating/alleviating factors, progression, context, timing, quality, and ANY other details mentioned
+- Use multiple sentences as needed for clarity
+
+**3. Associated Symptoms - REPORT ALL QUESTIONS AND ANSWERS:**
+- Document ALL symptom-related questions asked during the conversation
+- POSITIVE findings: "Reports nausea and dizziness."
+- NEGATIVE findings: "Denies vomiting, fever, chest pain." ← THIS IS CRITICAL - if patient said "no" to a symptom, it MUST be here
+- UNCERTAIN findings: "Unsure about previous headaches."
+- DO NOT omit this section - document what was asked and answered
+- Prioritize: every question asked and its answer > clinical details > context
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 FIELD 2: performedActions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This field documents what the medical officer DID and FOUND during examination. EXCLUDE: vital signs, problem description content, patient history/symptoms.
+
+🚨 INCLUDE ALL FINDINGS - POSITIVE AND NEGATIVE 🚨
+- Document what was examined AND what was found (or not found)
+- Include negative findings: "Abdomen: soft, non-tender, no guarding, no rebound tenderness"
+- Include normal findings: "Lungs: clear bilaterally, no wheezing, no crackles"
+- This shows what was assessed, not just abnormalities
+
+CONTENT TO INCLUDE (in this order):
+
+**1. M-EWS SCORE:**
+- State the M-EWS score: "M-EWS score: [X]"
+- Note: The M-EWS score will be provided separately - always include it if available
+
+**2. PHYSICAL EXAMINATION (NOT vital signs):**
+- Document body areas/systems examined: head, eyes, ears, nose, throat, neck, chest, heart, lungs, abdomen, limbs, skin, neurological
+- Include BOTH positive AND negative findings FOR AREAS THAT WERE ACTUALLY EXAMINED
+- Example: "Chest: heart sounds normal, no murmurs. Lungs clear bilaterally, no wheezing or crackles."
+- Example: "Abdomen: soft, non-tender, normal bowel sounds, no masses."
+- Example: "Skin: no rash, no wounds."
+- REMINDER: Do NOT include vital signs here (no blood pressure, pulse, temperature, etc.)
+- ⚠️ ONLY include body areas that were EXPLICITLY examined and discussed
+- ⚠️ If no physical examination was performed/discussed, OMIT this section entirely
+
+**3. INVESTIGATIONS/TESTS:**
+- Blood tests, CRP, blood sugar, malaria test, urine analysis, etc.
+- Include test name AND result
+- Example: "Blood sugar: 5.8 mmol/L (normal). CRP: 12 mg/L (elevated). Urine dipstick: negative for blood, protein, glucose."
+- ⚠️ ONLY include tests that were EXPLICITLY mentioned in the conversation
+- ⚠️ If no tests were discussed, OMIT this section entirely - do NOT write "No tests performed"
+
+**4. ACTIONS TAKEN:**
+- Medications given (with dose, route, time if mentioned)
+- Procedures performed (wound care, bandaging, etc.)
+- Oxygen administered
+- Any other interventions
+- ⚠️ ONLY include actions that were EXPLICITLY mentioned in the conversation
+- ⚠️ If no actions were discussed, OMIT this section entirely - do NOT write "No medications given" or "No procedures performed"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📏 WRITING STYLE FOR BOTH FIELDS - INFORMATION-DENSE AND CONCISE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Be CONCISE: Every word must earn its place. No filler, no fluff.
+- Be COMPLETE: Include ALL clinically relevant information from the conversation.
+- Be CLEAR: Despite being concise, the text must be easy to read and understand.
+- NO arbitrary word or sentence limits, but do not be verbose
+- Use short, direct sentences rather than long complex ones
+- ALWAYS write numbers as digits (e.g., "57" not "fifty-seven", "7/10" not "seven out of ten")
+- State each fact ONCE only - no redundancy
 
 Return JSON format:
 {
-  "problemDescription": ""
-}`,
-  },
-  {
-    name: 'performed_actions',
-    prompt: `⚠️ OUTPUT MUST BE IN ENGLISH ONLY - TRANSLATE ALL INPUT ⚠️
-
-Generate a comprehensive PERFORMED ACTIONS summary. This describes all physical examination findings and clinical assessments. Return JSON only.
-
-CRITICAL: If input is in any non-English language (Polish, Danish, Spanish, etc.), TRANSLATE ALL CONTENT TO ENGLISH before extraction. ALL OUTPUT FIELDS MUST BE IN ENGLISH.
-
-🚨 ANTI-HALLUCINATION RULE - NEVER FABRICATE INFORMATION 🚨
-ABSOLUTE REQUIREMENT: Only include information that is EXPLICITLY stated in the conversation.
-- ONLY write about what was actually discussed
-- Extract and synthesize the ACTUAL VALUES from the conversation
-- If an assessment wasn't performed (e.g., no airway check mentioned), OMIT that section entirely
-- NEVER guess, infer, assume, or make up information
-- NEVER use placeholder text like "[X]", "Unknown", "N/A", "Not assessed"
-- NEVER use template structures with missing data
-- Write a summary ONLY from what was actually assessed - if very little was examined, write very little
-- Better to have a SHORT, ACCURATE summary than a LONG, FABRICATED one
-
-IMPORTANT: This is a SYNTHESIS task - combine information from the conversation into a structured summary, but only using ACTUAL stated information.
-
-TASK: Write "performedActions" as a comprehensive summary of physical examination and observations:
-
-INCLUDE:
-- ABCDE Assessment findings:
-  * Airway status and interventions
-  * Breathing pattern, rate, oxygen saturation
-  * Circulation: pulse, blood pressure, capillary refill, skin condition
-  * Disability: level of consciousness (AVPU), neurological findings, pupils
-  * Exposure: body examination findings, temperature
-- Vital signs (format: "BP 120/80, HR 72, RR 16, Temp 37.2°C, SpO2 98%")
-- Physical examination findings from head-to-toe
-- Any interventions performed (oxygen, IV access, medications given)
-- Observation chart data if monitored over time
-- Past medical history if not already mentioned in problem description
-- Additional clinical notes or concerns
-
-FORMAT: Write as structured clinical documentation. Group by assessment category (ABCDE). Use professional medical terminology.
-
-EXAMPLE STRUCTURE:
-"AIRWAY: Clear and patent. [interventions if any]
-BREATHING: Respiratory rate [X]/min, SpO2 [X]%, [pattern description]
-CIRCULATION: BP [X/X] mmHg, Pulse [X] bpm, [additional findings]
-DISABILITY: [consciousness level], pupils [description]
-EXPOSURE: Temperature [X]°C, [examination findings]
-INTERVENTIONS: [list any treatments, medications, procedures]
-OBSERVATION: [ongoing monitoring data if applicable]"
-
-Return JSON format:
-{
-  "performedActions": "",
-  "observation_chart_general_condition": "",
-  "observation_chart_level_consciousness": "",
-  "observation_chart_pupil_reaction": "",
-  "observation_chart_cannula_inserted": "",
-  "observation_chart_intravenous_fluid": "",
-  "observation_chart_fluid_intake": "",
-  "observation_chart_24_hour_urine": "",
-  "observation_chart_urine_sticks": "",
-  "observation_chart_blood_sugar": "",
-  "observation_chart_malaria_test": ""
+  "problemDescription": "",
+  "performedActions": ""
 }`,
   },
 ];
@@ -433,15 +372,26 @@ function conversationToText(conversation: Array<{ role: string; content: string 
 async function extractBatch(
   text: string,
   batch: BatchConfig,
+  mewsScore?: number | null,
 ): Promise<Record<string, string | boolean>> {
   const start = Date.now();
+
+  // Inject M-EWS score into the problemAndActions batch prompt
+  let prompt = batch.prompt;
+  if (batch.name === 'problemAndActions' && mewsScore !== null && mewsScore !== undefined) {
+    prompt = batch.prompt.replace(
+      'Return JSON format:',
+      `⚠️ IMPORTANT: The calculated M-EWS score is ${mewsScore}. Include this in the performedActions output.\n\nReturn JSON format:`
+    );
+  }
+
   try {
     const completion = await nebius.chat.completions.create({
       model: config.nebius.model,
       temperature: 0.3,
       max_tokens: 1500,
       messages: [
-        { role: 'system', content: batch.prompt },
+        { role: 'system', content: prompt },
         { role: 'user', content: text },
       ],
     });
@@ -471,33 +421,50 @@ async function extractBatch(
 export async function parallelExtract(
   conversation: Array<{ role: string; content: string }>,
   userProfile?: UserProfile,
+  mewsScore?: number | null,
 ): Promise<Record<string, string | boolean>> {
   const text = conversationToText(conversation);
 
-  const results = await Promise.all(BATCHES.map(b => extractBatch(text, b)));
+  const results = await Promise.all(BATCHES.map(b => extractBatch(text, b, mewsScore)));
   const merged: Record<string, string | boolean> = {};
   results.forEach(r => Object.assign(merged, r));
 
-  // Post-processing 1: medication extraction from treatment text
-  if (merged.treatment && !merged.medications_field1) {
-    const treatmentLines = String(merged.treatment)
-      .split(/\n/)
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-
-    const medicationLines = treatmentLines
-      .filter(line => /\d+\s*mg|ml|IV|oral|sublingual|administered|given/i.test(line))
-      .slice(0, 4);
-
-    if (medicationLines.length > 0) {
-      merged.medications_field1 = medicationLines[0] ?? '';
-      merged.medications_field2 = medicationLines[1] ?? '';
-      merged.medications_field3 = medicationLines[2] ?? '';
-      merged.medications_field4 = medicationLines[3] ?? '';
+  // If no M-EWS score was provided, calculate it from extracted vitals
+  let finalMewsScore = (mewsScore !== null && mewsScore !== undefined) ? mewsScore : null;
+  if (finalMewsScore === null) {
+    const parseNum = (v: string | boolean | undefined): number | null => {
+      if (v === undefined || v === '' || typeof v === 'boolean') return null;
+      const n = parseFloat(String(v).replace(/[^\d.]/g, ''));
+      return isNaN(n) ? null : n;
+    };
+    const mewsInput = {
+      pulse_per_min: parseNum(merged.circulation_pulse_per_min),
+      respiration_per_min: parseNum(merged.breathing_num_breaths_per_min),
+      temperature_celsius: parseNum(merged.expose_temperature_measured_mouth),
+      blood_pressure_systolic: parseNum(merged.circulation_systole),
+      oxygen_saturation_percent: parseNum(merged.breathing_oxygen_saturation),
+      oxygen_requirements: null as null,
+      avpu: null as null,
+    };
+    const hasAnyVital = Object.values(mewsInput).some(v => v !== null);
+    if (hasAnyVital) {
+      finalMewsScore = calculateMEWS(mewsInput).total_score;
+      console.log(`[ai/extract] M-EWS calculated from extracted vitals: ${finalMewsScore}`);
     }
+  } else {
+    console.log(`[ai/extract] M-EWS from request: ${finalMewsScore}`);
   }
 
-  // Post-processing 2: pre-populate from userProfile (only if AI left field empty)
+  // Inject authoritative M-EWS score into performedActions.
+  // Always strip any LLM-written M-EWS line first to prevent hallucinated values.
+  if (finalMewsScore !== null) {
+    const stripped = String(merged.performedActions ?? '')
+      .replace(/m-ews score:.*\n?/gi, '')
+      .trim();
+    merged.performedActions = `M-EWS score: ${finalMewsScore}${stripped ? '\n\n' + stripped : ''}`;
+  }
+
+  // Post-processing: pre-populate from userProfile (only if AI left field empty)
   if (userProfile) {
     if (userProfile.ship_name && !merged.shipName)           merged.shipName = userProfile.ship_name;
     if (userProfile.call_sign && !merged.shipCallSign)       merged.shipCallSign = userProfile.call_sign;

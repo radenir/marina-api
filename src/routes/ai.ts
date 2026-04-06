@@ -165,6 +165,7 @@ const ExtractSchema = z.object({
     gender:          z.string().optional(),
     nationality:     z.string().optional(),
   }).optional(),
+  mewsScore: z.number().nullable().optional(),
 });
 
 const SummarizeSchema = z.object({
@@ -396,11 +397,11 @@ aiRouter.post(
       return;
     }
 
-    const { conversation, userProfile } = parsed.data;
+    const { conversation, userProfile, mewsScore } = parsed.data;
 
     let summary: Record<string, string | boolean>;
     try {
-      summary = await parallelExtract(conversation, userProfile as UserProfile | undefined);
+      summary = await parallelExtract(conversation, userProfile as UserProfile | undefined, mewsScore ?? null);
     } catch (err) {
       console.error('[ai/extract] extraction error:', (err as Error).message);
       res.status(502).json({ error: 'Extraction service unavailable' });
