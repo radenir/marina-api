@@ -152,7 +152,7 @@ const ExtractSchema = z.object({
       role: z.enum(['user', 'assistant']),
       content: z.string().min(1).max(10000),
     })
-  ).min(1).max(100),
+  ).min(1).max(500),
   userProfile: z.object({
     ship_name:       z.string().optional(),
     call_sign:       z.string().optional(),
@@ -173,7 +173,7 @@ const SummarizeSchema = z.object({
       role: z.enum(['user', 'assistant']),
       content: z.string().min(1).max(10000),
     })
-  ).min(1).max(100),
+  ).min(1).max(500),
 });
 
 // ---------------------------------------------------------------------------
