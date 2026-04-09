@@ -301,6 +301,12 @@ Examples when age/gender is NOT stated (DO NOT FABRICATE):
 📋 FIELD 2: performedActions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+⚠️ CRITICAL — READ BEFORE WRITING THIS FIELD ⚠️
+The JSON key is called "performedActions" but it does NOT mean treatments, medications, or clinical interventions.
+It means: PHYSICAL EXAMINATION FINDINGS + INVESTIGATIONS discussed in the conversation.
+Do NOT write "not included", "none", "not applicable", or anything suggesting no content exists.
+If a physical exam was conducted or any test was discussed, this field MUST document it.
+
 This field contains THREE sections — physical examination findings, investigations/tests, and M-EWS score. Do NOT include: medications, allergies, vital sign numeric measurements, patient-reported symptoms, or patient history (those belong in other fields).
 
 🚨 ALWAYS POPULATE THIS FIELD — DO NOT RETURN EMPTY 🚨
@@ -472,7 +478,7 @@ export async function parallelExtract(
   // Always strip any LLM-written M-EWS line first to prevent hallucinated values.
   if (finalMewsScore !== null) {
     const stripped = String(merged.performedActions ?? '')
-      .replace(/m-ews score:.*\n?/gi, '')
+      .replace(/^m-ews score:[^\n]*\n?/gim, '')
       .trim();
     merged.performedActions = `M-EWS score: ${finalMewsScore}${stripped ? '\n\n' + stripped : ''}`;
   }
