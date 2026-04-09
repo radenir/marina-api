@@ -7,7 +7,7 @@ Reads credentials from ../.env automatically. No env vars required.
 Usage:
     python3 tests/simple_test.py
 
-Scenario: chest pain, English patient, English medical officer
+Scenario: chest pain, Khmer patient, English medical officer (khmer_chest_kh_en)
 """
 
 import sys, os, json, time, urllib.request, urllib.error
@@ -38,9 +38,31 @@ NEBIUS_URL   = env.get("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v
 NEBIUS_MODEL = env.get("NEBIUS_MODEL", "MiniMaxAI/MiniMax-M2.1")
 BASE         = "https://api.marinahealth.eu"
 
-SYMPTOM = "我的腹部右下方非常疼痛，从昨晚开始，走路也很困难"
-P_LANG  = "Chinese"
-MO_LANG = "English"
+# ── Scenario (override via MARINA_SCENARIO env var as JSON) ───────────────────
+_sc_json = os.environ.get("MARINA_SCENARIO", "")
+if _sc_json:
+    _sc            = json.loads(_sc_json)
+    SYMPTOM        = _sc["symptom"]
+    P_LANG         = _sc["p_lang"]
+    MO_LANG        = _sc["mo_lang"]
+    PATIENT_PROMPT = _sc["patient_prompt"]
+    MO_PROMPT      = _sc["mo_prompt"]
+    SCENARIO_NAME  = _sc.get("name", "custom")
+else:
+    SYMPTOM       = "ខ្ញុំមានការឈឺចាប់ខ្លាំងនៅក្នុងទ្រូង និងពិបាកដកដង្ហើម តាំងពីព្រឹកនេះ"
+    P_LANG        = "Khmer"
+    MO_LANG       = "English"
+    SCENARIO_NAME = "khmer_chest_kh_en"
+    PATIENT_PROMPT = f"""You are a patient on a maritime vessel.
+Male, 42 years old. Chief complaint: {SYMPTOM}
+No chronic conditions, no medications, no allergies. Non-smoker.
+Vital signs: O2 96%, HR 98, BP 140/90, RR 18, Temp 36.8°C, AVPU Alert.
+Rules: reply in 1-2 short sentences in Khmer. Answer only what is asked. Never break character."""
+    MO_PROMPT = """You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 42, chest pain and difficulty breathing since morning.
+Fixed values to report when asked:
+  O2 saturation: 96%, HR: 98 bpm, BP: 140/90 mmHg, RR: 18 breaths/min, Temp: 36.8°C, AVPU: Alert
+  General appearance: alert, mild distress, clutching chest, breath sounds reduced at left base.
+Rules: reply in 1-2 short sentences in English. Give only the specific value or finding asked. No diagnoses."""
 
 MAX_TURNS = 150
 
@@ -96,19 +118,6 @@ def api(path, payload=None, token=None):
         return 0, {"error": str(e)}, 0.0
 
 # ── Nebius LLM responder ───────────────────────────────────────────────────────
-
-PATIENT_PROMPT = f"""You are a patient on a maritime vessel.
-Male, 42 years old. Chief complaint: {SYMPTOM}
-No chronic conditions, no medications, no allergies. Quit smoking 5 years ago.
-Vital signs: O2 98%, HR 78, BP 125/82, RR 16, Temp 36.9°C, AVPU Alert.
-Rules: reply in 1-2 short sentences. Answer only what is asked. Never break character."""
-
-MO_PROMPT = """You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 42, chest pain.
-Fixed values to report when asked:
-  O2 saturation: 98%, HR: 78 bpm, BP: 125/82 mmHg, RR: 16 breaths/min, Temp: 36.9°C, AVPU: Alert
-  Capillary refill: 2 seconds, General appearance: mild distress, slightly diaphoretic
-  Lung sounds: equal bilaterally, no crackles. No peripheral oedema. No leg swelling.
-Rules: reply in 1-2 short sentences. Give only the specific value or finding asked. No diagnoses."""
 
 def llm_reply(stage, question):
     # Stages 1-6 = patient; stages 7-9 = medical officer
@@ -177,6 +186,7 @@ def main():
     p(f"{BOLD}{BLUE}  Marina Interview Test — {P_LANG} patient / {MO_LANG} MO{NC}")
     p(f"{BOLD}{BLUE}  {BASE}{NC}")
     p(f"{BOLD}{BLUE}{'═'*60}{NC}\n")
+    p(f"  Scenario: {SCENARIO_NAME}")
     p(f"  Email  : {EMAIL}")
     p(f"  Model  : {NEBIUS_MODEL}")
     p(f"  Symptom: {SYMPTOM}\n")
