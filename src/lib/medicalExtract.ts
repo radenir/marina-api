@@ -301,7 +301,7 @@ Examples when age/gender is NOT stated (DO NOT FABRICATE):
 📋 FIELD 2: performedActions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-performedActions is a complete record of everything the medical officer said, observed, reported, or did during the interview. Extract all MO contributions verbatim or summarised — vital signs reported, examination findings, investigation results or status, and any clinical observations. Do NOT include patient-reported symptoms or patient history (those belong in other fields).
+performedActions is a complete record of everything the medical officer observed, reported, or found during the interview — vital signs, examination findings, investigation results or status, and any clinical observations. Write as structured clinical notes in the same style as the other fields. Do NOT repeat "Medical officer did/said/confirmed" before every sentence — just state the findings directly. Do NOT include patient-reported symptoms or patient history (those belong in other fields).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📏 WRITING STYLE FOR BOTH FIELDS - INFORMATION-DENSE AND CONCISE:
