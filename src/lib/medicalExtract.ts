@@ -301,36 +301,55 @@ Examples when age/gender is NOT stated (DO NOT FABRICATE):
 📋 FIELD 2: performedActions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-This field documents what the medical officer DID and FOUND during examination. EXCLUDE: vital signs, problem description content, patient history/symptoms.
+This field documents what the medical officer EXAMINED and FOUND. EXCLUDE: vital sign measurements, patient-reported symptoms, and patient history.
 
-🚨 INCLUDE ALL FINDINGS - POSITIVE AND NEGATIVE 🚨
-- Document what was examined AND what was found (or not found)
-- Include negative findings: "Abdomen: soft, non-tender, no guarding, no rebound tenderness"
-- Include normal findings: "Lungs: clear bilaterally, no wheezing, no crackles"
-- This shows what was assessed, not just abnormalities
+🚨 VITAL SIGNS BAN — NUMBERS ONLY, NOT QUALITATIVE FINDINGS 🚨
+The ban on vital signs means: do NOT copy numeric measurements (BP, HR, SpO2, RR, temperature).
+It does NOT mean: omit qualitative clinical observations made during examination.
+
+WRONG (vital sign number): "Respiratory rate is 16 breaths per minute."
+RIGHT (clinical observation): "Breathing regular, unlabored, no Kuss-Maul pattern."
+
+WRONG (vital sign number): "Oxygen saturation 98%."
+RIGHT (clinical finding): "Lungs clear bilaterally, no crackles or wheeze."
+
+When the medical officer's answer mixes a vital sign number with a clinical observation, extract ONLY the observation and DROP the number.
+
+🚨 ALWAYS INCLUDE THIS SECTION — DO NOT OMIT 🚨
+If any physical examination was performed, document ALL findings (positive and negative).
+This section must never be empty if the conversation contains examination questions and answers.
 
 CONTENT TO INCLUDE (in this order):
 
 **1. M-EWS SCORE:**
 - State the M-EWS score: "M-EWS score: [X]"
-- Note: The M-EWS score will be provided separately - always include it if available
+- Note: The M-EWS score will be provided separately — always include it if available
 
-**2. PHYSICAL EXAMINATION (NOT vital signs):**
-- Document body areas/systems examined: head, eyes, ears, nose, throat, neck, chest, heart, lungs, abdomen, limbs, skin, neurological
-- Include BOTH positive AND negative findings FOR AREAS THAT WERE ACTUALLY EXAMINED
-- Example: "Chest: heart sounds normal, no murmurs. Lungs clear bilaterally, no wheezing or crackles."
-- Example: "Abdomen: soft, non-tender, normal bowel sounds, no masses."
-- Example: "Skin: no rash, no wounds."
-- REMINDER: Do NOT include vital signs here (no blood pressure, pulse, temperature, etc.)
-- ⚠️ ONLY include body areas that were EXPLICITLY examined and discussed
-- ⚠️ If no physical examination was performed/discussed, OMIT this section entirely
+**2. PHYSICAL EXAMINATION:**
+Document every area examined. Include both what was found AND what was absent.
+Use the area name as a label, then state the finding concisely.
+
+Common areas and example findings:
+- General: "Alert, oriented, speaking in full sentences. Mild distress. Diaphoretic."
+- Airway: "Clear, no foreign body or vomit in mouth."
+- Breathing: "Regular rhythm, unlabored. No Kuss-Maul respirations. Chest expanding symmetrically."
+- Lungs: "Clear bilaterally on auscultation. No crackles, wheeze, or reduced breath sounds."
+- Chest wall: "No tenderness on palpation over sternum or chest wall."
+- Abdomen: "Soft, non-tender below costal margin. No guarding or rebound tenderness."
+- Skin: "Diaphoretic. No visible wounds, bruising, or rash."
+- Limbs: "No oedema. No leg swelling. Capillary refill normal." (capillary refill is NOT a vital sign — include it)
+- Mobility: "Able to stand and walk unaided." (or as documented)
+
+⚠️ Only include areas that were explicitly assessed in the conversation
+⚠️ Do NOT include vital sign numbers (BP, HR, SpO2, RR, temperature) — extract the observation, not the measurement
 
 **3. INVESTIGATIONS/TESTS:**
-- Blood tests, CRP, blood sugar, malaria test, urine analysis, etc.
-- Include test name AND result
-- Example: "Blood sugar: 5.8 mmol/L (normal). CRP: 12 mg/L (elevated). Urine dipstick: negative for blood, protein, glucose."
-- ⚠️ ONLY include tests that were EXPLICITLY mentioned in the conversation
-- ⚠️ If no tests were discussed, OMIT this section entirely - do NOT write "No tests performed"
+Include ALL tests that were DISCUSSED — whether performed, pending, or only recommended.
+- Performed with result: "CRP: 48 mg/L (elevated). Blood sugar: 5.8 mmol/L (normal)."
+- Performed, result pending: "ECG: performed, results pending."
+- Indicated but not yet performed: "ECG: indicated, not yet performed."
+- Not indicated (explain why): "CRP: not indicated — no cough and temperature below 38°C."
+- ⚠️ If no tests were discussed at all, OMIT this section entirely
 
 **4. ACTIONS TAKEN:**
 - Medications given (with dose, route, time if mentioned)
@@ -338,7 +357,7 @@ CONTENT TO INCLUDE (in this order):
 - Oxygen administered
 - Any other interventions
 - ⚠️ ONLY include actions that were EXPLICITLY mentioned in the conversation
-- ⚠️ If no actions were discussed, OMIT this section entirely - do NOT write "No medications given" or "No procedures performed"
+- ⚠️ If no actions were discussed, OMIT this section entirely — do NOT write "No medications given"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📏 WRITING STYLE FOR BOTH FIELDS - INFORMATION-DENSE AND CONCISE:
