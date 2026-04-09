@@ -301,33 +301,7 @@ Examples when age/gender is NOT stated (DO NOT FABRICATE):
 📋 FIELD 2: performedActions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-performedActions contains all physical examination findings and investigations that were performed during the interview. It documents what the medical officer observed during the examination and what tests were discussed. Do NOT include: medications, allergies, vital sign numeric measurements, patient-reported symptoms, or patient history (those belong in other fields).
-
-Here is an example of a correctly populated performedActions for a chest pain case:
-
-"Physical Examination:
-General: Alert, oriented, talking freely. Mild distress. Slightly diaphoretic. No pallor or grey discoloration.
-Breathing: No respiratory difficulty. No mouth breathing.
-Skin: Slightly sweaty. No visible wounds or bruising.
-Limbs: No peripheral oedema. No leg swelling. Capillary refill 2 seconds.
-Mobility: Able to stand and walk several metres without assistance.
-
-Investigations:
-ECG: Not performed during this assessment.
-CRP: Not indicated — no cough and temperature below 38°C."
-
-Follow this structure exactly. Use the area name as a label, then state the finding. Include every area the medical officer assessed.
-
-VITAL SIGNS RULE: Do NOT copy numeric measurements (BP, HR, SpO2, RR, temperature) — those are extracted separately. Extract only qualitative observations.
-- WRONG: "Respiratory rate is 16 breaths per minute."
-- RIGHT: "Breathing regular, unlabored."
-- WRONG: "Oxygen saturation 98%."
-- RIGHT: "Lungs clear bilaterally, no crackles."
-- ALLOWED: Capillary refill time (not a vital sign — always include it).
-
-When an MO answer mixes a vital sign number with a clinical observation, extract ONLY the observation and drop the number.
-
-INVESTIGATIONS: Include every test discussed — performed, not performed, pending, or only recommended. If a test was mentioned at all, document it. If no tests were discussed, omit this section.
+performedActions is a complete record of everything the medical officer said, observed, reported, or did during the interview. Extract all MO contributions verbatim or summarised — vital signs reported, examination findings, investigation results or status, and any clinical observations. Do NOT include patient-reported symptoms or patient history (those belong in other fields).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📏 WRITING STYLE FOR BOTH FIELDS - INFORMATION-DENSE AND CONCISE:
