@@ -46,6 +46,7 @@ export interface InterviewState {
   conversationHistory: Record<string, unknown>[];
   variables: InterviewVariables;
   data: InterviewData;
+  turnsInStage: number;
 }
 
 export function createFreshState(
@@ -57,6 +58,7 @@ export function createFreshState(
     done: false,
     report: null,
     conversationHistory: [],
+    turnsInStage: 0,
     variables: {
       patientLanguage,
       medicalOfficerLanguage,
