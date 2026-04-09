@@ -301,7 +301,10 @@ Examples when age/gender is NOT stated (DO NOT FABRICATE):
 📋 FIELD 2: performedActions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-This field documents what the medical officer EXAMINED and FOUND. EXCLUDE: vital sign measurements, patient-reported symptoms, and patient history.
+This field contains THREE sections — physical examination findings, investigations/tests, and M-EWS score. Do NOT include: medications, allergies, vital sign numeric measurements, patient-reported symptoms, or patient history (those belong in other fields).
+
+🚨 ALWAYS POPULATE THIS FIELD — DO NOT RETURN EMPTY 🚨
+If the conversation contains physical examination questions OR investigation questions, this field MUST have content beyond just the M-EWS score.
 
 🚨 VITAL SIGNS BAN — NUMBERS ONLY, NOT QUALITATIVE FINDINGS 🚨
 The ban on vital signs means: do NOT copy numeric measurements (BP, HR, SpO2, RR, temperature).
@@ -314,10 +317,6 @@ WRONG (vital sign number): "Oxygen saturation 98%."
 RIGHT (clinical finding): "Lungs clear bilaterally, no crackles or wheeze."
 
 When the medical officer's answer mixes a vital sign number with a clinical observation, extract ONLY the observation and DROP the number.
-
-🚨 ALWAYS INCLUDE THIS SECTION — DO NOT OMIT 🚨
-If any physical examination was performed, document ALL findings (positive and negative).
-This section must never be empty if the conversation contains examination questions and answers.
 
 CONTENT TO INCLUDE (in this order):
 
@@ -342,22 +341,17 @@ Common areas and example findings:
 
 ⚠️ Only include areas that were explicitly assessed in the conversation
 ⚠️ Do NOT include vital sign numbers (BP, HR, SpO2, RR, temperature) — extract the observation, not the measurement
+⚠️ PARTIAL ASSESSMENTS STILL COUNT: If the MO said "not recorded" or "not assessed" for one item but mentioned a finding in the same answer (e.g., "not recorded, but patient is diaphoretic"), extract the finding. Only omit if truly nothing was found or observed.
 
 **3. INVESTIGATIONS/TESTS:**
-Include ALL tests that were DISCUSSED — whether performed, pending, or only recommended.
+Include ALL tests that were DISCUSSED — whether performed, pending, not performed, or only recommended.
 - Performed with result: "CRP: 48 mg/L (elevated). Blood sugar: 5.8 mmol/L (normal)."
 - Performed, result pending: "ECG: performed, results pending."
 - Indicated but not yet performed: "ECG: indicated, not yet performed."
+- Discussed but not performed: "ECG: not performed during this assessment."
 - Not indicated (explain why): "CRP: not indicated — no cough and temperature below 38°C."
+- ⚠️ If a test was mentioned at all in the conversation (even to say it was not done), include it here
 - ⚠️ If no tests were discussed at all, OMIT this section entirely
-
-**4. ACTIONS TAKEN:**
-- Medications given (with dose, route, time if mentioned)
-- Procedures performed (wound care, bandaging, etc.)
-- Oxygen administered
-- Any other interventions
-- ⚠️ ONLY include actions that were EXPLICITLY mentioned in the conversation
-- ⚠️ If no actions were discussed, OMIT this section entirely — do NOT write "No medications given"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📏 WRITING STYLE FOR BOTH FIELDS - INFORMATION-DENSE AND CONCISE:
