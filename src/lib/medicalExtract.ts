@@ -301,63 +301,33 @@ Examples when age/gender is NOT stated (DO NOT FABRICATE):
 📋 FIELD 2: performedActions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚠️ CRITICAL — READ BEFORE WRITING THIS FIELD ⚠️
-The JSON key is called "performedActions" but it does NOT mean treatments, medications, or clinical interventions.
-It means: PHYSICAL EXAMINATION FINDINGS + INVESTIGATIONS discussed in the conversation.
-Do NOT write "not included", "none", "not applicable", or anything suggesting no content exists.
-If a physical exam was conducted or any test was discussed, this field MUST document it.
+performedActions contains all physical examination findings and investigations that were performed during the interview. It documents what the medical officer observed during the examination and what tests were discussed. Do NOT include: medications, allergies, vital sign numeric measurements, patient-reported symptoms, or patient history (those belong in other fields).
 
-This field contains THREE sections — physical examination findings, investigations/tests, and M-EWS score. Do NOT include: medications, allergies, vital sign numeric measurements, patient-reported symptoms, or patient history (those belong in other fields).
+Here is an example of a correctly populated performedActions for a chest pain case:
 
-🚨 ALWAYS POPULATE THIS FIELD — DO NOT RETURN EMPTY 🚨
-If the conversation contains physical examination questions OR investigation questions, this field MUST have content beyond just the M-EWS score.
+"Physical Examination:
+General: Alert, oriented, talking freely. Mild distress. Slightly diaphoretic. No pallor or grey discoloration.
+Breathing: No respiratory difficulty. No mouth breathing.
+Skin: Slightly sweaty. No visible wounds or bruising.
+Limbs: No peripheral oedema. No leg swelling. Capillary refill 2 seconds.
+Mobility: Able to stand and walk several metres without assistance.
 
-🚨 VITAL SIGNS BAN — NUMBERS ONLY, NOT QUALITATIVE FINDINGS 🚨
-The ban on vital signs means: do NOT copy numeric measurements (BP, HR, SpO2, RR, temperature).
-It does NOT mean: omit qualitative clinical observations made during examination.
+Investigations:
+ECG: Not performed during this assessment.
+CRP: Not indicated — no cough and temperature below 38°C."
 
-WRONG (vital sign number): "Respiratory rate is 16 breaths per minute."
-RIGHT (clinical observation): "Breathing regular, unlabored, no Kuss-Maul pattern."
+Follow this structure exactly. Use the area name as a label, then state the finding. Include every area the medical officer assessed.
 
-WRONG (vital sign number): "Oxygen saturation 98%."
-RIGHT (clinical finding): "Lungs clear bilaterally, no crackles or wheeze."
+VITAL SIGNS RULE: Do NOT copy numeric measurements (BP, HR, SpO2, RR, temperature) — those are extracted separately. Extract only qualitative observations.
+- WRONG: "Respiratory rate is 16 breaths per minute."
+- RIGHT: "Breathing regular, unlabored."
+- WRONG: "Oxygen saturation 98%."
+- RIGHT: "Lungs clear bilaterally, no crackles."
+- ALLOWED: Capillary refill time (not a vital sign — always include it).
 
-When the medical officer's answer mixes a vital sign number with a clinical observation, extract ONLY the observation and DROP the number.
+When an MO answer mixes a vital sign number with a clinical observation, extract ONLY the observation and drop the number.
 
-CONTENT TO INCLUDE (in this order):
-
-**1. M-EWS SCORE:**
-- State the M-EWS score: "M-EWS score: [X]"
-- Note: The M-EWS score will be provided separately — always include it if available
-
-**2. PHYSICAL EXAMINATION:**
-Document every area examined. Include both what was found AND what was absent.
-Use the area name as a label, then state the finding concisely.
-
-Common areas and example findings:
-- General: "Alert, oriented, speaking in full sentences. Mild distress. Diaphoretic."
-- Airway: "Clear, no foreign body or vomit in mouth."
-- Breathing: "Regular rhythm, unlabored. No Kuss-Maul respirations. Chest expanding symmetrically."
-- Lungs: "Clear bilaterally on auscultation. No crackles, wheeze, or reduced breath sounds."
-- Chest wall: "No tenderness on palpation over sternum or chest wall."
-- Abdomen: "Soft, non-tender below costal margin. No guarding or rebound tenderness."
-- Skin: "Diaphoretic. No visible wounds, bruising, or rash."
-- Limbs: "No oedema. No leg swelling. Capillary refill normal." (capillary refill is NOT a vital sign — include it)
-- Mobility: "Able to stand and walk unaided." (or as documented)
-
-⚠️ Only include areas that were explicitly assessed in the conversation
-⚠️ Do NOT include vital sign numbers (BP, HR, SpO2, RR, temperature) — extract the observation, not the measurement
-⚠️ PARTIAL ASSESSMENTS STILL COUNT: If the MO said "not recorded" or "not assessed" for one item but mentioned a finding in the same answer (e.g., "not recorded, but patient is diaphoretic"), extract the finding. Only omit if truly nothing was found or observed.
-
-**3. INVESTIGATIONS/TESTS:**
-Include ALL tests that were DISCUSSED — whether performed, pending, not performed, or only recommended.
-- Performed with result: "CRP: 48 mg/L (elevated). Blood sugar: 5.8 mmol/L (normal)."
-- Performed, result pending: "ECG: performed, results pending."
-- Indicated but not yet performed: "ECG: indicated, not yet performed."
-- Discussed but not performed: "ECG: not performed during this assessment."
-- Not indicated (explain why): "CRP: not indicated — no cough and temperature below 38°C."
-- ⚠️ If a test was mentioned at all in the conversation (even to say it was not done), include it here
-- ⚠️ If no tests were discussed at all, OMIT this section entirely
+INVESTIGATIONS: Include every test discussed — performed, not performed, pending, or only recommended. If a test was mentioned at all, document it. If no tests were discussed, omit this section.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📏 WRITING STYLE FOR BOTH FIELDS - INFORMATION-DENSE AND CONCISE:
