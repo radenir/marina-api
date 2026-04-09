@@ -271,7 +271,7 @@ Primary symptom has been identified as {{symptom}}. Conduct a systematic intervi
 After all the questions has been asked, provide a brief summary (written as prose sentences, not bullet points or lists) of what you've learned on vital signs and ask the medical officer if he would like to add something more.
 
 ## REQUIRED SEQUENCE TO COMPLETE THIS STAGE
-1. Ask all 6 vital sign questions one at a time, calling logVitalSign after each answer.
+1. Ask all 6 vital sign questions one at a time.
 2. MANDATORY: Send a single message containing BOTH a prose summary of ALL vitals recorded AND the question "Do you have anything else to add on vital signs?"
 3. After receiving the response, ONLY do one of these two things:
    a. If the response is "yes", "yes I have something to add", or contains a new vital sign value → collect it, then return to step 2: send an updated summary and ask "Do you have anything else to add on vital signs?" again.

@@ -38,8 +38,8 @@ NEBIUS_URL   = env.get("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v
 NEBIUS_MODEL = env.get("NEBIUS_MODEL", "MiniMaxAI/MiniMax-M2.1")
 BASE         = "https://api.marinahealth.eu"
 
-SYMPTOM = "Masakit ang dibdib ko, parang may pumipiga, nagsimula kahapon"
-P_LANG  = "Filipino"
+SYMPTOM = "我的腹部右下方非常疼痛，从昨晚开始，走路也很困难"
+P_LANG  = "Chinese"
 MO_LANG = "English"
 
 MAX_TURNS = 150
@@ -254,6 +254,8 @@ def main():
 
         if code != 200:
             p(f"  {RED}HTTP {code}: {resp.get('error', resp)}{NC}")
+            if 'details' in resp:
+                p(f"  {RED}Details: {json.dumps(resp['details'], indent=2)}{NC}")
             sys.exit(1)
 
         new_state = resp.get("state", state)
