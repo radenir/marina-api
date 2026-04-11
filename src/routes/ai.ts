@@ -683,9 +683,14 @@ aiRouter.post(
         reply = result.reply;
         newState = result.newState;
       } else if (skipStage) {
-        // Skip current stage: advance via completeStage then let the agent open the new stage
+        // Skip current stage: advance via completeStage then open the new stage with the
+        // same hard trigger that runAgent uses internally after a normal completeStage call.
         const { newState: advancedState } = executeTool('completeStage', {}, state as ReturnType<typeof createFreshState>);
-        const result = await runAgent(advancedState, '[continue]');
+        const isMOStage = advancedState.stage >= 7;
+        const stageTrigger = isMOStage
+          ? `[Stage transition complete. Proceed according to this stage's instructions. You MUST respond in ${advancedState.variables.medicalOfficerLanguage} only.]`
+          : `[Stage transition complete. You MUST ask the first question of this new stage now.]`;
+        const result = await runAgent(advancedState, stageTrigger);
         reply = result.reply;
         newState = result.newState;
       } else {
