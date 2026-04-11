@@ -20,6 +20,7 @@ import { sha256hex } from '../lib/tokens.js';
 import type { AuditEventType } from '../types/index.js';
 import { createFreshState } from '../lib/interviewTypes.js';
 import { runAgent, generateGreeting } from '../lib/interviewAgent.js';
+import { executeTool } from '../lib/interviewTools.js';
 
 export const aiRouter = Router();
 
@@ -620,6 +621,7 @@ const InterviewChatSchema = z.object({
   message: z.string().min(1).max(2000).nullable().optional(),
   patientLanguage: z.string().max(50).optional(),
   medicalOfficerLanguage: z.string().max(50).optional(),
+  skipStage: z.boolean().optional(),
 });
 
 aiRouter.post(
@@ -635,20 +637,36 @@ aiRouter.post(
       return;
     }
 
-    const { state, message, patientLanguage, medicalOfficerLanguage } = parsed.data;
+    const { state, message, patientLanguage, medicalOfficerLanguage, skipStage } = parsed.data;
 
     // Validate call combinations
     if (state == null && message) {
       res.status(400).json({ error: 'message must not be sent on first call' });
       return;
     }
-    if (state != null && !message) {
+    if (state != null && !message && !skipStage) {
       res.status(400).json({ error: 'message is required when state is provided' });
       return;
     }
     if (state != null && state.done === true) {
       res.status(400).json({ error: 'Interview already complete' });
       return;
+    }
+
+    // Validate skip eligibility
+    if (skipStage) {
+      if (state == null) {
+        res.status(400).json({ error: 'state is required to skip a stage' });
+        return;
+      }
+      if (state.stage <= 1) {
+        res.status(400).json({ error: 'Stage 1 (symptom identification) cannot be skipped' });
+        return;
+      }
+      if (!state.variables?.symptom) {
+        res.status(400).json({ error: 'Cannot skip: symptom has not been identified yet' });
+        return;
+      }
     }
 
     let reply: string;
@@ -662,6 +680,12 @@ aiRouter.post(
           medicalOfficerLanguage ?? 'English',
         );
         const result = await generateGreeting(freshState);
+        reply = result.reply;
+        newState = result.newState;
+      } else if (skipStage) {
+        // Skip current stage: advance via completeStage then let the agent open the new stage
+        const { newState: advancedState } = executeTool('completeStage', {}, state as ReturnType<typeof createFreshState>);
+        const result = await runAgent(advancedState, '[continue]');
         reply = result.reply;
         newState = result.newState;
       } else {
