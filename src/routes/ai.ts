@@ -683,14 +683,32 @@ aiRouter.post(
         reply = result.reply;
         newState = result.newState;
       } else if (skipStage) {
-        // Skip current stage: advance via completeStage then open the new stage with the
-        // same hard trigger that runAgent uses internally after a normal completeStage call.
+        // Skip current stage: advance via completeStage then open the new stage.
         const { newState: advancedState } = executeTool('completeStage', {}, state as ReturnType<typeof createFreshState>);
         const isMOStage = advancedState.stage >= 7;
+
+        const SKIP_STAGE_NAMES: Record<number, string> = {
+          2: 'History Taking', 3: 'Associated Symptoms', 4: 'Past Medical History',
+          5: 'Medications', 6: 'Allergies', 7: 'Vital Signs', 8: 'Investigations', 9: 'Physical Exam',
+        };
+        const newStageLabel = SKIP_STAGE_NAMES[advancedState.stage] ?? `Stage ${advancedState.stage}`;
+
+        // Inject a "closed" marker so the LLM treats any unanswered questions as resolved.
+        // Without this the LLM sees the unanswered question in history and tries to fill it in
+        // instead of asking the first question of the new stage.
+        const stateWithCloseMarker = {
+          ...advancedState,
+          conversationHistory: [
+            ...advancedState.conversationHistory,
+            { role: 'user', content: '[Stage was skipped by the user. Any question left unanswered above is permanently closed. Do not ask it again.]' },
+          ],
+        } as ReturnType<typeof createFreshState>;
+
         const stageTrigger = isMOStage
-          ? `[Stage transition complete. Proceed according to this stage's instructions. You MUST respond in ${advancedState.variables.medicalOfficerLanguage} only.]`
-          : `[Stage transition complete. You MUST ask the first question of this new stage now.]`;
-        const result = await runAgent(advancedState, stageTrigger);
+          ? `[Stage skip: now in ${newStageLabel}. All prior stages are closed. Respond in ${advancedState.variables.medicalOfficerLanguage} only. Ask the first question of ${newStageLabel} now.]`
+          : `[Stage skip: now in ${newStageLabel}. All prior stages are closed — do NOT ask questions from any previous stage. Ask ONLY the first question of ${newStageLabel} now.]`;
+
+        const result = await runAgent(stateWithCloseMarker, stageTrigger);
         reply = result.reply;
         newState = result.newState;
       } else {
