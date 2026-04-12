@@ -119,7 +119,7 @@ export function buildVerificationEmail(verifyUrl: string): { subject: string; ht
       </tr>
     </table>
 
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#374151;text-align:center;">
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#374151;text-align:justify;">
       Click the link below to verify your account and access the Marina Health dashboard.
     </p>
 
@@ -135,8 +135,8 @@ export function buildVerificationEmail(verifyUrl: string): { subject: string; ht
       </tr>
     </table>
 
-    <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;text-align:center;">This link expires in 24 hours.</p>
-    <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;">If you didn't create an account, you can safely ignore this email.</p>
+    <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;text-align:justify;">This link expires in 24 hours.</p>
+    <p style="margin:0;font-size:13px;color:#9ca3af;text-align:justify;">If you didn't create an account, you can safely ignore this email.</p>
   `;
 
   return { subject: 'Verify your Marina Health account', html: layout(header, body) };
@@ -149,7 +149,7 @@ export function buildPasswordResetEmail(resetUrl: string): { subject: string; ht
   `;
 
   const body = `
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#374151;">
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#374151;text-align:justify;">
       We received a request to reset the password for your Marina Health account.
       Click the button below to choose a new password.
     </p>
@@ -166,8 +166,8 @@ export function buildPasswordResetEmail(resetUrl: string): { subject: string; ht
       </tr>
     </table>
 
-    <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;text-align:center;">This link expires in 1 hour.</p>
-    <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;">If you didn't request a password reset, your account remains secure — ignore this email.</p>
+    <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;text-align:justify;">This link expires in 1 hour.</p>
+    <p style="margin:0;font-size:13px;color:#9ca3af;text-align:justify;">If you didn't request a password reset, your account remains secure — ignore this email.</p>
   `;
 
   return { subject: 'Reset your Marina Health password', html: layout(header, body) };
@@ -180,7 +180,7 @@ export function buildPdfReportEmail(dateStr: string): { subject: string; html: s
   `;
 
   const body = `
-    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#374151;">
+    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#374151;text-align:justify;">
       Your RMD Maritime Medical Report is attached to this email,
       generated on <strong>${dateStr}</strong>.
     </p>
@@ -195,8 +195,8 @@ export function buildPdfReportEmail(dateStr: string): { subject: string; html: s
       </tr>
     </table>
 
-    <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;">This report is intended for medical and maritime personnel only. Please store it securely.</p>
-    <p style="margin:0;font-size:13px;color:#9ca3af;">If you did not request this report, please contact your administrator.</p>
+    <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;text-align:justify;">This report is intended for medical and maritime personnel only. Please store it securely.</p>
+    <p style="margin:0;font-size:13px;color:#9ca3af;text-align:justify;">If you did not request this report, please contact your administrator.</p>
   `;
 
   return { subject: 'Your RMD Maritime Medical Report', html: layout(header, body) };
