@@ -297,6 +297,9 @@ Examples when age/gender is NOT stated (DO NOT FABRICATE):
 - DO NOT omit this section - document what was asked and answered
 - Prioritize: every question asked and its answer > clinical details > context
 
+🚨 MANDATORY: problemDescription MUST ALWAYS CONTAIN AT LEAST ONE SENTENCE.
+Even if the conversation is very short or only a chief complaint was mentioned, write at least one sentence summarising what the patient reported. NEVER return an empty string for this field.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 FIELD 2: performedActions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
