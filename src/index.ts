@@ -84,6 +84,11 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Brevo domain validation
+app.get('/88f0890a3f0963ee1584b36186bf8382.txt', (_req, res) => {
+  res.set('Content-Type', 'text/plain').send('');
+});
+
 app.use('/auth', authRouter);
 app.use('/ai', aiRouter);
 
