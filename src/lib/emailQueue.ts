@@ -45,7 +45,7 @@ function makeConnection(): IORedis {
 // Queue
 // ---------------------------------------------------------------------------
 
-export const emailQueue = new Queue<EmailJobData>('marina:email', {
+export const emailQueue = new Queue<EmailJobData>('marina-email', {
   connection: makeConnection(),
   defaultJobOptions: {
     attempts: 3,
@@ -64,7 +64,7 @@ export const emailQueue = new Queue<EmailJobData>('marina:email', {
 
 export function createEmailWorker(): Worker<EmailJobData> {
   const worker = new Worker<EmailJobData>(
-    'marina:email',
+    'marina-email',
     async (job: Job<EmailJobData>) => {
       const { data } = job;
 
