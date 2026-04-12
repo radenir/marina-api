@@ -354,6 +354,7 @@ async function extractBatch(
       model: config.nebius.model,
       temperature: 0.3,
       max_tokens: 1500,
+      response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: prompt },
         { role: 'user', content: text },
