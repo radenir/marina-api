@@ -255,46 +255,40 @@ CRITICAL: Translate all non-English input to English. ALL OUTPUT MUST BE IN ENGL
 
 This field describes the patient's problem and history. EXCLUDE: vital signs, allergies (dedicated field), daily medications list (dedicated field).
 
-- Only document questions that were actually asked in the conversation
-- If the patient could not remember or was unsure about something asked, document it
-- Example: "Patient could not recall previous migraines."
+Follow these steps in order:
 
-CONTENT TO INCLUDE:
+STEP 1 — List the raw facts from the conversation (internal reasoning, not output):
+  a) Every piece of information the PATIENT explicitly stated
+  b) Every question asked and the patient's exact answer
+  c) Any medications mentioned (use to infer chronic conditions)
 
-**1. Patient Introduction & Past Medical History:**
-- ONLY include age/gender if EXPLICITLY stated in the conversation - NEVER guess or fabricate
-- If age/gender not stated, simply omit them and start with medical history or "Patient" or "The patient"
-- Chronic conditions from TWO sources (if mentioned):
-  a) Inferred from daily medications (antihypertensives → hypertension, statins → hypercholesterolemia, metformin/insulin → diabetes, inhalers → asthma/COPD)
-  b) Explicitly stated past medical history (previous conditions, surgeries, hospitalizations)
-- If no chronic conditions mentioned → "previously healthy" or omit this part
-Examples when age/gender IS stated:
-- "57-year-old male with hypertension, diabetes, previous appendectomy 2015."
-- "42-year-old female, previously healthy."
-Examples when age/gender is NOT stated (DO NOT FABRICATE):
-- "Patient with history of hypertension presents with..."
-- "Previously healthy patient presents with..."
-- "The patient reports..." (when no medical history mentioned either)
+STEP 2 — Write problemDescription using ONLY the facts from Step 1:
+  - Age/gender: only if explicitly stated
+  - Past history: only if explicitly stated or inferable from regular medications
+  - Current problem: only details the patient actually mentioned
+  - "Denies X": only if the patient was directly asked about X and explicitly said no
+  - "Patient unsure about X": only if the patient was asked and said they couldn't remember
+  - Output length must match what was actually discussed — a 2-message conversation yields 1 sentence
 
-**2. Current Condition - ALL Information Discussed:**
-- Include EVERYTHING discussed about the current problem
-- This includes: main complaint, onset, duration, character, location, severity, radiation, aggravating/alleviating factors, progression, context, timing, quality, and ANY other details mentioned
-- Use multiple sentences as needed for clarity
-
-**3. Associated Symptoms - only if symptom questions were actually asked:**
-- POSITIVE findings: "Reports nausea and dizziness."
-- NEGATIVE findings: "Denies vomiting, fever." — only if patient explicitly said no to those specific symptoms
-- UNCERTAIN findings: "Unsure about previous headaches."
-- Omit this section entirely if no symptom questions were asked in the conversation
-
-🚨 MANDATORY: problemDescription MUST ALWAYS CONTAIN AT LEAST ONE SENTENCE.
-Even if the conversation is very short, write at least one sentence summarising what the patient reported. NEVER return an empty string for this field.
+🚨 MANDATORY: problemDescription must always contain at least one sentence. NEVER return empty string.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 FIELD 2: performedActions
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-performedActions is a record of everything the medical officer observed, reported, or found during the interview — vital signs, examination findings, investigation results, and clinical observations. Write as structured clinical notes. Do NOT repeat "Medical officer did/said/confirmed" before every sentence — just state the findings directly. Do NOT include patient-reported symptoms or patient history (those belong in other fields). If the medical officer reported or performed nothing in the conversation, return empty string "".
+Follow these steps in order:
+
+STEP 1 — List only what the HUMAN MEDICAL OFFICER (not Marina the AI) explicitly reported (internal reasoning, not output):
+  - Vital signs measured and their values
+  - Physical examination findings
+  - Investigation results
+  - Any clinical observations
+
+STEP 2 — Write performedActions using ONLY those findings:
+  - State findings directly without "Medical officer did/said/confirmed" prefixes
+  - Do NOT include patient-reported symptoms or history
+  - Do NOT include anything said or done by Marina (the AI) — Marina's questions are not clinical findings
+  - If the medical officer reported or performed nothing, return empty string ""
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📏 WRITING STYLE FOR BOTH FIELDS - INFORMATION-DENSE AND CONCISE:
