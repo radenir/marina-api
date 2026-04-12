@@ -11,7 +11,8 @@ import {
   sha256hex,
 } from '../lib/tokens';
 import { rateLimit } from '../lib/rateLimit';
-import { sendEmail, buildVerificationEmail, buildPasswordResetEmail } from '../lib/email';
+import { buildVerificationEmail, buildPasswordResetEmail } from '../lib/email';
+import { enqueueEmail } from '../lib/emailQueue';
 import { requireAuth } from '../middleware/requireAuth';
 import { config } from '../config';
 import type { User, AuditEventType, DeviceInfo } from '../types';
@@ -202,11 +203,9 @@ authRouter.post('/register', registerRateLimit, async (req: Request, res: Respon
   const verifyUrl = `${config.appUrl}/verify-email?token=${encodeURIComponent(verifyToken)}`;
   const emailContent = buildVerificationEmail(verifyUrl);
 
-  // Send email async (don't block response)
-  setImmediate(() => {
-    sendEmail({ to: normalizedEmail, ...emailContent }).catch((err) => {
-      console.error('[email] verification send failed:', err.message);
-    });
+  // Enqueue — non-blocking, retried up to 3 times with exponential backoff
+  enqueueEmail({ type: 'simple', to: normalizedEmail, ...emailContent }).catch((err) => {
+    console.error('[email] failed to enqueue verification email:', err.message);
   });
 
   await auditLog('register', req, userId);
@@ -449,7 +448,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimit, async (req: Request
       const resetUrl = `${config.appUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
       const emailContent = buildPasswordResetEmail(resetUrl);
 
-      await sendEmail({ to: normalizedEmail, ...emailContent });
+      await enqueueEmail({ type: 'simple', to: normalizedEmail, ...emailContent });
       await auditLog('password_reset_requested', req, userId);
     } catch (err) {
       console.error('[forgot-password] error:', (err as Error).message);
@@ -574,7 +573,7 @@ authRouter.post('/verify-email/resend', resendVerifyRateLimit, async (req: Reque
       const verifyUrl = `${config.appUrl}/verify-email?token=${encodeURIComponent(verifyToken)}`;
       const emailContent = buildVerificationEmail(verifyUrl);
 
-      await sendEmail({ to: normalizedEmail, ...emailContent });
+      await enqueueEmail({ type: 'simple', to: normalizedEmail, ...emailContent });
       await auditLog('email_verification_resent', req, user.id);
     } catch (err) {
       console.error('[resend-verify] error:', (err as Error).message);

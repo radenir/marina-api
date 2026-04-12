@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "argon2": "^0.31.2",
+    "bullmq": "^5.73.4",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",

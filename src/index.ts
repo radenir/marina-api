@@ -9,6 +9,7 @@ import { authRouter } from './routes/auth';
 import { aiRouter } from './routes/ai';
 import { pool } from './lib/db';
 import { redis } from './lib/redis';
+import { createEmailWorker } from './lib/emailQueue';
 
 const app = express();
 
@@ -119,9 +120,26 @@ async function start() {
   await pool.query('SELECT 1');
   console.log('[db] connected');
 
-  app.listen(config.port, () => {
+  // Start email queue worker
+  const emailWorker = createEmailWorker();
+  console.log('[email-queue] worker started');
+
+  const server = app.listen(config.port, () => {
     console.log(`[server] marina-api running on port ${config.port} (${config.nodeEnv})`);
   });
+
+  // Graceful shutdown — finish in-flight jobs before exiting
+  async function shutdown(signal: string) {
+    console.log(`[server] ${signal} received, shutting down`);
+    server.close();
+    await emailWorker.close();
+    await redis.quit();
+    await pool.end();
+    process.exit(0);
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT',  () => shutdown('SIGINT'));
 }
 
 start().catch((err) => {
