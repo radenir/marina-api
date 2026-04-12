@@ -373,7 +373,8 @@ async function extractBatch(
     console.log(`[ai/extract] batch=${batch.name} duration=${duration}ms fields=${populated}/${Object.keys(extracted).length}`);
     return extracted;
   } catch (err) {
-    console.error(`[ai/extract] batch=${batch.name} failed:`, (err as Error).message);
+    const e = err as Error & { status?: number };
+    console.error(`[ai/extract] batch=${batch.name} failed: status=${e.status ?? 'n/a'} message=${e.message}`);
     return {};
   }
 }
