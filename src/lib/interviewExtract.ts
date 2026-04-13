@@ -51,6 +51,56 @@ function conversationText(history: ConversationMessage[]): string {
 // Prompt
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Valid SYBRA pathway names — used in the prompt to enforce exact matching
+// ---------------------------------------------------------------------------
+
+const SYBRA_PATHWAYS = [
+  'Abdominal Pain',
+  'Fever',
+  'Chest pain',
+  'Headache',
+  'Nausea and Vomiting',
+  'Back Pain',
+  'Cough/Respiratory Symptoms',
+  'Dizziness/Vertigo',
+  'Skin Infections/Rash',
+  'Dental Pain',
+  'Laceration or Open Wounds',
+  'Burns and Chemical Injuries',
+  'Eye Pain',
+  'Ear Pain or Hearing Problems',
+  'Urinary Symptoms',
+  'Shortness of Breath',
+  'Joint Pain or Swelling',
+  'Fatigue or Exhaustion',
+  'Diarrhea',
+  'Psychological Stress or Anxiety',
+  'Unspecific Symptoms',
+  'Anaphylaxis and Allergic Reactions',
+  'Palpitations or Irregular Heartbeat',
+  'Altered Consciousness or Confusion',
+  'Mental Health Crisis',
+  'Syncope or Presyncope',
+  'Trauma',
+  'Cold Exposure/Hypothermia',
+  'Heat Stroke/Heat Exhaustion',
+  'Tropical Disease',
+  'Poisoning/Overdose',
+  'Musculoskeletal injuries',
+  'Eye Foreign Body',
+  'Nosebleed',
+  'Sexually Transmitted Diseases',
+  'Female Health',
+  'Diabetic complications',
+  'Drowning or Near Drowning',
+  'Throat Pain and Sore Throat',
+  'Neurological symptoms',
+  'Obstipation',
+  'Sea Sickness',
+  'Sleeplessness / Insomnia',
+];
+
 const SYSTEM_PROMPT = `You are a clinical documentation assistant for Marina, a maritime telemedicine system.
 
 You will receive the full transcript of a structured medical interview conducted by Marina (an AI medical assistant) with two participants:
@@ -66,13 +116,18 @@ Your task is to extract and summarise all medical information gathered during th
 FIELD DEFINITIONS:
 
 "pathway"
-The primary symptom identified and confirmed by the patient in Stage 1 of the interview. Marina asks what is wrong, follows up, then asks the patient to confirm: "If I understand correctly, the main complaint is X. Do you confirm?" Extract the confirmed symptom — translate to English if the conversation was in another language. If no symptom was confirmed, write "Not identified".
+The primary symptom identified and confirmed by the patient in Stage 1 of the interview. Marina asks what is wrong, follows up, then asks the patient to confirm: "If I understand correctly, the main complaint is X. Do you confirm?" You must use EXACTLY one of the following SYBRA pathway names — copy it character-for-character, including capitalisation:
+
+${SYBRA_PATHWAYS.map(p => `  - ${p}`).join('\n')}
+
+Choose the entry from this list that best matches the confirmed symptom. Translate the symptom to English if necessary, then select the closest matching name from the list above. If no symptom was confirmed by the patient, write exactly "Not identified".
 
 "currentHistoryTaking"
 A narrative summary of everything gathered in Stage 2 (History Taking). This covers the patient's age, gender, and the detailed history of the presenting complaint: onset (when it started), duration, character (what it feels like), severity, location, radiation, aggravating and relieving factors, and any other symptom-specific history-taking topics. Write in clear prose. Include only what the patient actually stated. If the patient said "no" or "I don't know" to a question, include that negative finding. Do not include associated symptoms, medications, allergies, or past history (those have dedicated fields below).
 
 "associatedSymptoms"
-A narrative summary from Stage 3 (Associated Symptoms). These are additional symptoms the patient was asked about that may accompany the primary complaint. Include both positive findings (symptoms the patient confirmed) and negative findings (symptoms the patient explicitly denied when directly asked). Write as concise prose. If this stage was not reached, write "Not assessed".
+A narrative summary from Stage 3 (Associated Symptoms). These are additional symptoms the patient was asked about that may accompany the primary complaint. Include BOTH positive findings (symptoms the patient confirmed) AND negative findings (symptoms the patient explicitly denied when directly asked). Write as concise prose.
+Write "Not assessed" ONLY if Marina never asked about ANY symptoms beyond the primary complaint. If Marina asked about even one additional symptom — regardless of whether the patient confirmed or denied it — summarise what was asked and what the patient answered. A list of all-negative answers is still a valid summary (e.g. "Patient denied nausea, vomiting, and blurred vision.").
 
 "pastMedicalHistory"
 A narrative summary from Stage 4 (Past Medical History). Covers previous illnesses, chronic conditions, prior surgeries, hospitalisations, and other relevant medical history. Include both positive and negative findings. If this stage was not reached, write "Not assessed".
@@ -150,7 +205,7 @@ export async function extractInterviewSummary(
   const completion = await nebius.chat.completions.create({
     model: config.nebius.model,
     temperature: 0.2,
-    max_tokens: 2000,
+    max_tokens: 50000,
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
