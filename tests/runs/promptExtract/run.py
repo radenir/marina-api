@@ -101,20 +101,28 @@ def validate(sc: Scenario, summary: dict) -> list[str]:
     # Investigations should be absent / not performed
     if sc.expect_no_investigations:
         inv = summary.get("investigations", "")
-        if inv and "no investigations" not in inv.lower() and "not assessed" not in inv.lower():
+        inv_lower = inv.lower()
+        if inv and "no investigations" not in inv_lower and "not assessed" not in inv_lower and "not performed" not in inv_lower:
             issues.append(f"investigations = '{inv[:80]}' — expected no investigations")
 
     # Physical exam should be absent / not performed
     if sc.expect_no_exam:
         exam = summary.get("physicalExam", "")
-        if exam and "not performed" not in exam.lower() and "not assessed" not in exam.lower():
+        exam_lower = exam.lower()
+        if exam and "not performed" not in exam_lower and "not assessed" not in exam_lower and "no exam" not in exam_lower:
             issues.append(f"physicalExam = '{exam[:80]}' — expected 'Not performed'")
 
-    # Forbidden strings (hallucination check, case-insensitive)
     full_text = json.dumps(summary).lower()
+
+    # Forbidden strings (hallucination / over-reporting check, case-insensitive)
     for fs in sc.forbidden_strings:
         if fs.lower() in full_text:
             issues.append(f"HALLUCINATION: forbidden string found: '{fs}'")
+
+    # Required strings (positive content check, case-insensitive)
+    for rs in sc.require_strings:
+        if rs.lower() not in full_text:
+            issues.append(f"MISSING CONTENT: required string not found: '{rs}'")
 
     return issues
 

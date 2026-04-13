@@ -109,7 +109,7 @@ const interviewRateLimit = rateLimit({
 
 const interviewExtractRateLimit = rateLimit({
   prefix: 'ai-interview-extract',
-  limit: 50,
+  limit: 200,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
