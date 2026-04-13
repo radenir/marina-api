@@ -161,8 +161,8 @@ A summary of all physical examination findings from Stage 9. Marina guides the m
 
 "additionalNotes"
 A catch-all for any medically relevant information gathered during the interview that does not belong in any of the fields above. The report must not lose any information — if something was said in the conversation and it does not clearly fit into pathway, currentHistoryTaking, associatedSymptoms, pastMedicalHistory, medications, allergies, vitalSigns, investigations, or physicalExam, it must appear here. Examples: spontaneous remarks the patient made outside the structured questions, concerns or observations raised by the medical officer, contradictions or corrections made during the interview, context about the vessel's situation or conditions, follow-up information added after a stage was already summarised.
-Do NOT include meta-commentary about the interview structure itself — do not write observations like "the interview was abbreviated", "certain stages were not conducted", or "the assessment was incomplete". Those are structural observations, not information gathered from the patient or medical officer.
-Do not repeat information already captured in other fields. If truly nothing additional was said, return empty string "".
+STRICT PROHIBITION: Do NOT write anything about the interview structure, process, or workflow. This includes — but is not limited to — observations about: which stages were or were not conducted, whether the interview deviated from a standard structure, whether Marina asked or did not ask certain questions, whether the medical officer volunteered information proactively or was asked for it, whether the interview was abbreviated or incomplete, or any other procedural commentary. Every sentence in this field must state a clinical fact from the conversation — something a patient or medical officer actually said. If no such information exists, return empty string "".
+Do not repeat information already captured in other fields.
 
 ---
 
