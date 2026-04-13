@@ -4,7 +4,9 @@ dist/
 *.log
 tests/conversations/
 tests/output/
-tests/runs/
+tests/runs/*.txt
+tests/runs/*/output/
+tests/runs/*/results/
 tests/ai_results.txt
 tests/interview_results.txt
 tests/prod_results.txt

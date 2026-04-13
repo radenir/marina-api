@@ -21,6 +21,7 @@ import type { AuditEventType } from '../types/index.js';
 import { createFreshState } from '../lib/interviewTypes.js';
 import { runAgent, generateGreeting } from '../lib/interviewAgent.js';
 import { executeTool } from '../lib/interviewTools.js';
+import { extractInterviewSummary } from '../lib/interviewExtract.js';
 
 export const aiRouter = Router();
 
@@ -102,6 +103,13 @@ const pdfEmailRateLimit = rateLimit({
 const interviewRateLimit = rateLimit({
   prefix: 'ai-interview',
   limit: 50000,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
+const interviewExtractRateLimit = rateLimit({
+  prefix: 'ai-interview-extract',
+  limit: 50,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
@@ -696,6 +704,51 @@ aiRouter.post(
       done: newState.done,
       ...(newState.done && newState.report ? { report: newState.report } : {}),
     });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/interview/extract
+// Extracts a structured clinical summary from a completed (or in-progress)
+// interview state. One LLM call — no batching.
+// Middleware order: requireAuth → interviewExtractRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// ---------------------------------------------------------------------------
+
+const InterviewExtractSchema = z.object({
+  conversationHistory: z.array(z.record(z.unknown())).min(1).max(500),
+});
+
+aiRouter.post(
+  '/interview/extract',
+  requireAuth,
+  interviewExtractRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = InterviewExtractSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { conversationHistory } = parsed.data;
+
+    let summary;
+    try {
+      summary = await extractInterviewSummary(
+        conversationHistory as import('../lib/interviewExtract.js').ConversationMessage[],
+      );
+    } catch (err) {
+      console.error('[ai/interview/extract] extraction error:', (err as Error).message);
+      res.status(502).json({ error: 'Extraction service unavailable' });
+      return;
+    }
+
+    await auditLog('medical_record_extracted', req, req.user!.id, {
+      message_count: conversationHistory.length,
+    });
+
+    res.json({ summary });
   }
 );
 
