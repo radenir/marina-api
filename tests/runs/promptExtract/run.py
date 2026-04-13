@@ -1,6 +1,9 @@
 """
 Runner for POST /ai/interview/extract scenarios.
 Usage: python tests/runs/promptExtract/run.py [--url http://localhost:4000]
+
+Results are always saved to tests/runs/promptExtract/results/<timestamp>.json
+Each entry contains the input conversation, the raw API response, pass/fail, and issues.
 """
 
 import asyncio
@@ -8,8 +11,12 @@ import aiohttp
 import json
 import sys
 import argparse
+import os
+from datetime import datetime, timezone
 
 from scenarios import SCENARIOS, Scenario
+
+RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 
 BASE_URL = "http://localhost:4000"
 TOKEN = ""
@@ -150,6 +157,8 @@ async def main(base_url: str):
     global BASE_URL, TOKEN
     BASE_URL = base_url
 
+    run_started = datetime.now(timezone.utc)
+
     async with aiohttp.ClientSession() as session:
         # Login
         async with session.post(
@@ -166,9 +175,10 @@ async def main(base_url: str):
         tasks = [run_scenario(session, sc) for sc in SCENARIOS]
         results = await asyncio.gather(*tasks)
 
-    # Report
+    # Validate and build report
     passed = 0
     failed = 0
+    stored_results = []
 
     for r in sorted(results, key=lambda x: x["sc"].id):
         sc: Scenario = r["sc"]
@@ -178,12 +188,32 @@ async def main(base_url: str):
             print(f"FAIL {prefix}")
             print(f"     ERROR: {r['error']}\n")
             failed += 1
+            stored_results.append({
+                "id": sc.id,
+                "name": sc.name,
+                "passed": False,
+                "error": r["error"],
+                "issues": [],
+                "input": sc.conversation,
+                "output": None,
+            })
             continue
 
         summary = r["summary"]
         issues = validate(sc, summary)
+        ok = len(issues) == 0
 
-        if issues:
+        stored_results.append({
+            "id": sc.id,
+            "name": sc.name,
+            "passed": ok,
+            "error": None,
+            "issues": issues,
+            "input": sc.conversation,
+            "output": summary,
+        })
+
+        if not ok:
             print(f"FAIL {prefix}")
             for issue in issues:
                 print(f"      {issue}")
@@ -205,6 +235,21 @@ async def main(base_url: str):
 
     print("─" * 60)
     print(f"RESULT: {passed}/{len(SCENARIOS)} passed   {failed} failed")
+
+    # Save results to disk
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    timestamp = run_started.strftime("%Y-%m-%dT%H-%M-%SZ")
+    result_path = os.path.join(RESULTS_DIR, f"{timestamp}.json")
+    with open(result_path, "w") as f:
+        json.dump({
+            "run_at": run_started.isoformat(),
+            "url": BASE_URL,
+            "total": len(SCENARIOS),
+            "passed": passed,
+            "failed": failed,
+            "scenarios": stored_results,
+        }, f, indent=2)
+    print(f"Results saved → {result_path}")
 
     if failed:
         sys.exit(1)

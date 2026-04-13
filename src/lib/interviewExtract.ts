@@ -133,10 +133,10 @@ Write "Not assessed" ONLY if Marina never asked about ANY symptoms beyond the pr
 A narrative summary from Stage 4 (Past Medical History). Covers previous illnesses, chronic conditions, prior surgeries, hospitalisations, and other relevant medical history. Include both positive and negative findings. If this stage was not reached, write "Not assessed".
 
 "medications"
-A summary from Stage 5 (Medications). List all medications the patient is currently taking: prescription drugs, over-the-counter medications, vitamins, supplements. Include name, dosage, and frequency where mentioned. If the patient stated no medications, write "Patient states no current medications." If this stage was not reached, write "Not assessed".
+A summary from Stage 5 (Medications). To determine whether this stage was reached, check whether Marina explicitly asked the patient about their current medications in the transcript. If Marina asked and the patient responded: list all medications mentioned (name, dosage, frequency where given). If the patient explicitly said they take nothing, write "Patient states no current medications." If Marina never asked about medications at all in the transcript, write "Not assessed" — do NOT infer from silence that the patient has no medications.
 
 "allergies"
-A summary from Stage 6 (Allergies). List all known allergies including the allergen and reaction type. If the patient stated no known allergies, write "No known allergies." If this stage was not reached, write "Not assessed".
+A summary from Stage 6 (Allergies). To determine whether this stage was reached, check whether Marina explicitly asked the patient about allergies in the transcript. If Marina asked and the patient responded: list all known allergies with allergen and reaction type. If the patient explicitly stated no known allergies, write "No known allergies." If Marina never asked about allergies at all in the transcript, write "Not assessed" — do NOT infer from silence that the patient has no allergies.
 
 "vitalSigns"
 Vital signs measured by the medical officer in Stage 7. Marina asks the medical officer for each measurement one at a time. Extract each value from what the medical officer reported. Populate each sub-field as follows:
