@@ -1,42 +1,68 @@
-import nodemailer from 'nodemailer';
-import type { Attachment } from 'nodemailer/lib/mailer';
 import { config } from '../config';
 
-const transporter = nodemailer.createTransport({
-  host: config.smtp.host,
-  port: config.smtp.port,
-  secure: false,   // STARTTLS on port 587
-  auth: {
-    user: config.smtp.user,
-    pass: config.smtp.pass,
-  },
-  tls: {
-    minVersion: 'TLSv1.2',
-  },
-});
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer | string;
+  contentType: string;
+}
 
 interface SendOptions {
   to: string;
   subject: string;
   html: string;
   text?: string;
-  attachments?: Attachment[];
+  attachments?: EmailAttachment[];
 }
 
 export async function sendEmail(opts: SendOptions): Promise<void> {
-  await transporter.sendMail({
-    from: `"Marina Health" <${config.smtp.from}>`,
-    to: opts.to,
-    subject: opts.subject,
-    html: opts.html,
-    text: opts.text ?? opts.html.replace(/<[^>]*>/g, ''),
-    ...(opts.attachments ? { attachments: opts.attachments } : {}),
+  const credentials = Buffer.from(
+    `${config.mailjet.apiKey}:${config.mailjet.secretKey}`
+  ).toString('base64');
+
+  const message: Record<string, unknown> = {
+    From: { Email: config.mailjet.from, Name: 'Marina Health' },
+    To: [{ Email: opts.to }],
+    Subject: opts.subject,
+    HTMLPart: opts.html,
+    TextPart: opts.text ?? opts.html.replace(/<[^>]*>/g, ''),
+  };
+
+  if (opts.attachments?.length) {
+    message.Attachments = opts.attachments.map((att) => ({
+      ContentType: att.contentType,
+      Filename: att.filename,
+      Base64Content: Buffer.isBuffer(att.content)
+        ? att.content.toString('base64')
+        : Buffer.from(att.content).toString('base64'),
+    }));
+  }
+
+  const response = await fetch('https://api.mailjet.com/v3.1/send', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Basic ${credentials}`,
+    },
+    body: JSON.stringify({ Messages: [message] }),
   });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Mailjet API error ${response.status}: ${error}`);
+  }
+
+  const result = await response.json() as {
+    Messages: Array<{ Status: string; Errors?: unknown[] }>;
+  };
+
+  const msg = result.Messages?.[0];
+  if (msg?.Status !== 'success') {
+    throw new Error(`Mailjet send failed: ${JSON.stringify(msg?.Errors)}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
-// Shared layout — mirrors the app's auth page card style:
-// centered white card, logo top-center, #0a4b78 heading, muted subtext
+// Shared layout
 // ---------------------------------------------------------------------------
 
 const LOGO_URL = 'https://eu.marinahealth.eu/marina-logo.svg';
@@ -110,7 +136,6 @@ export function buildVerificationEmail(verifyUrl: string): { subject: string; ht
   `;
 
   const body = `
-    <!-- Icon -->
     <table cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 20px;">
       <tr>
         <td style="background-color:#e8f0f7;border-radius:50%;width:56px;height:56px;text-align:center;vertical-align:middle;">
@@ -123,7 +148,6 @@ export function buildVerificationEmail(verifyUrl: string): { subject: string; ht
       Click the link below to verify your account and access the Marina Health dashboard.
     </p>
 
-    <!-- Button — full width, rounded-lg -->
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 20px;">
       <tr>
         <td style="background-color:#0a4b78;border-radius:10px;text-align:center;padding:12px 24px;">
@@ -154,7 +178,6 @@ export function buildPasswordResetEmail(resetUrl: string): { subject: string; ht
       Click the button below to choose a new password.
     </p>
 
-    <!-- Button -->
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 20px;">
       <tr>
         <td style="background-color:#0a4b78;border-radius:10px;text-align:center;padding:12px 24px;">
@@ -185,7 +208,6 @@ export function buildPdfReportEmail(dateStr: string): { subject: string; html: s
       generated on <strong>${dateStr}</strong>.
     </p>
 
-    <!-- Attachment indicator -->
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 24px;background-color:#f4f6f8;border-radius:10px;border:1px solid #e5e7eb;">
       <tr>
         <td style="padding:14px 18px;">

@@ -45,12 +45,10 @@ export const config = {
     resetTokenTtl: 60 * 60,         // 1 hour in seconds
   },
 
-  smtp: {
-    host: optional_env('SMTP_HOST', 'smtp.office365.com'),
-    port: parseInt(optional_env('SMTP_PORT', '587'), 10),
-    user: require_env('SMTP_USER'),
-    pass: require_env('SMTP_PASS'),
-    from: optional_env('EMAIL_FROM', require_env('SMTP_USER')),
+  mailjet: {
+    apiKey: require_env('MAILJET_API_KEY'),
+    secretKey: require_env('MAILJET_SECRET_KEY'),
+    from: require_env('EMAIL_FROM'),
   },
 
   appUrl: optional_env('APP_URL', 'http://localhost:3000'),
