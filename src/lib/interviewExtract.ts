@@ -123,14 +123,17 @@ ${SYBRA_PATHWAYS.map(p => `  - ${p}`).join('\n')}
 Choose the entry from this list that best matches the confirmed symptom. Translate the symptom to English if necessary, then select the closest matching name from the list above. If no symptom was confirmed by the patient, write exactly "Not identified".
 
 "currentHistoryTaking"
-A narrative summary of everything gathered in Stage 2 (History Taking). This covers the patient's age, gender, and the detailed history of the presenting complaint: onset (when it started), duration, character (what it feels like), severity, location, radiation, aggravating and relieving factors, and any other symptom-specific history-taking topics. Write in clear prose. Include only what the patient actually stated. If the patient said "no" or "I don't know" to a question, include that negative finding. Do not include associated symptoms, medications, allergies, or past history (those have dedicated fields below).
+A narrative summary of the history of the presenting complaint. This covers the patient's age, gender, and the detailed history: onset (when it started), duration, character (what it feels like), severity, location, radiation, aggravating and relieving factors, and any other symptom-specific details. Write in clear prose. Include only what was actually stated. If the patient said "no" or "I don't know" to a question, include that negative finding. Do not include associated symptoms, medications, allergies, or past history (those have dedicated fields below).
+If Stage 2 was not reached but the patient or medical officer described the presenting situation in Stage 1 (e.g. "found unconscious in cabin", "hit head on crane"), capture that description here. Do not write "Not assessed" if there is any presenting context available from the conversation.
 
 "associatedSymptoms"
 A narrative summary from Stage 3 (Associated Symptoms). These are additional symptoms the patient was asked about that may accompany the primary complaint. Include BOTH positive findings (symptoms the patient confirmed) AND negative findings (symptoms the patient explicitly denied when directly asked). Write as concise prose.
 Write "Not assessed" ONLY if Marina never asked about ANY symptoms beyond the primary complaint. If Marina asked about even one additional symptom — regardless of whether the patient confirmed or denied it — summarise what was asked and what the patient answered. A list of all-negative answers is still a valid summary (e.g. "Patient denied nausea, vomiting, and blurred vision.").
 
 "pastMedicalHistory"
-A narrative summary from Stage 4 (Past Medical History). Covers previous illnesses, chronic conditions, prior surgeries, hospitalisations, and other relevant medical history. Include both positive and negative findings. If this stage was not reached, write "Not assessed".
+A narrative summary of the patient's past medical history. Covers previous illnesses, chronic conditions, prior surgeries, hospitalisations, and other relevant medical history. Include both positive and negative findings.
+Important: if the patient reveals past medical history at ANY point in the interview — even during the medications or allergies stage — include it here. The field captures the fact, not the stage it was disclosed in.
+If the patient explicitly denied having any relevant past history when directly asked, write "Patient denies any significant past medical history." Reserve "Not assessed" strictly for when Marina never asked about past history at all in the transcript.
 
 "medications"
 A summary from Stage 5 (Medications). To determine whether this stage was reached, check whether Marina explicitly asked the patient about their current medications in the transcript. If Marina asked and the patient responded: list all medications mentioned (name, dosage, frequency where given). If the patient explicitly said they take nothing, write "Patient states no current medications." If Marina never asked about medications at all in the transcript, write "Not assessed" — do NOT infer from silence that the patient has no medications.
@@ -151,13 +154,13 @@ Vital signs measured by the medical officer in Stage 7. Marina asks the medical 
   "supplementalOxygen" — Whether the patient is on supplemental oxygen. Look for this anywhere in the vital signs exchange. Write "Yes", "No", or empty string if not mentioned.
 
 "investigations"
-A summary of all investigation results from Stage 8. Marina asks the medical officer whether specific diagnostic tests were performed and their results (e.g. ECG, CRP, blood sugar, urine analysis, malaria test, pregnancy test). For each test: state the test name and the result or finding the medical officer reported. If no investigations were performed or this stage was not reached, write "No investigations performed".
+A summary of all investigation results from Stage 8. Marina asks the medical officer whether specific diagnostic tests were performed and their results (e.g. ECG, CRP, blood sugar, urine analysis, malaria test, pregnancy test). For each test: state the test name and the result or finding the medical officer reported. If no investigations were performed or this stage was not reached, write exactly: "No investigations performed".
 
 "physicalExam"
 A summary of all physical examination findings from Stage 9. Marina guides the medical officer through a structured examination specific to the patient's symptom (e.g. Capillary Refill, Abdominal Examination, Neurological Check, Eye Examination). Summarise the examination type and findings question by question in order. Write as concise prose. If this stage was not reached, write "Not performed".
 
 "additionalNotes"
-Any medically relevant information from the conversation that does not fit the fields above — for example: spontaneous complaints the patient mentioned outside the structured questions, concerns raised by the medical officer, context about the vessel's situation or sailing conditions, or follow-up information added after a stage summary. Do not repeat information already captured in other fields. If nothing additional was noted, return empty string "".
+A catch-all for any medically relevant information gathered during the interview that does not belong in any of the fields above. The report must not lose any information — if something was said in the conversation and it does not clearly fit into pathway, currentHistoryTaking, associatedSymptoms, pastMedicalHistory, medications, allergies, vitalSigns, investigations, or physicalExam, it must appear here. Examples: spontaneous remarks the patient made outside the structured questions, concerns or observations raised by the medical officer, contradictions or corrections made during the interview, context about the vessel's situation or conditions, follow-up information added after a stage was already summarised. Do not repeat information already captured in other fields. If truly nothing additional was said, return empty string "".
 
 ---
 

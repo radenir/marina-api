@@ -200,6 +200,16 @@ async def main(base_url: str):
             continue
 
         summary = r["summary"]
+        if not summary:
+            print(f"FAIL {prefix}")
+            print(f"     ERROR: endpoint returned empty or missing summary")
+            print()
+            failed += 1
+            stored_results.append({
+                "id": sc.id, "name": sc.name, "passed": False,
+                "error": "empty summary", "issues": [], "input": sc.conversation, "output": None,
+            })
+            continue
         issues = validate(sc, summary)
         ok = len(issues) == 0
 
