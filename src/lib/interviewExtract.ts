@@ -124,7 +124,7 @@ Choose the entry from this list that best matches the confirmed symptom. Transla
 
 "currentHistoryTaking"
 A narrative summary of the history of the presenting complaint. This covers the patient's age, gender, and the detailed history: onset (when it started), duration, character (what it feels like), severity, location, radiation, aggravating and relieving factors, and any other symptom-specific details. Write in clear prose. Include only what was actually stated. If the patient said "no" or "I don't know" to a question, include that negative finding. Do not include associated symptoms, medications, allergies, or past history (those have dedicated fields below).
-If Stage 2 was not reached but the patient or medical officer described the presenting situation in Stage 1 (e.g. "found unconscious in cabin", "hit head on crane"), capture that description here. Do not write "Not assessed" if there is any presenting context available from the conversation.
+If Stage 2 was not reached, still populate this field with whatever presenting context is available from Stage 1 — the confirmed chief complaint, any description the patient or medical officer gave before or during confirmation (e.g. "found unconscious in cabin", "hit head on crane", "chest pain started one hour ago"), and any demographics mentioned. Do not write "Not assessed" if the patient's complaint was confirmed — at minimum write what complaint was confirmed and note that no further history was obtained.
 
 "associatedSymptoms"
 A narrative summary from Stage 3 (Associated Symptoms). These are additional symptoms the patient was asked about that may accompany the primary complaint. Include BOTH positive findings (symptoms the patient confirmed) AND negative findings (symptoms the patient explicitly denied when directly asked). Write as concise prose.
@@ -154,13 +154,15 @@ Vital signs measured by the medical officer in Stage 7. Marina asks the medical 
   "supplementalOxygen" — Whether the patient is on supplemental oxygen. Look for this anywhere in the vital signs exchange. Write "Yes", "No", or empty string if not mentioned.
 
 "investigations"
-A summary of all investigation results from Stage 8. Marina asks the medical officer whether specific diagnostic tests were performed and their results (e.g. ECG, CRP, blood sugar, urine analysis, malaria test, pregnancy test). For each test: state the test name and the result or finding the medical officer reported. If no investigations were performed or this stage was not reached, write exactly: "No investigations performed".
+A summary of all investigation results from Stage 8. Marina asks the medical officer whether specific diagnostic tests were performed and their results (e.g. ECG, CRP, blood sugar, urine analysis, malaria test, pregnancy test). For each test: state the test name and the result or finding exactly as the medical officer reported it. Do NOT add clinical interpretation, normal range judgements, or labels like "(elevated)", "(abnormal)", or "(normal)" — extract only what was stated. If no investigations were performed or this stage was not reached, write exactly: "No investigations performed".
 
 "physicalExam"
 A summary of all physical examination findings from Stage 9. Marina guides the medical officer through a structured examination specific to the patient's symptom (e.g. Capillary Refill, Abdominal Examination, Neurological Check, Eye Examination). Summarise the examination type and findings question by question in order. Write as concise prose. If this stage was not reached, write "Not performed".
 
 "additionalNotes"
-A catch-all for any medically relevant information gathered during the interview that does not belong in any of the fields above. The report must not lose any information — if something was said in the conversation and it does not clearly fit into pathway, currentHistoryTaking, associatedSymptoms, pastMedicalHistory, medications, allergies, vitalSigns, investigations, or physicalExam, it must appear here. Examples: spontaneous remarks the patient made outside the structured questions, concerns or observations raised by the medical officer, contradictions or corrections made during the interview, context about the vessel's situation or conditions, follow-up information added after a stage was already summarised. Do not repeat information already captured in other fields. If truly nothing additional was said, return empty string "".
+A catch-all for any medically relevant information gathered during the interview that does not belong in any of the fields above. The report must not lose any information — if something was said in the conversation and it does not clearly fit into pathway, currentHistoryTaking, associatedSymptoms, pastMedicalHistory, medications, allergies, vitalSigns, investigations, or physicalExam, it must appear here. Examples: spontaneous remarks the patient made outside the structured questions, concerns or observations raised by the medical officer, contradictions or corrections made during the interview, context about the vessel's situation or conditions, follow-up information added after a stage was already summarised.
+Do NOT include meta-commentary about the interview structure itself — do not write observations like "the interview was abbreviated", "certain stages were not conducted", or "the assessment was incomplete". Those are structural observations, not information gathered from the patient or medical officer.
+Do not repeat information already captured in other fields. If truly nothing additional was said, return empty string "".
 
 ---
 
@@ -170,6 +172,9 @@ STRICT RULES:
 - Never fabricate or infer information not explicitly stated.
 - Never use placeholder values like "N/A", "Unknown", "Not mentioned" — use empty string "" for truly missing values unless a specific fallback is defined above.
 - For vitalSigns numeric fields (heartRate, oxygenSaturation, bloodPressureSystolic, bloodPressureDiastolic, respirationRate, bodyTemperature) return ONLY the plain number as a string — no units, no symbols, no suffixes.
+- Never add clinical interpretation to any field. Do not label results as normal, elevated, abnormal, or critical. Do not suggest diagnoses. Extract only what was explicitly stated.
+- The investigations fallback is always exactly the string "No investigations performed" — no other wording.
+- currentHistoryTaking must never be "Not assessed" if the patient's complaint was confirmed. Write what is known, even if brief.
 
 ---
 
