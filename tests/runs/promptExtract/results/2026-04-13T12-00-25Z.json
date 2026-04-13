@@ -1,0 +1,1746 @@
+{
+  "run_at": "2026-04-13T12:00:25.655641+00:00",
+  "url": "http://localhost:4000",
+  "total": 20,
+  "passed": 19,
+  "failed": 1,
+  "scenarios": [
+    {
+      "id": 1,
+      "name": "Smart watch HR 145 in history \u2014 vitalSigns must use MO measurement of 88",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have chest pain and my heart was racing earlier"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Chest pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "When did it start?"
+        },
+        {
+          "role": "user",
+          "content": "About two hours ago. My Garmin watch showed my heart rate at 145 when it first hit."
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "96"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "88"
+        },
+        {
+          "role": "assistant",
+          "content": "Blood pressure?"
+        },
+        {
+          "role": "user",
+          "content": "132/86"
+        },
+        {
+          "role": "assistant",
+          "content": "Respiratory rate?"
+        },
+        {
+          "role": "user",
+          "content": "18"
+        },
+        {
+          "role": "assistant",
+          "content": "Temperature?"
+        },
+        {
+          "role": "user",
+          "content": "37.1"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "Alert"
+        }
+      ],
+      "output": {
+        "pathway": "Chest pain",
+        "currentHistoryTaking": "Patient is experiencing chest pain that started approximately two hours ago. At onset, the patient's Garmin watch recorded a heart rate of 145 beats per minute.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "88",
+          "oxygenSaturation": "96",
+          "bloodPressureSystolic": "132",
+          "bloodPressureDiastolic": "86",
+          "respirationRate": "18",
+          "AVPU": "Alert",
+          "bodyTemperature": "37.1",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 2,
+      "name": "Interpreter-mediated \u2014 MO translates patient answers in third person",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "assistant",
+          "content": "What is the patient's main complaint?"
+        },
+        {
+          "role": "user",
+          "content": "The patient doesn't speak English. She says she has severe abdominal pain."
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Abdominal Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "She confirms, yes."
+        },
+        {
+          "role": "assistant",
+          "content": "How old is the patient?"
+        },
+        {
+          "role": "user",
+          "content": "She is 34 years old, female."
+        },
+        {
+          "role": "assistant",
+          "content": "When did the pain start?"
+        },
+        {
+          "role": "user",
+          "content": "She says it started this morning, about 8 hours ago."
+        },
+        {
+          "role": "assistant",
+          "content": "Where exactly is the pain located?"
+        },
+        {
+          "role": "user",
+          "content": "Lower right abdomen \u2014 she is pointing to it."
+        },
+        {
+          "role": "assistant",
+          "content": "Does she have nausea or vomiting?"
+        },
+        {
+          "role": "user",
+          "content": "She says yes, she vomited twice this morning."
+        },
+        {
+          "role": "assistant",
+          "content": "Any fever?"
+        },
+        {
+          "role": "user",
+          "content": "She says she feels hot and shivery."
+        },
+        {
+          "role": "assistant",
+          "content": "Any previous illnesses?"
+        },
+        {
+          "role": "user",
+          "content": "She says no previous illnesses."
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "She takes no medications."
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "She says no known allergies."
+        }
+      ],
+      "output": {
+        "pathway": "Abdominal Pain",
+        "currentHistoryTaking": "The patient is a 34-year-old female. She reports severe abdominal pain that started this morning, approximately 8 hours ago. The pain is located in the lower right abdomen, as indicated by the patient pointing to the area.",
+        "associatedSymptoms": "Patient reports nausea and vomiting, having vomited twice this morning. She also reports feeling hot and shivery.",
+        "pastMedicalHistory": "Patient denies any previous illnesses.",
+        "medications": "Patient states no current medications.",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "The patient does not speak English, creating a language barrier for communication."
+      }
+    },
+    {
+      "id": 3,
+      "name": "MO suggests 'appendicitis' \u2014 pathway stays Abdominal Pain, diagnosis not adopted",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have pain in my lower right belly"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Abdominal Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "99"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "94"
+        },
+        {
+          "role": "assistant",
+          "content": "Blood pressure?"
+        },
+        {
+          "role": "user",
+          "content": "128/82"
+        },
+        {
+          "role": "assistant",
+          "content": "Respiratory rate?"
+        },
+        {
+          "role": "user",
+          "content": "20"
+        },
+        {
+          "role": "assistant",
+          "content": "Temperature?"
+        },
+        {
+          "role": "user",
+          "content": "38.2"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "Alert. By the way \u2014 I'm pretty sure this is appendicitis. He has classic signs. I think we need to evacuate him immediately."
+        }
+      ],
+      "output": {
+        "pathway": "Abdominal Pain",
+        "currentHistoryTaking": "The patient reports pain in the lower right belly. No additional history was obtained as the interview proceeded directly to vital signs collection.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "94",
+          "oxygenSaturation": "99",
+          "bloodPressureSystolic": "128",
+          "bloodPressureDiastolic": "82",
+          "respirationRate": "20",
+          "AVPU": "Alert",
+          "bodyTemperature": "38.2",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "The medical officer states suspicion of appendicitis based on classic signs and recommends immediate evacuation."
+      }
+    },
+    {
+      "id": 4,
+      "name": "Contradiction: patient denies fever, MO measures 39.5\u00b0C",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have a bad headache"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Headache. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Do you have any fever or chills?"
+        },
+        {
+          "role": "user",
+          "content": "No, I feel fine temperature-wise \u2014 definitely no fever"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, temperature?"
+        },
+        {
+          "role": "user",
+          "content": "39.5"
+        },
+        {
+          "role": "assistant",
+          "content": "Oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "97"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "92"
+        },
+        {
+          "role": "assistant",
+          "content": "Blood pressure?"
+        },
+        {
+          "role": "user",
+          "content": "126/80"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "Alert"
+        }
+      ],
+      "output": {
+        "pathway": "Headache",
+        "currentHistoryTaking": "The patient presents with a headache, which they confirmed as their main complaint. No additional details about onset, duration, character, severity, or other features of the headache were provided.",
+        "associatedSymptoms": "Patient denied fever and chills, stating they feel fine temperature-wise and definitely have no fever.",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "92",
+          "oxygenSaturation": "97",
+          "bloodPressureSystolic": "126",
+          "bloodPressureDiastolic": "80",
+          "respirationRate": "",
+          "AVPU": "Alert",
+          "bodyTemperature": "39.5",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "Patient stated they feel fine temperature-wise and denied having a fever, however the measured body temperature was 39.5\u00b0C."
+      }
+    },
+    {
+      "id": 5,
+      "name": "Patient self-corrects medication: atorvastatin \u2192 simvastatin",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have chest pain"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Chest pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "How old are you?"
+        },
+        {
+          "role": "user",
+          "content": "61, male"
+        },
+        {
+          "role": "assistant",
+          "content": "Any previous illnesses?"
+        },
+        {
+          "role": "user",
+          "content": "High blood pressure, controlled."
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "Atorvastatin 40mg \u2014 oh wait, that's my wife's pills. I take simvastatin 20mg daily."
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "No known allergies"
+        }
+      ],
+      "output": {
+        "pathway": "Chest pain",
+        "currentHistoryTaking": "61-year-old male presenting with chest pain. No additional history obtained regarding onset, duration, character, severity, or aggravating/relieving factors.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "High blood pressure, controlled.",
+        "medications": "Simvastatin 20mg daily (patient initially mentioned Atorvastatin 40mg but corrected that these are his wife's pills).",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 6,
+      "name": "AVPU answer is single letter 'P' \u2014 must map to 'Pain'",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "Patient collapsed on deck, head injury, not responding normally"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Trauma. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "91"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "110"
+        },
+        {
+          "role": "assistant",
+          "content": "Blood pressure?"
+        },
+        {
+          "role": "user",
+          "content": "90/60"
+        },
+        {
+          "role": "assistant",
+          "content": "Respiratory rate?"
+        },
+        {
+          "role": "user",
+          "content": "22"
+        },
+        {
+          "role": "assistant",
+          "content": "Temperature?"
+        },
+        {
+          "role": "user",
+          "content": "36.4"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "P"
+        }
+      ],
+      "output": {
+        "pathway": "Trauma",
+        "currentHistoryTaking": "Patient collapsed on deck with head injury and is not responding normally. The patient confirmed trauma as the main complaint.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "110",
+          "oxygenSaturation": "91",
+          "bloodPressureSystolic": "90",
+          "bloodPressureDiastolic": "60",
+          "respirationRate": "22",
+          "AVPU": "Pain",
+          "bodyTemperature": "36.4",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 7,
+      "name": "CRP elevated but exact value unknown \u2014 must not fabricate a number",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have fever and feel terrible"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Fever. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, CRP result?"
+        },
+        {
+          "role": "user",
+          "content": "CRP is elevated but the machine display is broken \u2014 it only shows 'HIGH', I cannot read the exact number."
+        },
+        {
+          "role": "assistant",
+          "content": "Blood glucose?"
+        },
+        {
+          "role": "user",
+          "content": "6.1 mmol/L"
+        }
+      ],
+      "output": {
+        "pathway": "Fever",
+        "currentHistoryTaking": "Patient reports fever and feeling terrible. The complaint was confirmed as Fever.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "CRP is elevated but the machine display is broken \u2014 it only shows 'HIGH', the exact number cannot be read. Blood glucose is 6.1 mmol/L.",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 8,
+      "name": "Paracetamol overdose \u2014 pathway Poisoning/Overdose, substance in history not medications",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I think I took too many paracetamol tablets"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Poisoning/Overdose. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "How many tablets did you take?"
+        },
+        {
+          "role": "user",
+          "content": "Around 20 tablets, 500mg each, about 3 hours ago"
+        },
+        {
+          "role": "assistant",
+          "content": "Why did you take so many?"
+        },
+        {
+          "role": "user",
+          "content": "I had terrible toothache and just kept taking more"
+        },
+        {
+          "role": "assistant",
+          "content": "Any regular medications you take daily?"
+        },
+        {
+          "role": "user",
+          "content": "No regular medications"
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "98"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "88"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "Alert"
+        }
+      ],
+      "output": {
+        "pathway": "Poisoning/Overdose",
+        "currentHistoryTaking": "A crew member took approximately 20 tablets of paracetamol (500mg each) about 3 hours ago. The patient reported taking the overdose due to terrible toothache and stated they kept taking more tablets. The patient denied taking any regular daily medications.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Patient states no current medications.",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "88",
+          "oxygenSaturation": "98",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "Alert",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "The patient reported having terrible toothache as the reason for taking the paracetamol overdose."
+      }
+    },
+    {
+      "id": 9,
+      "name": "BP reported with 'mmHg' unit label \u2014 extract plain numbers, no unit",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have a severe headache, worst of my life"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Headache. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "97"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "76"
+        },
+        {
+          "role": "assistant",
+          "content": "Blood pressure?"
+        },
+        {
+          "role": "user",
+          "content": "Blood pressure is 168/104 mmHg"
+        },
+        {
+          "role": "assistant",
+          "content": "Respiratory rate?"
+        },
+        {
+          "role": "user",
+          "content": "16"
+        },
+        {
+          "role": "assistant",
+          "content": "Temperature?"
+        },
+        {
+          "role": "user",
+          "content": "37.2"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "Alert"
+        }
+      ],
+      "output": {
+        "pathway": "Headache",
+        "currentHistoryTaking": "The patient reports a severe headache, described as the worst of their life. No further history details were obtained.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "76",
+          "oxygenSaturation": "97",
+          "bloodPressureSystolic": "168",
+          "bloodPressureDiastolic": "104",
+          "respirationRate": "16",
+          "AVPU": "Alert",
+          "bodyTemperature": "37.2",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 10,
+      "name": "Patient cannot recall most history details \u2014 unknowns must be documented",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I feel pain in my chest"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Chest pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "When did the pain start?"
+        },
+        {
+          "role": "user",
+          "content": "I don't know, I just woke up with it"
+        },
+        {
+          "role": "assistant",
+          "content": "Can you describe what the pain feels like?"
+        },
+        {
+          "role": "user",
+          "content": "I don't know, it just hurts"
+        },
+        {
+          "role": "assistant",
+          "content": "Does the pain go anywhere else, like your arm or jaw?"
+        },
+        {
+          "role": "user",
+          "content": "I'm not sure"
+        },
+        {
+          "role": "assistant",
+          "content": "On a scale of 1 to 10, how severe is the pain?"
+        },
+        {
+          "role": "user",
+          "content": "I don't know, very bad I guess"
+        },
+        {
+          "role": "assistant",
+          "content": "Does anything make it better or worse?"
+        },
+        {
+          "role": "user",
+          "content": "I don't know"
+        },
+        {
+          "role": "assistant",
+          "content": "Any previous illnesses?"
+        },
+        {
+          "role": "user",
+          "content": "Can't remember"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "I don't think so, not sure"
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "I don't know"
+        }
+      ],
+      "output": {
+        "pathway": "Chest pain",
+        "currentHistoryTaking": "The patient is a crew member presenting with chest pain. The pain started upon waking, and the patient is unable to specify when it began. The patient describes the pain simply as hurting without further characterization. The patient is uncertain whether the pain radiates to other areas such as the arm or jaw. The patient rates the pain as very bad but is unable to provide a numerical severity score. The patient reports no known aggravating or relieving factors.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Patient unable to recall past medical history.",
+        "medications": "Patient uncertain about current medications.",
+        "allergies": "Patient uncertain about allergies.",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 11,
+      "name": "Physical exam with Murphy's sign \u2014 clinical jargon must be captured verbatim",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have pain in my upper right belly for two days"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Abdominal Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, any tenderness on palpation?"
+        },
+        {
+          "role": "user",
+          "content": "Yes \u2014 significant tenderness in the right upper quadrant. Murphy's sign is positive: the patient catches his breath when I press under the right rib margin."
+        },
+        {
+          "role": "assistant",
+          "content": "Any guarding?"
+        },
+        {
+          "role": "user",
+          "content": "Mild voluntary guarding in the RUQ."
+        },
+        {
+          "role": "assistant",
+          "content": "Bowel sounds?"
+        },
+        {
+          "role": "user",
+          "content": "Present but reduced."
+        },
+        {
+          "role": "assistant",
+          "content": "Capillary refill?"
+        },
+        {
+          "role": "user",
+          "content": "Under 2 seconds."
+        }
+      ],
+      "output": {
+        "pathway": "Abdominal Pain",
+        "currentHistoryTaking": "The patient reports pain in the upper right belly for two days.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Abdominal examination: Significant tenderness in the right upper quadrant. Murphy's sign is positive \u2014 patient catches his breath when pressed under the right rib margin. Mild voluntary guarding in the RUQ. Bowel sounds present but reduced. Capillary refill under 2 seconds.",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 12,
+      "name": "MO says 'oxygen mask' \u2014 supplementalOxygen must be 'Yes'",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "Patient found unconscious in the engine room, very pale"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Altered Consciousness or Confusion. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "88. I already put him on an oxygen mask \u2014 he's been breathing through it since we found him ten minutes ago."
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "120"
+        },
+        {
+          "role": "assistant",
+          "content": "Blood pressure?"
+        },
+        {
+          "role": "user",
+          "content": "88/54"
+        },
+        {
+          "role": "assistant",
+          "content": "Respiratory rate?"
+        },
+        {
+          "role": "user",
+          "content": "28"
+        },
+        {
+          "role": "assistant",
+          "content": "Temperature?"
+        },
+        {
+          "role": "user",
+          "content": "36.2"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "Unresponsive"
+        }
+      ],
+      "output": {
+        "pathway": "Altered Consciousness or Confusion",
+        "currentHistoryTaking": "Patient was found unconscious in the engine room and is very pale. No further history of presenting complaint was obtained as the interview proceeded directly to vital signs assessment.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "120",
+          "oxygenSaturation": "88",
+          "bloodPressureSystolic": "88",
+          "bloodPressureDiastolic": "54",
+          "respirationRate": "28",
+          "AVPU": "Unresponsive",
+          "bodyTemperature": "36.2",
+          "supplementalOxygen": "Yes"
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "Patient has been breathing through an oxygen mask since being found ten minutes ago."
+      }
+    },
+    {
+      "id": 13,
+      "name": "Filipino/Tagalog patient \u2014 full interview, all output in English",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "Mayroon akong matinding sakit ng ulo"
+        },
+        {
+          "role": "assistant",
+          "content": "Kung naiintindihan ko nang tama, ang pangunahing reklamo ay sakit ng ulo. Kumpirmahin mo ba?"
+        },
+        {
+          "role": "user",
+          "content": "Oo"
+        },
+        {
+          "role": "assistant",
+          "content": "Ilang taon ka na?"
+        },
+        {
+          "role": "user",
+          "content": "29 taong gulang, lalaki"
+        },
+        {
+          "role": "assistant",
+          "content": "Kailan nagsimula ang sakit ng ulo?"
+        },
+        {
+          "role": "user",
+          "content": "Nagsimula kagabi, mga 10 oras na ang nakalipas"
+        },
+        {
+          "role": "assistant",
+          "content": "Mayroon ka bang pagduduwal?"
+        },
+        {
+          "role": "user",
+          "content": "Oo, mayroon"
+        },
+        {
+          "role": "assistant",
+          "content": "Mayroon ka bang pagkasensitibo sa liwanag?"
+        },
+        {
+          "role": "user",
+          "content": "Oo, nakakasakit ang malakas na liwanag"
+        },
+        {
+          "role": "assistant",
+          "content": "Anong gamot ang iyong iniinom?"
+        },
+        {
+          "role": "user",
+          "content": "Wala"
+        },
+        {
+          "role": "assistant",
+          "content": "Mayroon ka bang allergy?"
+        },
+        {
+          "role": "user",
+          "content": "Wala"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "99"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "72"
+        },
+        {
+          "role": "assistant",
+          "content": "Blood pressure?"
+        },
+        {
+          "role": "user",
+          "content": "118/76"
+        },
+        {
+          "role": "assistant",
+          "content": "Temperature?"
+        },
+        {
+          "role": "user",
+          "content": "37.0"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "Alert"
+        }
+      ],
+      "output": {
+        "pathway": "Headache",
+        "currentHistoryTaking": "The patient is a 29-year-old male presenting with severe headache. The headache started last night, approximately 10 hours ago.",
+        "associatedSymptoms": "Patient reports nausea and photophobia (bright light causes pain).",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Patient states no current medications.",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "72",
+          "oxygenSaturation": "99",
+          "bloodPressureSystolic": "118",
+          "bloodPressureDiastolic": "76",
+          "respirationRate": "",
+          "AVPU": "Alert",
+          "bodyTemperature": "37.0",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 14,
+      "name": "Ambiguous malaria test 'faint line' \u2014 must document uncertainty, not interpret",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have had fever for 3 days, came from shore leave in West Africa"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Fever. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, did you perform a malaria test?"
+        },
+        {
+          "role": "user",
+          "content": "I tried, but the result is unclear. There is only a very faint line where the positive band should appear. I cannot tell if this is positive or negative."
+        },
+        {
+          "role": "assistant",
+          "content": "Any other tests available?"
+        },
+        {
+          "role": "user",
+          "content": "No, that is all we have."
+        }
+      ],
+      "output": {
+        "pathway": "Fever",
+        "currentHistoryTaking": "Patient is a crew member who has had fever for 3 days. The fever began after returning from shore leave in West Africa.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "Malaria test performed; result is unclear with a very faint line where the positive band should appear, making it impossible to determine if the result is positive or negative. No other diagnostic tests are available.",
+        "physicalExam": "Not performed",
+        "additionalNotes": "Patient recently returned from shore leave in West Africa. The medical officer attempted a malaria rapid diagnostic test but the result was inconclusive."
+      }
+    },
+    {
+      "id": 15,
+      "name": "MO volunteers distended abdomen during vitals \u2014 unsolicited finding must be captured",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have abdominal pain and my belly feels very swollen"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Abdominal Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "97"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "88. Also \u2014 his abdomen is visibly distended and hard to the touch."
+        },
+        {
+          "role": "assistant",
+          "content": "Blood pressure?"
+        },
+        {
+          "role": "user",
+          "content": "118/76"
+        },
+        {
+          "role": "assistant",
+          "content": "Respiratory rate?"
+        },
+        {
+          "role": "user",
+          "content": "19"
+        },
+        {
+          "role": "assistant",
+          "content": "Temperature?"
+        },
+        {
+          "role": "user",
+          "content": "37.8"
+        },
+        {
+          "role": "assistant",
+          "content": "AVPU?"
+        },
+        {
+          "role": "user",
+          "content": "Alert"
+        }
+      ],
+      "output": {
+        "pathway": "Abdominal Pain",
+        "currentHistoryTaking": "Patient reports abdominal pain with abdominal swelling. No further history obtained as structured history-taking stage was not conducted.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "88",
+          "oxygenSaturation": "97",
+          "bloodPressureSystolic": "118",
+          "bloodPressureDiastolic": "76",
+          "respirationRate": "19",
+          "AVPU": "Alert",
+          "bodyTemperature": "37.8",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "Medical officer observed abdomen is visibly distended and hard to the touch."
+      }
+    },
+    {
+      "id": 16,
+      "name": "Two allergies with different reactions \u2014 both allergen-reaction pairs must be captured",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have urinary pain and burning"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Urinary Symptoms. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "How old are you?"
+        },
+        {
+          "role": "user",
+          "content": "38, female"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "Trimethoprim 200mg twice daily \u2014 I started it myself this morning."
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "Yes \u2014 penicillin causes anaphylaxis, and NSAIDs give me severe stomach bleeding."
+        }
+      ],
+      "output": {
+        "pathway": "Urinary Symptoms",
+        "currentHistoryTaking": "Patient is a 38-year-old female presenting with urinary pain and burning. No further history obtained.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Trimethoprim 200mg twice daily, started this morning",
+        "allergies": "Penicillin (anaphylaxis), NSAIDs (severe stomach bleeding)",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 17,
+      "name": "Patient gives birth year 1982 \u2014 must be captured as stated",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have back pain"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Back Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "How old are you?"
+        },
+        {
+          "role": "user",
+          "content": "I was born in 1982, I'm male"
+        },
+        {
+          "role": "assistant",
+          "content": "When did the pain start?"
+        },
+        {
+          "role": "user",
+          "content": "Three days ago after lifting heavy cargo on deck"
+        },
+        {
+          "role": "assistant",
+          "content": "Any previous illnesses?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "Ibuprofen 400mg as needed for the pain"
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        }
+      ],
+      "output": {
+        "pathway": "Back Pain",
+        "currentHistoryTaking": "Male patient born in 1982 (approximately 41-42 years old). Back pain started three days ago after lifting heavy cargo on deck.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Patient denies any significant past medical history.",
+        "medications": "Ibuprofen 400mg as needed for pain",
+        "allergies": "No known allergies",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 18,
+      "name": "Sea sickness \u2014 exact SYBRA pathway 'Sea Sickness', not 'Nausea and Vomiting'",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I'm feeling seasick from the rough seas, constant nausea and vomiting"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Sea Sickness. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes, exactly that"
+        },
+        {
+          "role": "assistant",
+          "content": "How long have you been feeling this way?"
+        },
+        {
+          "role": "user",
+          "content": "Since yesterday when the storm started, about 18 hours"
+        },
+        {
+          "role": "assistant",
+          "content": "Have you vomited?"
+        },
+        {
+          "role": "user",
+          "content": "Many times, I cannot keep anything down"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "I took Stugeron earlier, two tablets"
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        }
+      ],
+      "output": {
+        "pathway": "Sea Sickness",
+        "currentHistoryTaking": "Patient is experiencing seasickness due to rough seas, presenting with constant nausea and vomiting. Symptoms began yesterday when the storm started, approximately 18 hours ago. Patient has vomited multiple times and is unable to keep any food or liquid down.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Patient took Stugeron, two tablets earlier",
+        "allergies": "No known allergies",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 19,
+      "name": "Marina speculates GERD diagnosis \u2014 speculation must not enter the clinical record",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "HALLUCINATION: forbidden string found: 'gerd'",
+        "HALLUCINATION: forbidden string found: 'acid reflux'",
+        "HALLUCINATION: forbidden string found: 'gastroesophageal reflux'",
+        "HALLUCINATION: forbidden string found: 'rule out cardiac'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have severe heartburn and chest discomfort"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Chest pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "When did it start?"
+        },
+        {
+          "role": "user",
+          "content": "A few hours after dinner, about 4 hours ago. What do you think I have?"
+        },
+        {
+          "role": "assistant",
+          "content": "It may be acid reflux or gastroesophageal reflux disease (GERD). However, we need to rule out cardiac causes. Does the discomfort get worse when lying down?"
+        },
+        {
+          "role": "user",
+          "content": "Yes, much worse when I lie flat"
+        },
+        {
+          "role": "assistant",
+          "content": "Any nausea?"
+        },
+        {
+          "role": "user",
+          "content": "Yes, some nausea"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        }
+      ],
+      "output": {
+        "pathway": "Chest pain",
+        "currentHistoryTaking": "Patient reports severe heartburn and chest discomfort that started approximately 4 hours ago after dinner. The discomfort worsens when lying flat. Patient also reports some nausea.",
+        "associatedSymptoms": "Patient confirmed nausea when asked.",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Patient states no current medications.",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "Patient asked what they might have. Marina mentioned it may be acid reflux or gastroesophageal reflux disease (GERD), but noted the need to rule out cardiac causes."
+      }
+    },
+    {
+      "id": 20,
+      "name": "Patient's glucometer reading during history \u2014 in currentHistoryTaking not investigations",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I feel dizzy and shaky, I'm a diabetic"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Diabetic complications. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "When did this start?"
+        },
+        {
+          "role": "user",
+          "content": "About 30 minutes ago. I checked my blood sugar on my own glucometer \u2014 it was 2.1 mmol/L."
+        },
+        {
+          "role": "assistant",
+          "content": "Have you eaten today?"
+        },
+        {
+          "role": "user",
+          "content": "No, I missed breakfast"
+        },
+        {
+          "role": "assistant",
+          "content": "Any regular medications?"
+        },
+        {
+          "role": "user",
+          "content": "Insulin glargine 20 units every night, metformin 500mg twice daily"
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, blood glucose test?"
+        },
+        {
+          "role": "user",
+          "content": "We do not have the equipment for that on board."
+        }
+      ],
+      "output": {
+        "pathway": "Diabetic complications",
+        "currentHistoryTaking": "Patient is a diabetic experiencing dizziness and shakiness that started approximately 30 minutes ago. The patient checked their own blood sugar with a personal glucometer, which showed a reading of 2.1 mmol/L. The patient missed breakfast today and has not eaten.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Patient states they are a diabetic.",
+        "medications": "Insulin glargine 20 units every night, metformin 500mg twice daily.",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "The medical officer reported that the vessel does not have blood glucose testing equipment on board."
+      }
+    }
+  ]
+}

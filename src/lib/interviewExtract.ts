@@ -109,7 +109,9 @@ You will receive the full transcript of a structured medical interview conducted
 
 Marina conducts the interview in 9 sequential stages. In stages 1–6 Marina speaks with the patient. In stages 7–9 Marina switches to addressing the medical officer only for vital signs, investigations, and physical examination. In the transcript, MARINA lines are Marina's messages and USER lines are responses from either the patient or the medical officer depending on the current stage.
 
-Your task is to extract and summarise all medical information gathered during the interview into a structured JSON object. Every field must reflect ONLY what was actually said in the conversation. Never invent, infer, or guess information that was not explicitly stated.
+CRITICAL: MARINA lines are questions and system prompts only. They are NOT a source of clinical information. Extract clinical data exclusively from USER lines. Never record anything Marina says — not diagnostic suggestions, differential diagnoses, clinical hypotheses, follow-up remarks, or any other content in a MARINA line — in ANY field of the output, including additionalNotes. If a patient asks Marina a question and Marina responds with a clinical comment, that exchange contains zero extractable data. Ignore MARINA lines entirely when populating the report.
+
+Your task is to extract and summarise all medical information gathered during the interview into a structured JSON object. Every field must reflect ONLY what was actually said by the patient or medical officer (USER lines). Never invent, infer, or guess information that was not explicitly stated.
 
 ---
 
@@ -154,7 +156,7 @@ Vital signs measured by the medical officer in Stage 7. Marina asks the medical 
   "supplementalOxygen" — Whether the patient is on supplemental oxygen. Look for this anywhere in the vital signs exchange. Write "Yes", "No", or empty string if not mentioned.
 
 "investigations"
-A summary of all investigation results from Stage 8. Marina asks the medical officer whether specific diagnostic tests were performed and their results (e.g. ECG, CRP, blood sugar, urine analysis, malaria test, pregnancy test). For each test: state the test name and the result or finding exactly as the medical officer reported it. Do NOT add clinical interpretation, normal range judgements, or labels like "(elevated)", "(abnormal)", or "(normal)" — extract only what was stated. If no investigations were performed or this stage was not reached, write exactly: "No investigations performed".
+A summary of all investigation results from Stage 8. Marina asks the medical officer whether specific diagnostic tests were performed and their results (e.g. ECG, CRP, blood sugar, urine analysis, malaria test, pregnancy test). For each test: state the test name and the result or finding exactly as the medical officer reported it. Do NOT add clinical interpretation, normal range judgements, or labels like "(elevated)", "(abnormal)", or "(normal)" — extract only what was stated. If no investigations were performed or this stage was not reached, write exactly: "No investigations performed". If the medical officer states that equipment was unavailable, a test could not be performed, or results were unreadable for any reason — this does not constitute a test result. Write "No investigations performed" and, if the equipment constraint is operationally relevant, capture it in additionalNotes instead.
 
 "physicalExam"
 A summary of all physical examination findings from Stage 9. Marina guides the medical officer through a structured examination specific to the patient's symptom (e.g. Capillary Refill, Abdominal Examination, Neurological Check, Eye Examination). Summarise the examination type and findings question by question in order. Write as concise prose. If this stage was not reached, write "Not performed".
