@@ -29,6 +29,16 @@ export const aiRouter = Router();
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Retry an async fn once after a short delay on any error. */
+async function withRetry<T>(fn: () => Promise<T>, delayMs = 1500): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    await new Promise(r => setTimeout(r, delayMs));
+    return await fn();
+  }
+}
+
 function getIp(req: Request): string {
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string') return forwarded.split(',')[0].trim();
@@ -353,7 +363,7 @@ aiRouter.post(
 
     let translation: string;
     try {
-      const completion = await nebius.chat.completions.create({
+      const completion = await withRetry(() => nebius.chat.completions.create({
         model: config.nebius.model,
         temperature: 0.3,
         top_p: 0.9,
@@ -362,7 +372,7 @@ aiRouter.post(
           { role: 'system', content: createTranslationPrompt(fromLanguageName, toLanguageName) },
           { role: 'user', content: text },
         ],
-      });
+      }));
 
       const content = completion.choices[0]?.message?.content;
       if (!content) {
@@ -649,7 +659,7 @@ aiRouter.post(
           patientLanguage ?? 'English',
           medicalOfficerLanguage ?? 'English',
         );
-        const result = await generateGreeting(freshState);
+        const result = await withRetry(() => generateGreeting(freshState));
         reply = result.reply;
         newState = result.newState;
       } else if (skipStage) {
@@ -678,12 +688,12 @@ aiRouter.post(
           ? `[Stage skip: now in ${newStageLabel}. All prior stages are closed. Respond in ${advancedState.variables.medicalOfficerLanguage} only. Ask the first question of ${newStageLabel} now.]`
           : `[Stage skip: now in ${newStageLabel}. All prior stages are closed — do NOT ask questions from any previous stage. Ask ONLY the first question of ${newStageLabel} now.]`;
 
-        const result = await runAgent(stateWithCloseMarker, stageTrigger);
+        const result = await withRetry(() => runAgent(stateWithCloseMarker, stageTrigger));
         reply = result.reply;
         newState = result.newState;
       } else {
         // Subsequent call — run agent with existing state
-        const result = await runAgent(state as ReturnType<typeof createFreshState>, message as string);
+        const result = await withRetry(() => runAgent(state as ReturnType<typeof createFreshState>, message as string));
         reply = result.reply;
         newState = result.newState;
       }

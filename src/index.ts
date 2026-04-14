@@ -156,6 +156,9 @@ start().catch((err) => {
 });
 
 process.on('unhandledRejection', (reason) => {
-  console.error('[unhandledRejection]', reason);
-  process.exit(1);
+  console.error('[unhandledRejection] — process kept alive:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException] — process kept alive:', err.message, err.stack);
 });
