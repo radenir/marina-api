@@ -661,7 +661,15 @@ aiRouter.post(
         );
         const result = await withRetry(() => generateGreeting(freshState));
         reply = result.reply;
-        newState = result.newState;
+        // Store the greeting in history so the LLM knows it was already sent
+        // and doesn't repeat "How can I help you today?" on the first user message.
+        newState = {
+          ...result.newState,
+          conversationHistory: [
+            ...result.newState.conversationHistory,
+            { role: 'assistant', content: reply },
+          ],
+        } as typeof result.newState;
       } else if (skipStage) {
         // Skip current stage: advance via completeStage then open the new stage.
         const { newState: advancedState } = executeTool('completeStage', {}, state as ReturnType<typeof createFreshState>);
