@@ -177,6 +177,7 @@ STRICT RULES:
 - Never add clinical interpretation to any field. Do not label results as normal, elevated, abnormal, or critical. Do not suggest diagnoses. Extract only what was explicitly stated.
 - The investigations fallback is always exactly the string "No investigations performed" — no other wording.
 - currentHistoryTaking must never be "Not assessed" if the patient's complaint was confirmed. Write what is known, even if brief.
+- If the transcript is empty, blank, or contains no substantive USER lines (all user messages are missing or contain only whitespace), there is no clinical data. In that case: pathway must be "Not identified", all stage text fields must be "Not assessed", all vitalSigns fields must be empty string "", investigations must be "No investigations performed", physicalExam must be "Not performed", and additionalNotes must be "". Do not fabricate any clinical information.
 
 ---
 
@@ -207,10 +208,36 @@ OUTPUT FORMAT (with examples of expected values):
 // Public API
 // ---------------------------------------------------------------------------
 
+const EMPTY_RESULT: InterviewExtractResult = {
+  pathway: 'Not identified',
+  currentHistoryTaking: 'No clinical information available.',
+  associatedSymptoms: 'Not assessed',
+  pastMedicalHistory: 'Not assessed',
+  medications: 'Not assessed',
+  allergies: 'Not assessed',
+  vitalSigns: {
+    heartRate: '',
+    oxygenSaturation: '',
+    bloodPressureSystolic: '',
+    bloodPressureDiastolic: '',
+    respirationRate: '',
+    AVPU: '',
+    bodyTemperature: '',
+    supplementalOxygen: '',
+  },
+  investigations: 'No investigations performed',
+  physicalExam: 'Not performed',
+  additionalNotes: '',
+};
+
 export async function extractInterviewSummary(
   conversationHistory: ConversationMessage[],
 ): Promise<InterviewExtractResult> {
   const transcript = conversationText(conversationHistory);
+
+  if (!transcript.trim()) {
+    return EMPTY_RESULT;
+  }
 
   const completion = await nebius.chat.completions.create({
     model: config.nebius.model,
