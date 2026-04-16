@@ -1,0 +1,154 @@
+
+════════════════════════════════════════════════════════════
+  Danish patient / Norwegian MO — Acute Appendicitis
+════════════════════════════════════════════════════════════
+  Symptom: Jeg har haft mavesmerter siden i morges, som startede ved navlen og nu sidder i højre side. Jeg har kvalme og lidt feber.
+
+  ✓ Started  (587ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Hvordan kan jeg hjælpe dig i dag?
+  [Pt] Jeg har haft mavesmerter, der er flyttet fra navlen til højre side underlivet, og jeg har ondt i maven.
+  [1] 609ms  Marina: Kan du beskrive symptomet mere detaljeret?
+  [Pt] Smerten startede omkring navlen for cirka 12 timer siden og har gradvist flyttet sig til højre nedre mave. Jeg har haft let kvalme og en svag feber, men ingen opkastning.
+  [2] 658ms  Marina: Har du også oplevet noget af følgende: tab af appetit, diarré, eller forstoppelse?
+  [Pt] Ja, jeg har mistet appetitten og oplever let forstoppelse, men ingen diarré.
+  [3] 707ms  Marina: Bekræfter du, at din primære klage er mavesmerter, der er flyttet fra omkring navlen til højre nedre mave?
+  [Pt] Ja, det bekræfter jeg. Smerten startede omkring navlen og har gradvist flyttet sig til højre nedre mave.
+  [4] 772ms  Marina: Hvor gammel er du?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Jeg er 31 år gammel.
+  [5] 350ms  Marina: Hvad er dit køn?
+  [Pt] Mit køn er mand.
+  [6] 426ms  Marina: Har du tidligere haft lignende mavesmerter?
+  [Pt] Nej, jeg har aldrig haft noget lignende før.
+  [7] 452ms  Marina: Var begyndelsen af smerten pludselig eller gradvis?
+  [Pt] Smerten begyndte gradvist for omkring 12 timer siden.
+  [8] 441ms  Marina: Hvor nøjagtigt i maven oplever du smerten nu?
+  [Pt] Smerten er nu lokalisert til højre nedre kvadrant af maven.
+  [9] 490ms  Marina: Udsender smerten sig til andre områder af kroppen?
+  [Pt] Nej, smerten udsender sig ikke til andre områder – den er lokaliseret til højre nedre kvadrant.
+  [10] 2589ms  Marina: Har smertens placering ændret sig siden begyndelsen?
+  [Pt] Ja, smerten startede omkring navlen og er flyttet til højre nedre mave.
+  [11] 650ms  Marina: Hvordan vil du beskrive smertens karakter – er den krampeagtig, skarp, brændende eller kolikagtig?
+  [Pt] Smerten er konstant og skarp, ikke krampeagtig eller kolikagtig. Den er mest intens i højre nedre kvadrant.
+  [12] 836ms  Marina: På en skala fra 1 til 10, hvor 10 er den værste tænkelige smerte, hvor stærk er din smerte lige nu?
+  [Pt] Min smerte er omkring 7 ud af 10 lige nu.
+  [13] 857ms  Marina: Er smerten vedvarende, eller kommer den og går?
+  [Pt] Smerten er vedvarende og har gradvist forværret sig over de sidste 12 timer.
+  [14] 699ms  Marina: Har du bemærket, om noget gør smerten værre eller bedre – for eksempel bevægelse, måltider eller kropsholdning?
+  [Pt] Smerten bliver værre, når jeg bevæger mig eller hoster, mens jeg ikke har bemærket noget, der gør den bedre.
+  [15] 750ms  Marina: Har du rejst uden for dit hjemland i løbet af de sidste tre måneder? Hvis ja, hvilke lande har du besøgt?
+  [Pt] Nej, jeg har ikke rejst uden for mit hjemland de sidste tre måneder.
+  [16] 979ms  Marina: Har du været udsat for usædvanlig eller mistænkelig fødevare i de sidste dage – for eksempel råt kød, dåsefødevarer, ukogt vand eller eksotisk mad?
+  [Pt] Nej, jeg har ikke indtaget råt kød, dåsefødevarer, ukogt vand eller eksotisk mad i de sidste dage.
+  [17] 2887ms  Marina: Du er 31 år gammel mand, der har ikke haft lignende mavesmerter før. Smerten begyndte gradvist omkring navlen for cirka 12 timer siden og er flyttet til højre nedre mave, hvor den nu er lokaliseret. Smerten er skarp, konstant og vurderes til 7 ud af 10 i styrke. Den forværres ved bevægelse og hoste, men udsender sig ikke til andre områder. Du har også oplevet mistet appetit og let forstoppelse, men ingen diarré, opkastning eller markant kvalme. Derudover har du ikke rejst uden for dit hjemland eller været udsat for mistænkt føde de sidste tre måneder. Har du noget mere at tilføje vedrørende din sygdomshistorie?
+  [Pt] Nej, det er alt – ingen tidligere lignende episoder, rejser eller mistænkt føde.
+  [18] 1141ms  Marina: Har du oplevet kvalme eller opkastning sammen med mavesmerterne?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Ja, jeg har haft kvalme i forbindelse med smerterne, men ingen opkastning.
+  [19] 518ms  Marina: Har du haft diarré eller forstoppelse?
+  [Pt] Nej, ingen diarré eller forstoppelse.
+  [20] 460ms  Marina: Har du haft feber eller kulderystelser?
+  [Pt] Ja, jeg har haft en svag feber, men ingen kulderystelser.
+  [21] 662ms  Marina: Har du opkastet blod, eller har du haft mørk, tjæregul-lignende afføring eller blod i afføringen?
+  [Pt] Nej, jeg har hverken opkastet blod eller haft mørk, tjæregul-lignende afføring eller blod i afføringen.
+  [22] 778ms  Marina: Har du oplevet smerter ved vandladning, brænden i kødet eller øget vandladningsfrekvens?
+  [Pt] Nej, jeg har ikke haft smerter ved vandladning, brænden i kødet eller øget vandladningsfrekvens.
+  [23] 1351ms  Marina: Da du er mand, spørger jeg ikke om vaginal udflåd eller blødning. Du har bekræftet kvalme, men ingen opkastning, ingen diarré eller forstoppelse, svag feber uden kulderystelser, ingen blod i opkast eller afføring, og ingen urinvejssymptomer. Har du noget andet at tilføje om symptomer, der optræder sammen med din mavesmerter?
+  [Pt] Nej, der er ikke andre symptomer at tilføje. Smerten er stadig lokaliseret til højre nedre kvadrant og forværres let ved bevægelse.
+  [24] 1309ms  Marina: Har du tidligere været opereret i maven, herunder appendektomi eller andre abdominalkirurgiske indgreb?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Nej, jeg har aldrig været opereret i maven før. Ingen tidligere abdominalkirurgi.
+  [25] 1109ms  Marina: Har du nogen kendte sygdomme, især relateret til tarmen, nyrerne, blodkarrene eller urinvejene – som f.eks. Crohns sygdom, ulcerøs colitis, nyresten eller hæmorider?
+  [Pt] Nej, jeg har ingen kendte sygdomme, hverken i tarmen, nyrerne, blodkarrene eller urinvejene.
+  [26] 1132ms  Marina: Da du er mand, spørger jeg ikke om graviditet, fødsler eller brugen af p-piller eller anden form for prævention. Du har ikke haft nogen tidligere operationer i maven og har ingen kendte sygdomme i tarmen, nyrerne, blodkarrene eller urinvejene. Har du noget andet at tilføje om din tidligere medicinske historik?
+  [Pt] Nej, der er ikke andet at tilføje om min tidligere medicinske historik.
+  [27] 1501ms  Marina: Tager du nogen medicin regelmæssigt?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Nej, jeg tager ingen medicin regelmæssigt.
+  [28] 604ms  Marina: Tager du nogen over-the-counter lægemidler, vitaminer eller kosttilskud?
+  [Pt] Nej, jeg tager ingen over-the-counter lægemidler, vitaminer eller kosttilskud.
+  [29] 561ms  Marina: Har du taget nogen medicin specifikt for dine nuværende mavesmerter?
+  [Pt] Nej, jeg har ikke taget nogen medicin for mavesmerterne.
+  [30] 949ms  Marina: Du tager ingen regelmæssige medicin, ingen over-the-counter lægemidler, vitaminer eller kosttilskud, og du har ikke taget medicin specifikt for dine nuværende mavesmerter. Har du noget andet at tilføje om medicin, du måske tager eller har taget i forbindelse med dine symptomer?
+  [Pt] Nej, jeg har ikke taget noget medicin for mine symptomer eller andet.
+  [31] 1172ms  Marina: Har du nogen kendte allergier mod medicin, fødevarer eller andre stoffer?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Nej, jeg har ingen kendte allergier mod medicin, fødevarer eller andre stoffer.
+  [32] 1360ms  Marina: Medisinske officer, du overtager nu. Hva er pasientens oksygenmetning i prosent?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Pasientens oksygenmetning er 99 prosent.
+  [33] 580ms  Marina: Hva er pasientens respirasjonsfrekvens i pust per minutt?
+  [MO] Pasientens respirasjonsfrekvens er 17 pustetrekk per minutt.
+  [34] 769ms  Marina: Hva er pasientens puls i slag per minutt?
+  [MO] Pulsen er 96 slag per minutt.
+  [35] 642ms  Marina: Hva er pasientens blodtrykk, både systolisk og diastolisk, i mmHg?
+  [MO] Pasientens blodtrykk er 124 mmHg systolisk og 78 mmHg diastolisk.
+  [36] 547ms  Marina: Hva er pasientens kroppstemperatur i grader celsius?
+  [MO] Pasientens kroppstemperatur er 37,9 °C.
+  [37] 715ms  Marina: Hva er pasientens bevissthetstilstand etter AVPU-skalaen (Alert/Verbal/Pain/Unresponsive)?
+  [MO] Pasienten er våken og alert ifølge AVPU-skalaen.
+  [38] 1437ms  Marina: Pasientens oksygenmetning er 99 prosent, respirasjonsfrekvens er 17 pust per minutt, puls er 96 slag per minutt, blodtrykk er 124/78 mmHg, kroppstemperatur er 37,9 °C og bevissthetstilstand er alert ifølge AVPU-skalaen. Ønsker du å legge til noe mer om pasientens vitale funksjoner?
+  [MO] Nei, vitale funksjoner er stabile med O2 99 %, HR 96, BP 124/78, RR 17 og temp 37,9 °C, AVPU alert. Ingen tegn på akutt respiratorisk eller kardiovaskulær pågang.
+  [39] 1138ms  Marina: Tok du CRP-test, og i så fall, hva var resultatet?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] CRP-test er ikke utført.
+  [40] 538ms  Marina: Tok du urinanalyse, og i så fall, hva var resultatet?
+  [MO] Urinanalysen var negativ for leukocytter, nitritt og blod.
+  [41] 596ms  Marina: Tok du malaria-test, og i så fall, hva var resultatet?
+  [MO] Malaria-test er ikke utført.
+  [42] 1405ms  Marina: Tok du blodsukker, og i så fall, hva var resultatet?
+  [MO] Blodsukker ikke målt.
+  [43] 1039ms  Marina: Undersøkelsene viste at urinanalysen var negativ for leukocytter, nitritt og blod, mens CRP-test, malaria-test og blodsukkermåling ikke er utført. Ønsker du å legge til noe mer om undersøkelser?
+  [MO] Urinanalysen var negativ for leukocytter, nitritt og blod. CRP, malaria og blodsukk er ikke utført ennå.
+  [44] 2631ms  Marina: Medisinske officer, basert på primærsymptomet magesmerter som har flyttet seg fra navlen til høyre nedre mave, skal vi nå gjennomføre en målrettet klinisk undersøkelse. Vi starter med abdominalundersøkelse. Vennligst plasser pasienten liggende på ryggen med avdekket abdomen fra under brystkassen til bekkenet. Ser du noen distensjon, asymmetri, hudendringer eller kirurgiske ar?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Ingen distensjon, asymmetri, hudendringer eller kirurgiske ar observert. Abdomen ser symmetrisk og normalt ut.
+  [45] 1146ms  Marina: Bruk fingerpussene til å trykke forsiktig (cirka 1 cm dypt) over alle fire kvadrantene av abdomen. Er det smerte eller muskelspenning i noen av områdene?
+  [MO] Smerte ved trykk og rebound i høyre nedre kvadrant, spesielt ved McBurney's punkt. Ingen markert muskelspenning eller guarding.
+  [46] 1257ms  Marina: Bruk flaten av hånden til å utføre dypere palpasjon (4–5 cm) systematisk i alle fire kvadranter. Føler du eventuelle masser, organforstørrelser eller områder med dyp sårbarhet?
+  [MO] Dyp sårbarhet i høyre nedre kvadrant, ingen masser eller organforstørrelser påvist.
+  [47] 1461ms  Marina: Plasser hånden under høyre ribbein og be pasienten åpne munnen og puste dypt og jevnt. Øker smerten eller stopper pasienten å puste under innpusten?
+  [MO] Smerten øker under innpusten, pasienten stopper å puste på grunn av økt smerte.
+  [48] 828ms  Marina: Trykk forsiktig men fast på venstre nedre kvadrant. Utløser dette smerte på høyre side av abdomen?
+  [MO] Trykk på venstre nedre kvadrant utløser smerte i høyre side – Rovsing's tegn er positivt.
+  [49] 1114ms  Marina: Lokaliser McBurney's punkt, cirka en tredjedel av veien fra høyre hofteknokkel til navlen. Trykk der med jevnt trykk. Er det lokalisert sårbarhet eller smerte i dette punktet?
+  [MO] Det er tydelig lokal sårbarhet ved McBurney's punkt med smerte ved palpasjon.
+  [50] 1506ms  Marina: Abdominalundersøkelsen viser ingen distensjon, asymmetri eller hudendringer. Det er smerte ved trykk og rebound i høyre nedre kvadrant, spesielt ved McBurney's punkt. Dyp sårbarhet er påvist i samme område, men ingen masser eller organforstørrelser. Murphy's tegn er negativt, men Rovsing's tegn er positivt. Smerten øker under innpusten, og det er tydelig lokal sårbarhet ved McBurney's punkt. Har du noe mer å legge til fra den fysiske undersøkelsen?
+  [MO] Ingen muskelspenning eller beskyttelse (guarding) er observert, men tydelig rebound-tendens i høyre nedre kvadrant. Ingen visuell asymmetri eller hudendringer påvist.
+  [51] 1666ms  Marina: Medisinske officer, intervjuet er fullført og rapporten er generert. Du kan nå gå videre til vurdering og eventuell behandling.
+
+  Interview complete after 51 turns.
+
+── Extract ──
+  Calling /ai/extract with 111 messages (filtered from 129)...
+  ✓ Done  (1913ms)
+
+  gender: male
+  chiefComplaint: abdominal pain that started around the navel and moved to the lower right abdomen
+  chiefSymptom: sharp, constant pain in the lower right abdomen, worsening with movement and coughing
+  history: The patient is a 31-year-old male who developed gradually worsening abdominal pain around the umbilicus approximately 12 hours ago. The pain has migrated to the right lower quadrant, where it is now localized. The pain is sharp, constant, and rated 7 out of 10 in intensity. It worsens with movement and coughing. The patient reports associated nausea, loss of appetite, mild fever, and mild constipation, but no vomiting, diarrhea, dysuria, hematuria, or other urinary symptoms. There is no radiation of pain to other areas.
+  pastHistory: The patient has no prior history of similar abdominal pain. He has never undergone abdominal surgery, including appendectomy, and reports no known medical conditions such as Crohn's disease, ulcerative colitis, kidney stones, or hemorrhoids.
+  currentMedications: Patient states they do not take any medications.
+  allergies: Patient states they have no known allergies.
+  circulation_pulse_per_min: 96
+  circulation_systole: 124
+  circulation_diastole: 78
+  breathing_num_breaths_per_min: 17
+  breathing_oxygen_saturation: 99
+  expose_temperature_measured_mouth: 37.9
+  avpu: Alert
+  problemDescription: 31-year-old male with no prior history of similar abdominal pain. Pain began gradually around the navel approximately 12 hours ago and migrated to the right lower quadrant, where it is now localized. The pain is sharp, constant, and rated 7 out of 10 in intensity, worsening with movement and coughing. He reports loss of appetite, mild nausea without vomiting, and mild fever without chills. He denies diarrhea, blood in stool or vomit, dark tarry stools, urinary symptoms, or recent travel and consumption of suspicious food. No previous abdominal surgeries or known medical conditions. Not taking any regular medications, over-the-counter drugs, vitamins, or supplements. No known allergies.
+  performedActions: M-EWS score: 1
+
+Abdominal examination shows tenderness and rebound tenderness in the right lower quadrant, particularly at McBurney's point. Deep tenderness is present in the same area with positive Rovsing's sign. Pain increases during deep inspiration. No guarding, masses, or organomegaly detected. Abdomen is symmetrical with no skin changes or surgical scars.

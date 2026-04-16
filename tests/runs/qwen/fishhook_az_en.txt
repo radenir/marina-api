@@ -1,0 +1,172 @@
+
+════════════════════════════════════════════════════════════
+  Azerbaijani patient / English MO — fish hook embedded in finger
+════════════════════════════════════════════════════════════
+  Symptom: Balıq ovlayarkən çəngəl barmağıma batdı, çıxara bilmirəm, çox ağrıyır
+
+  ✓ Started  (906ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Salam, mən dəniz təbabəti köməkçisi Marina. Bu gün sizə necə kömək edə bilərəm?
+  [Pt] Salam, sağ əlimin dəstək barmağında balıq nəməsi var, çıxarmağa çalışdım, amma çox ağrır və çıxartmaq mümkün olmadı.
+  [1] 677ms  Marina: Zəhmət olmasa simptomu daha ətraflı təsvir edə bilərsinizmi?
+  [Pt] Sağ əlimin göstərici barmağına balıq qancı daxil olub, çıxarmağa çalışdım, amma çıxmadı və çox ağrıyır.
+  [2] 833ms  Marina: Bu simptomun başqa yerdə də olduğu varmı və ya onunla əlaqəli başqa şikayətləriniz var?
+  [Pt] Xəstənin yalnız sağ işarə barmağında balıq kancası var, digər yerlərdə simptom yoxdur. Başqa şikayəti bildirmir.
+  [3] 731ms  Marina: Əsas simptomunuzun sağ əlinizin göstərici barmağına daxil olan balıq nəməsi olduğunu başa düşürəm. Doğrudur?
+  [Pt] Bəli, düzgün başa düşdünüz. Sağ göstərici barmağımda balıq nəməsi var və çıxarmağa çalışanda çox ağrı olur.
+  [4] 912ms  Marina: Zəhmət olmasa, yaşınızı deyə bilərsiniz?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] 29 yaşım var.
+  [5] 403ms  Marina: Cinsinizi bildirə bilərsiniz?
+  [Pt] Kişi.
+  [6] 4839ms  Marina: Yaralanmanın necə baş verdiyini danışa bilərsiniz? Yəni, balıq nəməsi necə daxil oldu?
+  [Pt] Balıq tutarkən nəmə barmağıma sıyrıldı və oraya daxil oldu.
+  [7] 720ms  Marina: Bu hadisə nə vaxt baş verdi? Yəni, yaralanmadan nə qədər vaxt keçib?
+  [Pt] Bu hadisə təxminən 20 dəqiqə əvvəl baş verdi. Yaralanmadan o vaxtdan bəri təxminən yarım saat keçib.
+  [8] 584ms  Marina: Yaranın dəqiq yerini deyə bilərsiniz? Sağ əlinizin hansı hissəsindədir?
+  [Pt] Balıq qancı sağ əlimin göstərici barmağının uc hissəsində, təpə nahiyəsində yerləşir.
+  [9] 848ms  Marina: Yaraya yol aça biləcək hər hansı bir çirklənmə mənbəsi var idi? Məsələn, kirli su, paslı səth və ya başqa bir şey?
+  [Pt] Yaralanma balıq tutduqda dəniz suyuna toxunmuş qancıqla baş verdi, paslı səthə toxunma yox idi.
+  [10] 781ms  Marina: Yaralanma baş verən vəziyyət haqqında daha ətraflı danışa bilərsiniz? Məsələn, nə edərkən baş verdi, harada idiniz?
+  [Pt] Balıq tutarkən qəfildən əlimə dəydi, dənizdəki qayığın üzərində idim.
+  [11] 746ms  Marina: Yaralanmadan sonra ilk tibbi yardım kimi nə edildi? Məsələn, yuyuldu, sarıldı və ya heç nə?
+  [Pt] Barmaq dərhal su ilə yuyuldu, sonra təmiz bir pəslə örtüldü. İod istifadə olunmadı, çünki yodunuzdan allergiyam var.
+  [12] 1770ms  Marina: Xəstənin yaşı 29, cinsiyyəti kişi. Yaralanma balıq tutarkən baş verib, dənizdə qayığın üzərində idi. Balıq nəməsi sağ əlin göstərici barmağının uc hissəsinə, təpə nahiyəsinə daxil olub. Hadisə təxminən 20 dəqiqə əvvəl baş verib. Yaranın çirklənmə mənbəyi dəniz suyu olub, paslı səthə toxunma yoxdur. İlk yardım kimi barmaq dərhal su ilə yuyulub və təmiz pəslə örtülüb. İod tətbiq olunmayıb, çünki xəstənin ioda allergiyası var. Do you have anything else to add on history taking?
+  [Pt] Xəstə balıq nəməsinin daxil olma şəkli və zədələnmə zamanı barmağın hərəkəti ilə bağlı əlavə məlumat verə bilər. Son tetanus profilaktikasının vaxtı da soruşulmalıdır.
+  [13] 692ms  Marina: Balıq nəməsi barmağınıza daxil olarkən hansı istiqamətdən daxil oldu və barmaq hərəkət edərkən yaralanma baş verdi?
+  [Pt] Nəməs barmağımın ucundan daxil oldu, yaralanma barmağı qabağa doğru hərəkət etdirərkən baş verdi.
+  [14] 537ms  Marina: Son tetanus peyvəndinizi nə vaxt edibsiniz?
+  [Pt] Son tetanus peyvəndimi 5 il əvvəl etdirmişəm.
+  [15] 1567ms  Marina: Xəstənin yaşı 29, cinsiyyəti kişi. Yaralanma balıq tutarkən baş verib, dənizdə qayığın üzərində idi. Balıq nəməsi sağ əlin göstərici barmağının uc hissəsinə, təpə nahiyəsinə daxil olub və bu, barmağın irəli hərəkəti zamanı baş verib. Hadisə təxminən 20 dəqiqə əvvəl baş verib. Yaranın çirklənmə mənbəyi dəniz suyu olub, paslı səthə toxunma yoxdur. İlk yardım kimi barmaq dərhal su ilə yuyulub və təmiz pəslə örtülüb. İod tətbiq olunmayıb, çünki xəstənin ioda allergiyası var. Son tetanus peyvəndi 5 il əvvəl edilib. Do you have anything else to add on history taking?
+  [Pt] Xəstə balıq nəməsinin daxil olma vaxtı barmağın hərəkəti ilə əlaqədar ağrı və qanamanın olduğunu qeyd edir, başqa şikayəti yoxdur.
+  [16] 854ms  Marina: Yaradan qan gəlir?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Xırda qanaxma var, lakin şiddətli deyil.
+  [17] 894ms  Marina: Yaralanan barmaqla hərəkət etməkdə çətinlik çəkirsiniz? Məsələn, əzilə bilmir və ya qavramaqda problem yaradır?
+  [Pt] Bəli, sağ işarə barmaqla hərəkət etməkdə çətinlik çəkirəm, xüsusilə qavramaqda ağrı artır.
+  [18] 821ms  Marina: Yarada xarici cisim hissi var, məsələn, nəmənin hələ də orada olduğunu hiss edirsiniz?
+  [Pt] Bəli, barmağımda hələ də xarici cisim hissi var, kimi ki, balıq qancı hələ oradadır və şiddətli ağrı yaradır.
+  [19] 479ms  Marina: Yarada ağrı hiss edirsiniz?
+  [Pt] Bəli, sağ işarə barmağında kəskin ağrı hiss edirəm.
+  [20] 745ms  Marina: Yarada və ya ətrafında hiss itkinliyi, yəni numbness, var?
+  [Pt] Xeyr, barmağımın ətrafında hiss itkinliyi yoxdur.
+  [21] 853ms  Marina: Yarada qızartı, is, şişkinlik və ya irin kimi infeksiya əlamətləri var?
+  [Pt] Yox, infeksiya əlaməti yoxdur – qızartı, is, şişkinlik və ya irin görünmür.
+  [22] 1664ms  Marina: Yaradan xırda qanaxma var, lakin şiddətli deyil. Yaralanan barmaqla hərəkət etməkdə çətinlik çəkirsiniz və qavramaqda ağrı artır. Yarada xarici cisim hissi var və balıq nəməsinin hələ də orada olduğunu hiss edirsiniz. Kəskin ağrı qeyd edirsiniz. Hiss itkinliyi yoxdur. İnfeksiya əlamətləri – qızartı, is, şişkinlik və ya irin – müşahidə olunmur. Başqa əlavə etmək istədiyiniz bir şey var?
+  [Pt] Xırda qanaxma var, lakin şiddətli deyil. Hələ də barmaqda balıq nəməsi hiss olunur, hərəkət çətinliyi və kəskin ağrı qeyd olunur.
+  [23] 4535ms  Marina: Yaradan xırda qanaxma var, lakin şiddətli deyil. Yaralanan barmaqla hərəkət etməkdə çətinlik çəkirsiniz və qavramaqda ağrı artır. Yarada xarici cisim hissi var və balıq nəməsinin hələ də orada olduğunu hiss edirsiniz. Kəskin ağrı qeyd edirsiniz. Hiss itkinliyi yoxdur. İnfeksiya əlamətləri – qızartı, is, şişkinlik və ya irin – müşahidə olunmur. Başqa əlavə etmək istədiyiniz bir şey var?
+  [Pt] Xırda qanaxma var, lakin şiddətli deyil. Balıq nəməsi hələ də barmaqda hiss olunur, hərəkət çətinliyi və kəskin ağrı var.
+  [24] 1127ms  Marina: Son tetanus peyvəndinizi nə vaxt etdirdiniz?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Son tetanus peyvəndimi 5 il əvvəl etdirdim.
+  [25] 874ms  Marina: Qanın laxtalanması ilə bağlı hər hansı bir pozğunluq, məsələn, hemoqiliya və ya tez qanaxma problemi var?
+  [Pt] Xeyr, qanın laxtalanması ilə bağlı heç bir problem yoxdur, hemoqiliya yoxdur və tez qanaxma müşahidə olunmayıb.
+  [26] 938ms  Marina: Qanın qalınlaşmasını azaldan dərmanlar, məsələn, aspirin, varfarin və ya klopidogrel qəbul edirsiniz?
+  [Pt] Xeyr, heç bir qanın qalınlaşmasını azaldan dərman qəbul etmirəm.
+  [27] 830ms  Marina: Hər hansı bir allergiyanız var? Məsələn, dərman, qida və ya digər maddələrə qarşı?
+  [Pt] Bəli, yodun preparatlarına allergiyam var.
+  [28] 709ms  Marina: Şəkər xəstəliyiniz var?
+  [Pt] Xeyr, şəkər xəstəliyim yoxdur.
+  [29] 1172ms  Marina: Son tetanus peyvəndi 5 il əvvəl edilib. Qanın laxtalanması ilə bağlı heç bir pozğunluq yoxdur. Qanın qalınlaşmasını azaldan dərmanlar qəbul edilmir. Yodun preparatlarına allergiya var. Şəkər xəstəliyi yoxdur. Keçmiş tibbi anamnezlə bağlı əlavə etmək istədiyiniz bir şey var?
+  [Pt] Keçmişdə heç bir qan laxtalanması pozğunluğu və ya cərrahi əməliyyat keçirməmişəm, əlavə xronik xəstəliklərim yoxdur.
+  [30] 1322ms  Marina: Son tetanus peyvəndi 5 il əvvəl edilib. Qanın laxtalanması ilə bağlı heç bir pozğunluq yoxdur. Qanın qalınlaşmasını azaldan dərmanlar qəbul edilmir. Yodun preparatlarına allergiya var. Şəkər xəstəliyi yoxdur. Keçmişdə heç bir cərrahi əməliyyat və ya xronik xəstəlik yoxdur. Keçmiş tibbi anamnezlə bağlı əlavə etmək istədiyiniz bir şey var?
+  [Pt] Keçmiş tibbi anamnezlə bağlı əlavə məlumat yoxdur.
+  [31] 1178ms  Marina: Müntəzəm qəbul etdiyiniz hər hansı dərman var?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Xeyr, heç bir dərman qəbul etmirəm.
+  [32] 1053ms  Marina: Hər hansı vitamin, dəstək vasitəsi və ya tibbi olmayan preparatlar alırsınız?
+  [Pt] Xeyr, heç bir vitamin və ya dəstək vasitəsi qəbul etmirəm.
+  [33] 910ms  Marina: Cari simptomla əlaqədar olaraq hər hansı dərman qəbul etmisiniz? Məsələn, ağrı kəsici və ya antiseptik?
+  [Pt] Xeyr, heç bir dərman qəbul etmədim. Ağrı çox şiddətlidir, lakin allergiyam olduğu üçün hər hansı antiseptik istifadə etmədim.
+  [34] 1026ms  Marina: Xəstə müntəzəm dərman qəbul etmir, vitamin və ya dəstək vasitələri də qəbul etmir. Cari simptomla əlaqədar hər hansı dərman qəbul etməyib. Dərmanlarla bağlı əlavə etmək istədiyiniz bir şey var?
+  [Pt] Xəstə heç bir dərman, vitamin və ya dəstək vasitəsi qəbul etmir, həmçinin simptomla əlaqədar dərman qəbulu yoxdur. Dərmanlarla bağlı əlavə məlumat yoxdur.
+  [35] 1100ms  Marina: Hər hansı allergiyanız var? Məsələn, dərman, qida və ya digər maddələrə qarşı?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Bəli, yodun preparatlarına allergiyam var.
+  [36] 881ms  Marina: Yodun hansı preparatlarına qarşı allergiya inkişaf edir? Məsələn, antiseptiklər, kontrast maddələr və ya başqa bir şey?
+  [Pt] Yodun özünə qarşı deyil, yod ehtiva edən preparatlara (məsələn, antiseptiklər kimi povidon-iod) qarşı allergiya ola bilər. Kontrast maddələrə allergiya da ola bilər, lakin bu, müxtəlif mexanizmlərlə gedir.
+  [37] 1360ms  Marina: Yod ehtiva edən preparatlara, xüsusilə povidon-iod kimi antiseptiklərə qarşı allergiya var. Bu allergiya ilə əlaqəli hansı reaksiyaları yaşayırsınız? Məsələn, dəri qızarması, səpgilər, nəfəs alma çətinliyi?
+  [Pt] Dəri qızarması və səpgilər baş verir, nəfəs alma çətinliyi yoxdur.
+  [38] 847ms  Marina: Bu allergiya reaksiyası daha əvvəl bir neçə dəfə baş verib?
+  [Pt] Xeyr, bu ən ilk dəfədir.
+  [39] 1121ms  Marina: Yod ehtiva edən preparatlara, xüsusilə povidon-iod kimi antiseptiklərə qarşı allergiya var. Reaksiya dəri qızarması və səpgilərlə təzahür edir, nəfəs alma çətinliyi yoxdur. Bu, ilk hadisədir. Başqa allergiyanız var?
+  [Pt] Başqa allergiyam yoxdur. Yalnız yod ehtiva edən preparatlara qarşı dəri reaksiyası olur.
+  [40] 1126ms  Marina: Xəstənin yod ehtiva edən preparatlara, xüsusilə povidon-iod kimi antiseptiklərə qarşı allergiyası var. Reaksiya dəri qızarması və səpgilərlə təzahür edir, nəfəs alma çətinliyi yoxdur. Bu, ilk hadisədir. Başqa allergiya yoxdur. Allerqiyalarla bağlı əlavə etmək istədiyiniz bir şey var?
+  [Pt] Xəstənin yalnız yod ehtiva edən preparatlara allergiyası var, digər allergiyalar qeyd olunmayıb. Povidon-iod istifadə olunmamalıdır, alternativ antiseptiklər tətbiq edilməlidir.
+  [41] 1265ms  Marina: What is the patient's oxygen saturation level in percent?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] The patient's oxygen saturation level is 99%.
+  [42] 546ms  Marina: What is the patient's respiratory rate in breaths per minute?
+  [MO] The patient's respiratory rate is 16 breaths per minute.
+  [43] 524ms  Marina: What is the patient's heart rate in beats per minute?
+  [MO] The patient's heart rate is 88 beats per minute.
+  [44] 672ms  Marina: What is the patient's blood pressure in mmHg, including both systolic and diastolic values?
+  [MO] The patient's blood pressure is 122/78 mmHg.
+  [45] 581ms  Marina: What is the patient's temperature in degrees Celsius?
+  [MO] The patient's temperature is 36.8°C.
+  [46] 649ms  Marina: What is the patient's level of consciousness according to the AVPU scale (Alert, Verbal, Pain, Unresponsive)?
+  [MO] The patient is alert.
+  [47] 917ms  Marina: The patient's vital signs are as follows: oxygen saturation is 99%, respiratory rate is 16 breaths per minute, heart rate is 88 beats per minute, blood pressure is 122/78 mmHg, temperature is 36.8°C, and the patient is alert according to the AVPU scale. Do you have anything else to add on vital signs?
+  [MO] Vital signs are within normal limits; no abnormalities noted.
+  [48] 1796ms  Marina: Temperature is 36.8°C, which is below 38°C. No investigations were required for this case. Do you have anything else to add on investigations?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] No additional investigations required; temperature is within normal limits and no signs of infection present.
+  [49] 1497ms  Marina: How long and wide is the wound in centimeters?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] The wound measures approximately 0.8 cm in length and 0.3 cm in width.
+  [50] 728ms  Marina: Are the edges even and smooth, or uneven and jagged?
+  [MO] The wound edges are even and smooth.
+  [51] 1139ms  Marina: Do the edges gap open, or are they close together?
+  [MO] The wound edges are close together.
+  [52] 1058ms  Marina: Can you see fat, muscle, bone or tendons? Tendons are white and cord-like.
+  [MO] No visible fat, muscle, bone, or white cord-like tendons exposed. The hook is embedded in the dorsum without evidence of deep tissue exposure.
+  [53] 817ms  Marina: Is there sign of infection, like redness or yellow secretion?
+  [MO] No signs of infection; no redness or yellow secretion observed.
+  [54] 916ms  Marina: Is there any dirt, metal or other debris inside the wound? Rinse with clean water if necessary and look again.
+  [MO] No visible dirt, metal, or debris observed in the wound after rinsing with clean water.
+  [55] 1361ms  Marina: [Only if the wound is located on an extremity like arm or leg] Check the skin further down from the wound, for example in fingers. Is the skin warm and of normal color?
+  [MO] Skin of the fingers is warm and of normal color.
+  [56] 1288ms  Marina: [Only if the wound is located on an extremity like arm or leg] Gently touch the skin, can the person feel it?
+  [MO] Yes, the patient can feel light touch on the skin around the injury site.
+  [57] 788ms  Marina: [Only if the wound is located on an extremity like arm or leg] Can the patient move the extremity with limitation?
+  [MO] The patient can move the right index finger with mild limitation due to pain from the embedded fish hook.
+  [58] 1476ms  Marina: The wound measures 0.8 cm in length and 0.3 cm in width, with even and smooth edges that are close together. There is no exposure of fat, muscle, bone, or tendons. No signs of infection such as redness or yellow secretion are present. After rinsing with clean water, no dirt, metal, or debris is visible in the wound. The skin of the fingers is warm and of normal color. The patient can feel light touch on the skin around the injury site. The patient can move the right index finger with mild limitation due to pain from the embedded fish hook. Do you have anything else to add on the examination?
+  [MO] No additional findings; wound appears clean with intact neurovascular function and no tissue exposure.
+  [59] 2077ms  Marina: Müdaxilə tamamlandı. Xəstə haqqında məlumat toplanmışdır və hesabat hazırlanmışdır. Tibbi rəisə məlumat verin ki, müsahibə başa çatmışdır.
+
+  Interview complete after 59 turns.
+
+── Extract ──
+  Calling /ai/extract with 127 messages (filtered from 145)...
+  ✓ Done  (2045ms)
+
+  location: on a boat at sea
+  gender: male
+  incidentTime: approximately 20 minutes ago
+  chiefComplaint: fish hook embedded in right index finger
+  chiefSymptom: sharp pain, difficulty moving the finger, mild bleeding
+  history: The patient sustained a fishhook injury to the dorsal aspect of the right index finger while fishing on a boat in the sea. The hook entered from the tip of the finger during forward movement of the finger, approximately 20 minutes ago. There was minor bleeding, sharp pain, and a persistent foreign body sensation. The finger was immediately rinsed with water and covered with a clean dressing. No iodine was used due to known allergy. The patient reports difficulty with movement and increased pain during gripping. No numbness or signs of infection such as redness, warmth, swelling, or pus are present.
+  pastHistory: The patient has no history of chronic diseases, bleeding disorders such as hemophilia, or previous surgeries. The last tetanus vaccination was 5 years ago.
+  allergies: Patient is allergic to iodine-containing preparations, specifically antiseptics like povidone-iodine, with reactions including skin redness and rash. No respiratory symptoms such as difficulty breathing. This is the first occurrence. No other allergies reported.
+  currentMedications: Patient states they do not take any medications, including prescription drugs, over-the-counter medications, vitamins, or supplements. No medications have been taken for the current injury.
+  circulation_pulse_per_min: 88
+  circulation_systole: 122
+  circulation_diastole: 78
+  breathing_num_breaths_per_min: 16
+  breathing_oxygen_saturation: 99
+  expose_temperature_measured_mouth: 36.8
+  avpu: Alert
+  problemDescription: 29-year-old male with a fish hook embedded in the dorsal tip of the right index finger, sustained while fishing on a boat in seawater approximately 20 minutes ago. The injury occurred during forward movement of the finger, causing sharp pain, mild bleeding, and a sensation of a foreign body. The patient reports difficulty moving the finger, especially with gripping, due to pain. Denies numbness, infection signs such as redness, warmth, swelling, or pus, and has no history of bleeding disorders, diabetes, prior surgeries, or chronic illnesses. Allergic to iodine-containing preparations, including povidone-iodine, with previous reaction consisting of skin redness and rash; no respiratory distress. No medications, vitamins, or supplements are taken regularly, and no drugs have been used for this injury.
+  performedActions: M-EWS score: 0
+
+Wound measures 0.8 cm in length and 0.3 cm in width with even, smooth, and approximated edges. No exposure of fat, muscle, bone, or tendons. No signs of infection or foreign debris after irrigation with clean water. Skin of the fingers is warm and normally colored. Light touch sensation is intact. Patient can move the right index finger with mild limitation due to pain from the embedded fish hook. Vital signs are within normal limits; patient is alert.

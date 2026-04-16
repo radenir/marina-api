@@ -1,0 +1,159 @@
+
+════════════════════════════════════════════════════════════
+  Japanese patient / German MO — Upper GI Bleed (peptic ulcer)
+════════════════════════════════════════════════════════════
+  Symptom: 胃の上の方が焼けるように痛くて、今朝コーヒーのかすのような茶色いものを吐きました。
+
+  ✓ Started  (1310ms)
+
+
+── Stage 1: Pathway ──
+  Marina: おはようございます、私は医療補助のマリーナです。今日はどのような症状でお困りですか？
+  [Pt] 今朝、上腹部の焼けるような痛みとコーヒーかすのような吐物がありました。以前から胃潰瘍があります。
+  [1] 504ms  Marina: 上腹部の焼けるような痛みについて、もう少し詳しく教えていただけますか？
+  [Pt] 上腹部に焼けるような痛みがあり、今朝はコーヒーかすのような吐物も出ました。以前から胃潰瘍の既往があります。
+  [2] 482ms  Marina: この症状に関連して、他に気になることはありますか？
+  [Pt] 吐血や黒色便の有無、強い貧血症状（めまい、乏力）があるか確認が必要です。
+  [3] 548ms  Marina: 確認させてください。主な症状は「上腹部の焼けるような痛み」と「コーヒーかすのような吐物」ですね。これでよろしいですか？
+  [Pt] はい、その通りです。今朝、上腹部に焼けるような痛みがあり、コーヒーかすのような吐物がありました。
+  [4] 885ms  Marina: ご年齢をお伺いしてもよろしいでしょうか？  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] 52歳です。
+  [5] 363ms  Marina: 性別について教えていただけますか？
+  [Pt] 男性です。
+  [6] 579ms  Marina: 症状の発症は突然でしたか、それとも徐々に始まりましたか？
+  [Pt] 症状は今朝突然始まりました。
+  [7] 631ms  Marina: 症状の持続時間について教えてください。痛みや嘔吐はどのくらいの間続いていますか？
+  [Pt] 今朝から痛みが始まり、嘔吐はそれから30分ほど後にありました。まだ続いています。
+  [8] 487ms  Marina: 嘔吐はどのくらいの頻度で起こっていますか？また、量についても教えていただけますか？
+  [Pt] 今朝、1回だけコーヒーかすのような嘔吐がありました。量はコップ1杯ほどです。
+  [9] 459ms  Marina: 嘔吐物に血が混ざっているように見えましたか？
+  [Pt] はい、嘔吐物はコーヒーかすのような色で、血が混ざっているように見えます。
+  [10] 562ms  Marina: 水分を摂取することはできますか？嘔吐があっても、水やお茶などを飲めていますか？
+  [Pt] 嘔吐があるため、現在は絶飲水です。医師の指示があるまで何も飲まないでください。
+  [11] 675ms  Marina: 腹痛や発熱といった、他の症状はありますか？
+  [Pt] はい、上腹部に灼熱痛がありますが、発熱はありません。
+  [12] 705ms  Marina: 最近の食事内容や、食事の衛生状態について心当たりはありますか？例えば、何か変わったものを食べた、または食中毒の疑いがあるような状況はありましたか？
+  [Pt] 特に変わったものは食べておらず、食事の衛生状態に問題はなかったと思います。
+  [13] 644ms  Marina: 乗り物酔いの傾向はありますか？例えば、船に乗っているときに気分が悪くなることはよくありますか？
+  [Pt] いいえ、乗り物酔いはほとんどありません。船に乗っていても気分が悪くなることはあまりありません。
+  [14] 1689ms  Marina: これまでにお話しいただいた内容をまとめます。52歳の男性で、今朝突然上腹部の焼けるような痛みが出現し、その後30分ほどでコーヒーかすのような嘔吐がありました。嘔吐は1回で、量はコップ1杯ほどでした。嘔吐物には血が混ざっているように見えます。現在は絶飲水の状態です。発熱はなく、最近の食事に特段の問題はないとされています。また、普段は乗り物酔いをしないとのことです。これまでの胃潰瘍の既往も確認しています。
+
+追加で、これまでに話した内容以外で付け加えることはありますか？
+  [Pt] 特に追加はありません。痛みはやや落ち着きましたが、まだすっきりしません。
+  [15] 740ms  Marina: 腹部痛はありますか？  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] はい、上腹部に焼けるような痛みがあります。
+  [16] 486ms  Marina: 発熱はありますか？
+  [Pt] いいえ、発熱はありません。体温は36.9℃です。
+  [17] 558ms  Marina: 下痢はありますか？
+  [Pt] いいえ、下痢はありません。
+  [18] 471ms  Marina: 頭痛はありますか？
+  [Pt] いいえ、頭痛はありません。
+  [19] 337ms  Marina: めまいはありますか？
+  [Pt] めまいはありません。
+  [20] 801ms  Marina: これまでの内容をまとめます。上腹部に焼けるような痛みがありますが、発熱、下痢、頭痛、めまいは報告されていません。体温は36.9℃です。
+
+このほかに、関連する症状で付け加えることはありますか？
+  [Pt] 吐血（コーヒー grounds 悪性）があり、脈は速い（112）です。血圧はやや低下（106/66）しています。
+  [21] 933ms  Marina: 過去に胃や腸の病気、例えば胃潰瘍や十二指腸潰瘍、胃炎などの診断を受けたことがありますか？  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] はい、以前に胃潰瘍と診断されたことがあります。
+  [22] 488ms  Marina: 現在、何か薬を服用していますか？または、最近何か薬を使ったことがありますか？
+  [Pt] イブプロフェンを定期的に腰痛のため服用しています。
+  [23] 413ms  Marina: 患者さんは女性ですか？それとも男性ですか？
+  [Pt] 患者さんは男性です。
+  [24] 719ms  Marina: これまでにお話しいただいた内容をまとめます。過去に胃潰瘍の既往があり、現在は腰痛のためイブプロフェンを定期的に服用しています。患者さんは男性であるため、妊娠の可能性はありません。
+
+このほかに、過去の病歴に関して追加で話したいことはありますか？
+  [Pt] 特に他に病歴はありません。
+  [25] 702ms  Marina: 現在、定期的に服用している薬はありますか？  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] はい、毎日イブプロフェンを飲んでいます。
+  [26] 634ms  Marina: イブプロフェンの1回の服用量と、1日に何回飲んでいるか教えていただけますか？
+  [Pt] 1回200mgを1日3回飲んでいます。
+  [27] 563ms  Marina: その他に、市販薬、ビタミン、サプリメントなどを服用していますか？
+  [Pt] いいえ、特に服用していません。
+  [28] 2798ms  Marina: 現在の症状のために、特別に何か薬を飲んでいますか？
+  [Pt] いえ、特に新しい薬は飲んでいません。いつも通りにイブプロフェンを飲んでいます。
+  [29] 1060ms  Marina: これまでの内容をまとめます。現在、腰痛のためイブプロフェンを1回200mg、1日3回定期的に服用しています。市販薬、ビタミン、サプリメントは使用していません。今回の症状に対して新たに服用している薬はありません。
+
+このほかに、薬に関する追加で話したいことはありますか？
+  [Pt] 特に追加はありません。イブプロフェンを長年続けていますが、胃の痛みは最近強くなってきました。
+  [30] 948ms  Marina: 薬や食べ物、その他の物質に対してアレルギーがありますか？  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] いいえ、アレルギーはありません。
+  [31] 761ms  Marina: Sauerstoffsättigung in Prozent?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Sauerstoffsättigung beträgt 97 %.
+  [32] 566ms  Marina: Atemfrequenz in Atemzügen pro Minute?
+  [MO] Atemfrequenz: 18 Atemzüge pro Minute.
+  [33] 608ms  Marina: Herzfrequenz oder Puls in Schlägen pro Minute?
+  [MO] Herzfrequenz 112 Schläge pro Minute.
+  [34] 563ms  Marina: Blutdruck: systolischer und diastolischer Wert in mmHg?
+  [MO] 106/66 mmHg
+  [35] 612ms  Marina: Körpertemperatur in Grad Celsius?
+  [MO] 36,9 °C
+  [36] 817ms  Marina: Bewusstseinslage nach AVPU: Alert (wach), Verbal (auf Ansprache reagierend), Pain (auf Schmerz reagierend), Unresponsive (nicht ansprechbar)?
+  [MO] Bewusstseinslage: Alert.
+  [37] 1463ms  Marina: Die aufgezeichneten Vitalzeichen weisen folgendes Bild auf: Die Sauerstoffsättigung beträgt 97 Prozent, die Atemfrequenz liegt bei 18 Atemzügen pro Minute, die Herzfrequenz ist mit 112 Schlägen pro Minute erhöht. Der Blutdruck beträgt 106 über 66 mmHg, was auf eine leichte Hypotonie hindeutet. Die Körpertemperatur liegt mit 36,9 Grad Celsius im Normbereich. Die Bewusstseinslage ist laut AVPU-Skala als „Alert“ einzustufen. Gibt es weitere Ergänzungen zu den Vitalzeichen?
+  [MO] Nein, die Vitalzeichen sind vollständig dokumentiert: O2 97 %, HR 112/min, BP 106/66 mmHg, RR 18/min, Temp 36,9 °C, AVPU alert.
+  [38] 1373ms  Marina: Da die Körpertemperatur unter 38 °C liegt, ist kein CRP-Test erforderlich. Der Patient ist männlich, daher entfällt der Schwangerschaftstest. Liegt ein Blutzuckertest vor, da der Patient bekanntermaßen kein Diabetiker ist?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] Ein Blutzuckertest sollte dennoch durchgeführt werden, da akute internistische Notfälle wie eine obere GI-Blutung einen Stresszustand darstellen, der den Glukosestoffwechsel beeinflussen kann – unabhängig von einer bekannten Diabeteserkrankung.
+  [39] 550ms  Marina: Wurde ein Blutzuckertest durchgeführt, und wenn ja, was war das Ergebnis?
+  [MO] Es wurde kein Blutzuckertest durchgeführt.
+  [40] 830ms  Marina: Zusammenfassend wurden keine Untersuchungen durchgeführt, da die Temperatur unter 38 °C liegt, der Patient männlich ist und kein bekannter Diabetiker. Ein Blutzuckertest wurde nicht durchgeführt. Gibt es ergänzende Informationen zu weiteren Untersuchungen?
+  [MO] Es wurden keine weiteren Untersuchungen durchgeführt. Keine ergänzenden Informationen verfügbar.
+  [41] 1194ms  Marina: Kann der Patient frei sprechen und klar antworten?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Ja, der Patient ist wach, ansprechbar und antwortet klar.
+  [42] 740ms  Marina: Ist die Atmung erschwert? Atmet der Patient durch den Mund?
+  [MO] Die Atmung ist nicht erschwert, der Patient atmet nicht durch den Mund.
+  [43] 679ms  Marina: Sieht der Patient blass oder grau aus?
+  [MO] Der Patient wirkt leicht blass.
+  [44] 577ms  Marina: Ist die Haut feucht oder warm?
+  [MO] Die Haut ist warm und trocken.
+  [45] 689ms  Marina: Gibt es Anzeichen für Trauma wie Wunden oder Blutergüsse?
+  [MO] Keine sichtbaren Wunden oder Blutergüsse.
+  [46] 565ms  Marina: Kann der Patient aufstehen und einige Meter gehen, ohne Unterstützung?
+  [MO] Der Patient ist wach und ansprechbar, zeigt jedoch Tachykardie und Blässe; eine ungeklärte orthostatische Hypotension könnte das Gehen ohne Unterstützung beeinträchtigen.
+  [47] 847ms  Marina: Der Patient kann aufgrund von Tachykardie und Blässe möglicherweise nicht sicher ohne Unterstützung aufstehen und gehen. Gibt es weitere Befunde zur allgemeinen körperlichen Verfassung?
+  [MO] Der Patient ist wach, orientiert, zeigt epigastrische Druckschmerzhaftigkeit, melänoischen Stuhl per rektale Untersuchung, keine Peritonealzeichen, leicht blässliche Haut, stabile Sauerstoffsättigung bei 97 %.
+  [48] 834ms  Marina: インタビューは完了しました。報告書が作成されました。
+
+  Interview complete after 48 turns.
+
+── Extract ──
+  Calling /ai/extract with 105 messages (filtered from 123)...
+  ✓ Done  (2467ms)
+
+  dateOfBirth: 52
+  gender: male
+  chiefComplaint: burning pain in the upper abdomen and coffee-ground vomiting
+  chiefSymptom: burning upper abdominal pain, coffee-ground vomit
+  history: The patient, a 52-year-old male, experienced sudden onset of burning epigastric pain this morning, followed approximately 30 minutes later by one episode of coffee-ground-like vomiting with an estimated volume of one cup. The vomitus appeared to contain blood. The pain has slightly improved but persists. The patient is currently nil per os (NPO) due to vomiting. There is no fever, diarrhea, headache, or dizziness. The patient reports tachycardia (pulse 112 bpm), mild hypotension (106/66 mmHg), and appears slightly pale. Melena was confirmed on rectal examination. Epigastric tenderness is present without peritoneal signs.
+  pastHistory: The patient has a history of gastric ulcer. No other past medical conditions were reported.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Ibuprofen 200mg three times daily for chronic low back pain, taken regularly for years.
+  circulation_pulse_per_min: 112
+  circulation_systole: 106
+  circulation_diastole: 66
+  breathing_num_breaths_per_min: 18
+  breathing_oxygen_saturation: 97
+  expose_temperature_measured_mouth: 36.9
+  avpu: Alert
+  redFlag: yes
+  redFlagType: gastrointestinal bleeding
+  problemDescription: 52-year-old male with a history of gastric ulcer and regular use of ibuprofen for back pain, presenting with sudden onset of burning upper abdominal pain this morning followed by one episode of coffee-ground-like vomiting, approximately one cup in volume, which appeared to contain blood. The pain is ongoing but slightly improved. Denies fever, diarrhea, headache, dizziness, and recent intake of unusual food. No motion sickness tendency. No allergies. Patient is currently on nil by mouth status due to vomiting. Confirms melena on rectal examination. Patient is unsure about orthostatic hypotension.
+  performedActions: M-EWS score: 3
+
+Patient is alert and oriented. Skin is warm, dry, and slightly pale. Epigastric tenderness is present on examination. No signs of trauma, no peritoneal signs. Respiratory effort is normal, no mouth breathing. Sauerstoffsättigung 97 Prozent, Atemfrequenz 18 Atemzüge pro Minute, Herzfrequenz 112 Schläge pro Minute, Blutdruck 106/66 mmHg, Körpertemperatur 36,9 °C, AVPU alert. No blood glucose test performed. No other investigations conducted.

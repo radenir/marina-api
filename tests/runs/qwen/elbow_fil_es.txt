@@ -1,0 +1,27 @@
+
+════════════════════════════════════════════════════════════
+  Filipino patient / Spanish MO — elbow pain after impact
+════════════════════════════════════════════════════════════
+  Symptom: Nabangga ang siko ko sa makinarya at hindi ko na maituwid ang braso, masakit na masakit
+
+  ✓ Started  (2791ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Paano ko masasamahan sa araw na ito? Ano ang nararamdaman mo ngayon?
+  [Pt] Masakit ang aking siko, hindi ko ito ma-extend. Nakakapanibago at nakakainis ito.
+  [1] 4985ms  Marina: Maaari mo bang ilarawan nang mas detalyado ang sakit sa iyong siko?
+  [Pt] May matinding sakit ako sa siko matapos ma-impact sa makina, parang may naboto at hindi ko maisilid o ma-extend nang buo ang braso.
+  [2] 2015ms  Marina: Bukod sa sakit at pagkabagot ng galaw sa siko, may iba ka pa bang nararamdaman tulad ng pamamaga, pangangati, o panghihina?
+  [Pt] May kaunting pamamaga at panghihina sa braso, pero walang pangangati o pulikat.
+  [3] 2894ms  Marina: Tama ba na ang pangunahing problema mo ay sakit sa siko na nagdulot ng pagkabagot sa galaw at bahagyang pamamaga?
+  [Pt] Oo, tama. Nasaktan ang siko ko dahil sa pag-impact sa makina, at hindi ko na maunat nang buo ang braso ko. May kaunting pamamaga at limitado ang galaw.
+  [4] 27776ms  Marina: Ilang taon ka na?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] 33 taon ako.
+  [5] 2177ms  Marina: Ikaw ba ay lalaki o babae?
+  [Pt] Lalaki ako, 33 taong gulang.
+  [6] 1358ms  Marina: Paano nangyari ang pinsala sa iyong siko? Maaari mo bang ilarawan ang eksaktong pangyayari kung paano ito nasaktan?
+  [LLM error: The read operation timed out — using fallback]
+  [Pt] Yes.

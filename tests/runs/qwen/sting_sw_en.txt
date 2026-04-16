@@ -1,0 +1,154 @@
+
+════════════════════════════════════════════════════════════
+  Swahili patient / English MO — jellyfish sting
+════════════════════════════════════════════════════════════
+  Symptom: Nilichomwa na ubiyubee wakati nilikuwa nikifanya kazi, ngozi yangu inawaka moto na inauma sana
+
+  ✓ Started  (944ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Mimi ni Marina, nasijali kujua leo unahisi vipi?
+  [Pt] Nahisi vibaya kidogo kwa sababu ya uchungu wa mkono wangu uliopata kutokana na sumu ya kikwete.
+  [1] 641ms  Marina: Tafadhali ueleze kwa undani zaidi uchungu wa mkono unao?
+  [Pt] Nina uchungu mkali unaivuta kwenye mkono wangu wa mbele, unahusiana na mahali ambapo nilipowakia kuti ni kipepeo cha baharini. Uchungu unanuka kama moto.
+  [2] 745ms  Marina: Je, unajisikia vibaya kwa sababu ya sababu nyingine zaidi ya uchungu wa mkono?
+  [Pt] Sijasikia vibaya, bali tu uchungu mkono na mapigo ya ngozi.
+  [3] 587ms  Marina: Je, unakadiria kuwa uchungu wa mkono ni kipaji chako kikuu cha sasa?
+  [Pt] Ndio, kuna uchungu mkali katika mkono wangu kisha kuna mapungufu ya ngozi.
+  [4] 998ms  Marina: Unajisikia kama umepata kipaji cha moto au sumu?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Najisikia kama kipaji cha moto kwenye mkono wangu wa mbele.
+  [5] 678ms  Marina: Je, umepata kipaji cha moto, sumu, au umeme?
+  [Pt] Nimepata kipaji cha moto kutokana na sumu ya kipepeo cha baharini kwenye mkono wangu.
+  [6] 468ms  Marina: Tafadhali toa umri wako kwa miaka?
+  [Pt] Nina miaka 22.
+  [7] 571ms  Marina: Unajinsikia kama mwanamume au mwanamke?
+  [Pt] Najisikia kama mwanamume.
+  [8] 575ms  Marina: Tafadhali toa muda uliopita tangu kipaji kikionekana?
+  [Pt] Kipaji kikionekana dakika 10 iliyopita.
+  [9] 511ms  Marina: Tafadhali toa eneo kamili ambapo kipaji kimeonekana?
+  [Pt] Kipaji kimeonekana kwenye mkono wa mbele wa mkono wake wa kushoto.
+  [10] 565ms  Marina: Tafadhali eleza kwa undani zaidi mazingira ambayo kipaji kimeonekana?
+  [Pt] Kipaji kilionekana wakati nilipofanya kazi karibu na bahari, baada ya kunyanyaswa na kitu kinachodumu kama kioo.
+  [11] 641ms  Marina: Je, umeweka matibabu yoyote ya kwanza baada ya kipaji kikionekana?
+  [Pt] Sijaweka matibabu yoyote baada ya kipaji kikionekana.
+  [12] 607ms  Marina: Tafadhali toa muda uliopita unapoepuka kioo kilichokulea?
+  [Pt] Sijui kama kuna muda maalum, lakini kioo kilichokulea kinaathiri kama hujatoa sumu kwenye ngozi bado.
+  [13] 1367ms  Marina: Kipaji cha moto kilichotokana na sumu kimeonekana kwenye mkono wa mbele wa mkono wa kushoto tangu dakika 10 iliyopita. Umepata kipaji hicho wakati ulifanya kazi karibu na bahari baada ya kunyanyaswa na kitu kinachodumu kama kioo. Hujaweka matibabu yoyote ya kwanza. Umri wako ni miaka 22 na unajisikia kama mwanamume. Je, una kitu kingine cha kuongeza kuhusu historia ya kipaji?
+  [Pt] Ninaumwa kama moto mkali kwenye sehemu iliyonukuliwa na kitu kioo, bila maumivu mengine au dalili zingine.
+  [14] 1697ms  Marina: Kipaji cha moto kilichotokana na sumu kimeonekana kwenye mkono wa mbele wa mkono wa kushoto tangu dakika 10 iliyopita. Umepata kipaji hicho wakati ulifanya kazi karibu na bahari baada ya kunyanyaswa na kitu kinachodumu kama kioo. Hujaweka matibabu yoyote ya kwanza. Umri wako ni miaka 22 na unajisikia kama mwanamume. Uchungu unanukia kama moto mkali bila dalili zingine. Je, una kitu kingine cha kuongeza kuhusu historia ya kipaji?
+  [Pt] Hapana, sina kitu kingine cha kuongeza. Kipaji kimeanza kuwaka mara moja baada ya kunyanyaswa na kitu kama kioo baharini.
+  [15] 1548ms  Marina: Je, una uchungu katika sehemu yoyote ya mwili zaidi ya mkono uliowekwa sumu?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Ndiyo, bado nasipokuwa na uchungu mkali kwenye mkono ambapo nilipowekwa sumu.
+  [16] 744ms  Marina: Je, kuna ongezeko la ukubwa au uzito katika sehemu iliyosumbuliwa?
+  [Pt] Hakuna ongezeko la ukubwa au uzito kwenye sehemu iliyosumbuliwa.
+  [17] 1561ms  Marina: Je, kuna vifungu au vifungu vya maji vilivyoanzia kwenye ngozi katika eneo lililosumbuliwa?
+  [Pt] Ndiyo, kuna vifungu vidogo vya maji kwenye eneo la shavu lililosumbuliwa.
+  [18] 700ms  Marina: Je, umejisikia kama kuungua, kuchoka sana, kuchelewa, au kutoroka damu kwenye pua au mdomo?
+  [Pt] Sijasikia chochote kama hicho, si kuchoka wala kutoroka damu.
+  [19] 736ms  Marina: Je, unajisikia kama kupumua kwa shida, kunuka pua, au kukipuka kwenye kichwa?
+  [Pt] Sijajisikia kama kupumua kwa shida, kunuka pua, au kukipuka kwenye kichwa.
+  [20] 1425ms  Marina: Je, una maumivu ya macho, kukichwa, au kuonekana kama macho yako yanavyomwaka?
+  [Pt] Hapana, sina maumivu ya macho, hakuna kukichwa, wala macho yasiyomwaka.
+  [21] 1561ms  Marina: Una uchungu mkali kwenye mkono uliosumbuliwa, kuna vifungu vidogo vya maji kwenye eneo la shavu, lakini hakuna ongezeko la ukubwa au uzito. Hujajisikia kama kuungua, kuchoka, kuchelewa, au kutoroka damu. Pia hakuna shida ya kupumua, kunuka pua, au kukipuka kwenye kichwa. Macho yako hayajawaka, hayana maumivu, wala hakuna kukichwa. Je, una kitu kingine cha kuongeza kuhusu dalili zingine zinazohusiana na kipaji?
+  [Pt] Hakuna dalili nyingine zinazohusiana na kipaji; uchungu ni wa wastani, na mifuko ni madogo tu kwenye eneo lililosumbuliwa.
+  [22] 1163ms  Marina: Je, umepata kipaji cha moto, sumu, au umeme mapema kabla ya sasa?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Sijapata kipaji cha moto, sumu, au umeme mapema kabla ya sasa.
+  [23] 4773ms  Marina: Je, umepata ugonjwa wowote mwingine ambao unahitaji matibabu au uliposimama kazi?
+  [Pt] Hapana, sijapata ugonjwa wowote mwingine, wala sikupata matibabu yoyote kabla ya sasa.
+  [24] 746ms  Marina: Je, umepata mafunzo yoyote ya kisasa kuhusu usimamizi wa kipaji au matibabu ya kwanza?
+  [Pt] Hapana, sijapokea mafunzo yoyote ya kisasa kuhusu usimamizi wa kipaji au matibabu ya kwanza.
+  [25] 1075ms  Marina: Umepata kipaji cha moto, sumu, au umeme mapema kabla ya sasa? Hapana. Umepata ugonjwa wowote mwingine ambao unahitaji matibabu au uliposimama kazi? Hapana. Umepokea mafunzo yoyote ya kisasa kuhusu usimamizi wa kipaji au matibabu ya kwanza? Hapana. Je, una kitu kingine cha kuongeza kuhusu historia yako ya kawaida ya afya?
+  [Pt] Hapana, sina maambukizi yoyote au matatizo mengine ya afya.
+  [26] 948ms  Marina: Je, unatumia dawa yoyote kila siku?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Hapana, sijatumia dawa yoyote kila siku.
+  [27] 715ms  Marina: Je, unatumia dawa yoyote za duka la mbalimbali, vitamini, au suplementi?
+  [Pt] Hapana, sijatumia dawa, vitamini, au suplementi yoyote.
+  [28] 639ms  Marina: Je, umetumia dawa yoyote hasa kwa ajili ya kipaji hiki cha sasa?
+  [Pt] Hapana, sijatumia dawa yoyote kwa sasa.
+  [29] 1027ms  Marina: Hakuna matumizi ya dawa kila siku, hakuna matumizi ya dawa za duka, vitamini, au suplementi, na hakuna matumizi ya dawa kwa ajili ya kipaji hiki cha sasa. Je, una kitu kingine cha kuongeza kuhusu matumizi ya dawa?
+  [Pt] Hapana, sina kitu kingine cha kuongeza kuhusu matumizi ya dawa.
+  [30] 1152ms  Marina: Je, una uzoefu wowote wa kutofautiana na dawa, chakula, au vitu vingine?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Hapana, sina uzoefu wowote wa kutofautiana na dawa, chakula, au vitu vingine.
+  [31] 682ms  Marina: Hakuna uzoefu wowote wa kutofautiana na dawa, chakula, au vitu vingine. Je, una kitu kingine cha kuongeza kuhusu matatizo ya kutofautiana?
+  [Pt] Hapana, sina kitu kingine cha kuongeza kuhusu matatizo ya kutofautiana.
+  [32] 1035ms  Marina: Medical Officer, please provide the patient's oxygen saturation level in percent.  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Oxygen saturation is 99%.
+  [33] 679ms  Marina: What is the patient's respiratory rate in breaths per minute?
+  [MO] The patient's respiratory rate is 16 breaths per minute.
+  [34] 537ms  Marina: What is the patient's heart rate or pulse in beats per minute?
+  [MO] The patient's heart rate is 92 beats per minute.
+  [35] 1094ms  Marina: What is the patient's blood pressure, both systolic and diastolic, in mmHg?
+  [MO] The patient's blood pressure is 120/76 mmHg.
+  [36] 466ms  Marina: What is the patient's temperature in degrees Celsius?
+  [MO] The patient's temperature is 37.0°C.
+  [37] 594ms  Marina: What is the patient's level of consciousness according to the AVPU scale—Alert, Verbal, Pain, or Unresponsive?
+  [MO] The patient is Alert.
+  [38] 932ms  Marina: The patient's vital signs are as follows: oxygen saturation is 99%, respiratory rate is 16 breaths per minute, heart rate is 92 beats per minute, blood pressure is 120/76 mmHg, temperature is 37.0°C, and the patient is Alert according to the AVPU scale. Does the medical officer have anything else to add regarding the vital signs?
+  [MO] All vital signs are within normal limits; no abnormalities noted.
+  [39] 1795ms  Marina: No investigations were required for this case. Does the medical officer have anything else to add on investigations?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] No, the medical officer has no further additions regarding investigations.
+  [40] 1204ms  Marina: Does the patient have any burns or chemical injuries visible on the skin?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] No, there are no burns or chemical injuries visible on the skin. The findings are limited to linear wheal marks and erythema on the left forearm.
+  [41] 846ms  Marina: Is there any blistering present at the site of injury?
+  [MO] No blistering is present at the site of injury.
+  [42] 1314ms  Marina: Is there any swelling observed in the affected area?
+  [MO] Yes, there is localized swelling in the affected area.
+  [43] 639ms  Marina: Is the skin around the injury warm to the touch?
+  [MO] The skin around the injury is not warm to the touch.
+  [44] 456ms  Marina: Is there any sign of infection such as pus or increasing redness?
+  [MO] No pus or increasing redness observed.
+  [45] 598ms  Marina: Is the patient able to move the affected limb normally?
+  [MO] The patient reports mild pain but is able to move the left forearm normally.
+  [46] 1766ms  Marina: Is there any numbness or tingling in the affected area?
+  [MO] Patient reports mild tingling but no numbness in the affected area.
+  [47] 861ms  Marina: Is there any pain on palpation of the injured site?
+  [MO] Yes, there is pain on palpation of the left forearm at the site of the wheal marks.
+  [48] 671ms  Marina: Is the injury located on an extremity that could affect circulation, such as a limb?
+  [MO] Yes, the injury is on the left forearm, a limb that could affect circulation.
+  [49] 735ms  Marina: Is distal circulation intact, assessed by checking capillary refill, pulse, and skin color?
+  [MO] Distal circulation is intact with normal capillary refill, palpable radial pulse, and normal skin color.
+  [50] 1050ms  Marina: The physical examination reveals linear wheal marks and erythema on the left forearm with localized swelling and pain on palpation. There is no blistering, warmth, pus, or increasing redness. The patient reports mild pain and tingling but no numbness, and is able to move the limb normally. Distal circulation is intact with normal capillary refill, palpable radial pulse, and normal skin color. Does the medical officer have anything else to add on the examination?
+  [MO] No additional findings on examination.
+  [51] 1188ms  Marina: The interview is complete. The report has been generated.
+
+  Interview complete after 51 turns.
+
+── Extract ──
+  Calling /ai/extract with 111 messages (filtered from 129)...
+  ✓ Done  (10859ms)
+
+  gender: male
+  chiefComplaint: burning pain from marine creature sting
+  chiefSymptom: severe burning pain in left forearm with small fluid-filled blisters and localized swelling
+  history: The patient developed a painful skin reaction 10 minutes ago on the left forearm after being stung by a jellyfish-like object while working near the sea. The pain is severe, burning in nature, and localized to the affected area. There are small fluid-filled blisters at the site. No other symptoms such as difficulty breathing, nasal congestion, headache, oral bleeding, fatigue, or eye irritation are reported. The patient has not applied any first aid or medication since the incident.
+  pastHistory: The patient has no prior history of burns, electric shocks, or toxic exposures. No other medical conditions, hospitalizations, or surgeries were reported. The patient has not received any recent training on first aid or injury management.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Patient states they do not take any medications.
+  circulation_pulse_per_min: 92
+  circulation_systole: 120
+  circulation_diastole: 76
+  breathing_num_breaths_per_min: 16
+  breathing_oxygen_saturation: 99
+  expose_temperature_measured_mouth: 37.0
+  avpu: Alert
+  problemDescription: 22-year-old male reports severe burning pain and small fluid-filled blisters on the left forearm following contact with a jellyfish while working near the sea 10 minutes ago. He describes the pain as intense and burning, localized to the affected area, with no other symptoms. He denies swelling increase, difficulty breathing, nasal congestion, headache, eye pain, redness, or discharge. He has not applied any first aid or medications. He has no prior history of similar injuries, no chronic illnesses, and no allergies. He is not on any regular medications.
+  performedActions: M-EWS score: 1
+
+Physical examination reveals linear wheal marks and erythema on the left forearm with localized swelling and pain on palpation. No blistering, warmth, pus, or increasing redness observed. Patient reports mild tingling but no numbness, and is able to move the left forearm normally. Distal circulation is intact with normal capillary refill, palpable radial pulse, and normal skin color.

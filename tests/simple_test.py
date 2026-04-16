@@ -35,7 +35,7 @@ PASSWORD     = env.get("MARINA_TEST_PASSWORD", "Gierek123")
 NEBIUS_KEY   = env.get("NEBIUS_API_KEY", "")
 NEBIUS_URL   = env.get("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v1")
 NEBIUS_MODEL = env.get("NEBIUS_MODEL", "MiniMaxAI/MiniMax-M2.1")
-BASE         = "https://api.marinahealth.eu"
+BASE         = env.get("TEST_BASE_URL", "http://localhost:4000")
 
 # ── Test cases (see tests/cases_index.md for full reference) ───────────────────
 CASES = [
@@ -640,11 +640,111 @@ CASES = [
         "patient_system": "You are a patient on a maritime vessel. Male, 38 years old. Chief complaint: right ankle twisted, now very swollen, cannot walk. No chronic conditions, no medications, no allergies. Non-smoker. Vital signs: O2 99%, HR 90, BP 126/80, RR 16, Temp 36.8°C, AVPU Alert. Rules: reply in 1-2 short sentences in Greek. Answer only what is asked. Never break character.",
         "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 38, right ankle injury. Fixed values: O2 99%, HR 90 bpm, BP 126/80 mmHg, RR 16, Temp 36.8°C, AVPU Alert. Right ankle: marked swelling, bony tenderness posterior edge of lateral malleolus, unable to bear weight, Ottawa rules positive for X-ray. Rules: reply in 1-2 short sentences in Italian. Give only the specific finding asked. No diagnoses.",
     },
+    # 61
+    {
+        "name": "Danish patient / Norwegian MO — Acute Appendicitis",
+        "slug": "abdomen_da_no",
+        "p_lang": "Danish",
+        "mo_lang": "Norwegian",
+        "symptom": "Jeg har haft mavesmerter siden i morges, som startede ved navlen og nu sidder i højre side. Jeg har kvalme og lidt feber.",
+        "patient_system": "You are a patient on a maritime vessel. Male, 31 years old. Chief complaint: abdominal pain migrating from periumbilical to right lower quadrant over 12 hours, nausea, low-grade fever. No chronic conditions, no medications, no allergies. Non-smoker. Vital signs: O2 99%, HR 96, BP 124/78, RR 17, Temp 37.9°C, AVPU Alert. Rules: reply in 1-2 short sentences in Danish. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 31, acute appendicitis suspected — RLQ pain migrating from umbilicus. Fixed values: O2 99%, HR 96 bpm, BP 124/78 mmHg, RR 17, Temp 37.9°C, AVPU Alert. McBurney's point tenderness, rebound tenderness positive, Rovsing sign positive, no guarding yet. Rules: reply in 1-2 short sentences in Norwegian. Give only the specific finding asked. No diagnoses.",
+    },
+    # 62
+    {
+        "name": "Norwegian patient / Polish MO — STEMI (Chest Pain)",
+        "slug": "chest_no_pl",
+        "p_lang": "Norwegian",
+        "mo_lang": "Polish",
+        "symptom": "Jeg har hatt knusende brystsmerter siden i natt som stråler ut i venstre arm og kjeven. Jeg er klam og svett.",
+        "patient_system": "You are a patient on a maritime vessel. Male, 58 years old. Chief complaint: severe crushing chest pain radiating to left arm and jaw since last night, diaphoresis. Known hypertension, takes aspirin. Smoker. No allergies. Vital signs: O2 93%, HR 106, BP 152/96, RR 22, Temp 37.1°C, AVPU Alert. Rules: reply in 1-2 short sentences in Norwegian. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 58, suspected STEMI — crushing chest pain radiating to arm and jaw. Fixed values: O2 93%, HR 106 bpm, BP 152/96 mmHg, RR 22, Temp 37.1°C, AVPU Alert. Diaphoretic, pain 9/10, anterior ST elevation on cardiac monitor, no signs of heart failure. Rules: reply in 1-2 short sentences in Polish. Give only the specific finding asked. No diagnoses.",
+    },
+    # 63
+    {
+        "name": "German patient / Danish MO — Community-Acquired Pneumonia",
+        "slug": "pneumonia_de_da",
+        "p_lang": "German",
+        "mo_lang": "Danish",
+        "symptom": "Seit drei Tagen habe ich hohes Fieber, Husten mit gelbem Schleim und starke Schmerzen beim tiefen Einatmen auf der rechten Seite.",
+        "patient_system": "You are a patient on a maritime vessel. Male, 43 years old. Chief complaint: productive cough with yellow sputum, high fever and right-sided pleuritic chest pain for 3 days. Smoker. No chronic conditions, no medications, no allergies. Vital signs: O2 91%, HR 106, BP 128/80, RR 28, Temp 39.4°C, AVPU Alert. Rules: reply in 1-2 short sentences in German. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 43, community-acquired pneumonia right lower lobe. Fixed values: O2 91%, HR 106 bpm, BP 128/80 mmHg, RR 28, Temp 39.4°C, AVPU Alert. Dullness to percussion right lower lobe, bronchial breathing, reduced air entry right base, no wheeze. Rules: reply in 1-2 short sentences in Danish. Give only the specific finding asked. No diagnoses.",
+    },
+    # 64
+    {
+        "name": "Polish patient / Russian MO — Renal Colic",
+        "slug": "renal_pl_ru",
+        "p_lang": "Polish",
+        "mo_lang": "Russian",
+        "symptom": "Mam bardzo silny ból w prawej okolicy lędźwiowej, który promieniuje do pachwiny. Zaczął się nagle i nie mogę znaleźć żadnej wygodnej pozycji.",
+        "patient_system": "You are a patient on a maritime vessel. Male, 38 years old. Chief complaint: sudden severe right loin-to-groin pain, cannot find comfortable position, nausea. No chronic conditions, no medications, no allergies. Non-smoker. Vital signs: O2 99%, HR 108, BP 148/92, RR 20, Temp 37.1°C, AVPU Alert. Rules: reply in 1-2 short sentences in Polish. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 38, renal colic suspected — right loin-to-groin pain. Fixed values: O2 99%, HR 108 bpm, BP 148/92 mmHg, RR 20, Temp 37.1°C, AVPU Alert. Right CVA tenderness, visible haematuria on dipstick, abdomen soft, no guarding, writhing in pain. Rules: reply in 1-2 short sentences in Russian. Give only the specific finding asked. No diagnoses.",
+    },
+    # 65
+    {
+        "name": "Japanese patient / German MO — Upper GI Bleed (peptic ulcer)",
+        "slug": "gibleed_ja_de",
+        "p_lang": "Japanese",
+        "mo_lang": "German",
+        "symptom": "胃の上の方が焼けるように痛くて、今朝コーヒーのかすのような茶色いものを吐きました。",
+        "patient_system": "You are a patient on a maritime vessel. Male, 52 years old. Chief complaint: epigastric burning pain and coffee-ground vomiting this morning. Known peptic ulcer disease, takes ibuprofen regularly for back pain. Smoker. No allergies. Vital signs: O2 97%, HR 112, BP 106/66, RR 18, Temp 36.9°C, AVPU Alert. Rules: reply in 1-2 short sentences in Japanese. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 52, upper GI bleed — peptic ulcer, NSAID use. Fixed values: O2 97%, HR 112 bpm, BP 106/66 mmHg, RR 18, Temp 36.9°C, AVPU Alert. Epigastric tenderness, melena on PR exam, tachycardic, mildly pale, no peritoneal signs. Rules: reply in 1-2 short sentences in German. Give only the specific finding asked. No diagnoses.",
+    },
+    # 66
+    {
+        "name": "Russian patient / Norwegian MO — Hypertensive Emergency with Focal Symptoms",
+        "slug": "hypertension_ru_no",
+        "p_lang": "Russian",
+        "mo_lang": "Norwegian",
+        "symptom": "У меня очень сильная головная боль, зрение стало нечётким и я чувствую онемение в правой руке. Таблетки от давления кончились три дня назад.",
+        "patient_system": "You are a patient on a maritime vessel. Male, 60 years old. Chief complaint: severe headache, blurred vision and right arm numbness. Known hypertension, ran out of medication 3 days ago. Non-smoker. No allergies. Vital signs: O2 97%, HR 94, BP 204/124, RR 18, Temp 37.0°C, AVPU Alert. Rules: reply in 1-2 short sentences in Russian. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 60, hypertensive emergency — BP 204/124, focal symptoms. Fixed values: O2 97%, HR 94 bpm, BP 204/124 mmHg, RR 18, Temp 37.0°C, AVPU Alert. GCS 15, right arm paraesthesia, no facial droop, no dysarthria, bilateral papilloedema on fundoscopy. Rules: reply in 1-2 short sentences in Norwegian. Give only the specific finding asked. No diagnoses.",
+    },
+    # 67
+    {
+        "name": "English patient / Russian MO — Spontaneous Pneumothorax",
+        "slug": "pneumothorax_en_ru",
+        "p_lang": "English",
+        "mo_lang": "Russian",
+        "symptom": "I suddenly got a really sharp pain in my left chest and I can't get a proper breath. It came on out of nowhere while I was just resting.",
+        "patient_system": "You are a patient on a maritime vessel. Male, 22 years old. Tall and slim build. Chief complaint: sudden sharp left-sided chest pain and breathlessness at rest, no prior warning. Smoker. No chronic conditions, no medications, no allergies. Vital signs: O2 90%, HR 116, BP 118/76, RR 30, Temp 37.0°C, AVPU Alert. Rules: reply in 1-2 short sentences in English. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 22, tall slim build, spontaneous left pneumothorax. Fixed values: O2 90%, HR 116 bpm, BP 118/76 mmHg, RR 30, Temp 37.0°C, AVPU Alert. Absent breath sounds left, hyper-resonant percussion left, trachea slightly deviated right, no tension signs. Rules: reply in 1-2 short sentences in Russian. Give only the specific finding asked. No diagnoses.",
+    },
+    # 68
+    {
+        "name": "German patient / Polish MO — Conjunctivitis / Red Eye with Discharge",
+        "slug": "redeye_de_pl",
+        "p_lang": "German",
+        "mo_lang": "Polish",
+        "symptom": "Mein rechtes Auge ist seit gestern rot und schmerzt. Morgens klebt es zu und es läuft viel gelblicher Schleim.",
+        "patient_system": "You are a patient on a maritime vessel. Male, 34 years old. Chief complaint: right eye redness, pain and mucopurulent discharge for 1 day, eyelid crusting on waking. No chronic conditions, no medications, no allergies. Non-smoker. Vital signs: O2 99%, HR 76, BP 122/78, RR 16, Temp 37.0°C, AVPU Alert. Rules: reply in 1-2 short sentences in German. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 34, bacterial conjunctivitis right eye. Fixed values: O2 99%, HR 76 bpm, BP 122/78 mmHg, RR 16, Temp 37.0°C, AVPU Alert. Right eye: diffuse conjunctival injection, profuse mucopurulent discharge, no corneal haziness, vision normal, no periorbital swelling. Rules: reply in 1-2 short sentences in Polish. Give only the specific finding asked. No diagnoses.",
+    },
+    # 69
+    {
+        "name": "Polish patient / English MO — Facial Trauma with Suspected Orbital Fracture",
+        "slug": "facialtrauma_pl_en",
+        "p_lang": "Polish",
+        "mo_lang": "English",
+        "symptom": "Uderzyłem twarzą w pokrywę włazu gdy statek się przechylił. Nos mocno krwawił, jest opuchnięty i krzywy, a teraz widzę podwójnie.",
+        "patient_system": "You are a patient on a maritime vessel. Male, 29 years old. Chief complaint: facial impact against hatch cover, heavy nosebleed, swollen crooked nose, and new diplopia. No chronic conditions, no medications, no allergies. Non-smoker. Vital signs: O2 99%, HR 88, BP 128/80, RR 16, Temp 36.9°C, AVPU Alert. Rules: reply in 1-2 short sentences in Polish. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 29, facial trauma — nasal fracture and suspected orbital blowout. Fixed values: O2 99%, HR 88 bpm, BP 128/80 mmHg, RR 16, Temp 36.9°C, AVPU Alert. Nasal deformity with swelling, epistaxis controlled, bilateral periorbital ecchymosis, diplopia on upward gaze, enophthalmos right eye, no CSF leak. Rules: reply in 1-2 short sentences in English. Give only the specific finding asked. No diagnoses.",
+    },
+    # 70
+    {
+        "name": "Japanese patient / Norwegian MO — Fever with Petechial Rash (meningococcal)",
+        "slug": "fever_ja_no",
+        "p_lang": "Japanese",
+        "mo_lang": "Norwegian",
+        "symptom": "昨日から高熱があって、今朝体に赤い斑点が出てきました。首が痛くて曲げることができません。",
+        "patient_system": "You are a patient on a maritime vessel. Male, 19 years old. Chief complaint: high fever since yesterday, petechial rash appeared this morning, severe neck stiffness. No chronic conditions, no medications, no allergies. Non-smoker. Vital signs: O2 96%, HR 120, BP 104/62, RR 22, Temp 40.1°C, AVPU Voice. Rules: reply in 1-2 short sentences in Japanese. Answer only what is asked. Never break character.",
+        "mo_system": "You are a medical officer on a maritime vessel reporting clinical findings. Patient: male, 19, suspected meningococcal disease — fever, petechial rash and neck stiffness. Fixed values: O2 96%, HR 120 bpm, BP 104/62 mmHg, RR 22, Temp 40.1°C, AVPU Voice. Non-blanching petechial rash on trunk and lower limbs, neck rigidity, Kernig sign positive, GCS 13, photophobia. Rules: reply in 1-2 short sentences in Norwegian. Give only the specific finding asked. No diagnoses.",
+    },
 ]
 
 MAX_TURNS = 150
 
-RUNS_DIR = os.path.join(os.path.dirname(__file__), "runs")
+RUNS_DIR = os.environ.get("MARINA_RUNS_DIR") or os.path.join(os.path.dirname(__file__), "runs")
 
 # ── Colours ────────────────────────────────────────────────────────────────────
 RED, GREEN, YELLOW, BLUE, BOLD, NC = (

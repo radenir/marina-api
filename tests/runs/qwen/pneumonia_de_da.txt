@@ -1,0 +1,153 @@
+
+════════════════════════════════════════════════════════════
+  German patient / Danish MO — Community-Acquired Pneumonia
+════════════════════════════════════════════════════════════
+  Symptom: Seit drei Tagen habe ich hohes Fieber, Husten mit gelbem Schleim und starke Schmerzen beim tiefen Einatmen auf der rechten Seite.
+
+  ✓ Started  (609ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Wie kann ich Ihnen heute helfen?
+  [Pt] Ich habe seit drei Tagen Fieber, einen produktiven Husten mit gelbem Auswurf und stechende Schmerzen in der rechten Brust beim Atmen.
+  [1] 641ms  Marina: Bitte beschreiben Sie das Symptom genauer?
+  [Pt] Ich habe seit drei Tagen einen husten mit gelbem Auswurf, starke rechtsseitige Brustschmerzen beim Atmen und Fieber.
+  [2] 838ms  Marina: Gibt es neben dem Husten, den Brustschmerzen und dem Fieber noch andere Beschwerden, die Sie besonders belasten?
+  [Pt] Nein, sonst habe ich nur allgemeine Schwäche und Atemnot bei körperlicher Belastung.
+  [3] 702ms  Marina: Sie haben also hauptsächlich einen Husten mit gelbem Auswurf, starke rechtsseitige Brustschmerzen beim Atmen und Fieber. Ist das korrekt?
+  [Pt] Ja, das ist korrekt. Ich habe seit drei Tagen Husten mit gelbem Auswurf, Fieber und starke rechtsseitige Brustschmerzen beim Atmen.
+  [4] 805ms  Marina: Wie alt sind Sie?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Ich bin 43 Jahre alt.
+  [5] 463ms  Marina: Welches Geschlecht haben Sie?
+  [Pt] Ich bin männlich.
+  [6] 440ms  Marina: Seit wann haben Sie den Husten?
+  [Pt] Ich habe den Husten seit drei Tagen.
+  [7] 304ms  Marina: Ist der Husten trocken oder produktiv?
+  [Pt] Der Husten ist produktiv mit gelbem Auswurf.
+  [8] 477ms  Marina: Ist der Beginn der Symptome plötzlich oder allmählich erfolgt?
+  [Pt] Der Beginn der Symptome war plötzlich.
+  [9] 864ms  Marina: Haben Sie Blut im Auswurf bemerkt?
+  [Pt] Nein, kein Blut im Auswurf bemerkt.
+  [10] 330ms  Marina: Haben Sie Atemnot?
+  [Pt] Ja, ich habe Atemnot, besonders beim Einatmen wegen des stechenden Schmerzes auf der rechten Seite.
+  [11] 557ms  Marina: Haben Sie Fieber?
+  [Pt] Ja, ich habe seit drei Tagen hohes Fieber, aktuell 39,4 °C.
+  [12] 659ms  Marina: Gibt es bestimmte Auslöser oder Umgebungsbedingungen, die die Symptome verschlimmern, wie Rauch, Staub oder Kälte?
+  [Pt] Ja, das Rauchen und kalte, feuchte Luft auf dem Schiff verschlimmern meinen Husten und die Schmerzen.
+  [13] 1878ms  Marina: Der Patient ist 43 Jahre alt und männlich. Er leidet seit drei Tagen an einem plötzlich eingesetzten, produktiven Husten mit gelbem Auswurf, begleitet von hohem Fieber und starken rechtsseitigen Brustschmerzen beim Atmen. Blut im Auswurf wurde nicht beobachtet. Atemnot besteht, insbesondere beim Einatmen aufgrund der Schmerzen. Die Symptome werden durch Rauchen und kalte, feuchte Luft verschlimmert. Gibt es noch etwas, das Sie zur Anamnese hinzufügen möchten?
+  [Pt] Nein, die Anamnese ist vollständig.
+  [14] 598ms  Marina: Haben Sie Fieber?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Ja, ich habe seit drei Tagen hohes Fieber, aktuell 39,4°C.
+  [15] 367ms  Marina: Haben Sie Schmerzen in der Brust?
+  [Pt] Ja, ich habe stechende Schmerzen auf der rechten Seite, die beim Atmen schlimmer werden.
+  [16] 784ms  Marina: Haben Sie Atemnot?
+  [Pt] Ja, ich habe Atemnot, besonders beim Einatmen wegen des stechenden Schmerzes auf der rechten Seite.
+  [17] 392ms  Marina: Haben Sie Blut im Auswurf bemerkt?
+  [Pt] Nein, ich habe kein Blut im Auswurf bemerkt.
+  [18] 452ms  Marina: Haben Sie in letzter Zeit an Gewicht verloren?
+  [Pt] Nein, ich habe in letzter Zeit kein Gewicht verloren.
+  [19] 430ms  Marina: Haben Sie Nachtschweiß?
+  [Pt] Ja, ich hatte in den letzten Nächten starken Nachtschweiß.
+  [20] 858ms  Marina: Der Patient hat Fieber, Brustschmerzen, Atemnot und Nachtschweiß. Blut im Auswurf wurde nicht beobachtet und es liegt kein Gewichtsverlust vor. Gibt es weitere Beschwerden im Zusammenhang mit den Atemwegssymptomen, die Sie ergänzen möchten?
+  [Pt] Der Patient klagt über Schüttelfrost und allgemeine Schwäche, sonst keine weiteren Beschwerden.
+  [21] 762ms  Marina: Der Patient hat Fieber, Brustschmerzen, Atemnot, Nachtschweiß, Schüttelfrost und allgemeine Schwäche. Blut im Auswurf wurde nicht beobachtet und es liegt kein Gewichtsverlust vor. Gibt es weitere Beschwerden im Zusammenhang mit den Atemwegssymptomen, die Sie ergänzen möchten?
+  [Pt] Nein, weitere Beschwerden bestehen nicht. Die Symptome beschränken sich auf Husten mit gelbem Auswurf, Fieber, Brustschmerzen und Atemnot.
+  [22] 778ms  Marina: Hatten Sie jemals Asthma, COPD oder sind Sie Raucher?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Ich rauche, hatte aber noch nie Asthma oder COPD.
+  [23] 612ms  Marina: Waren Sie in den letzten Monaten Tuberkulose ausgesetzt, zum Beispiel durch Kontakt mit einer infizierten Person?
+  [Pt] Nein, ich hatte in den letzten Monaten keinen Kontakt mit jemandem, der an Tuberkulose erkrankt war.
+  [24] 2869ms  Marina: Wo waren Sie in den letzten drei Monaten gereist?
+  [Pt] Ich war in den letzten drei Monaten nicht gereist.
+  [25] 1050ms  Marina: Der Patient ist Raucher, hat jedoch keine Vorgeschichte von Asthma oder COPD. Eine Exposition gegenüber Tuberkulose wurde verneint und es gab keine Reisen in den letzten drei Monaten. Gibt es weitere Angaben zur Krankenvorgeschichte, die Sie hinzufügen möchten?
+  [Pt] Nein, keine weiteren Vorerkrankungen bekannt. Der Patient gibt lediglich Rauchen als Risikofaktor an.
+  [26] 748ms  Marina: Nehmen Sie regelmäßig Medikamente ein?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Nein, ich nehme keine regelmäßigen Medikamente.
+  [27] 588ms  Marina: Nehmen Sie rezeptfreie Arzneimittel, Vitamine oder Nahrungsergänzungsmittel ein?
+  [Pt] Nein, ich nehme keine rezeptfreien Arzneimittel, Vitamine oder Nahrungsergänzungsmittel ein.
+  [28] 1182ms  Marina: Haben Sie in den letzten Tagen Medikamente eingenommen, um die aktuellen Beschwerden zu lindern?
+  [Pt] Nein, ich habe in den letzten Tagen keine Medikamente eingenommen.
+  [29] 915ms  Marina: Der Patient gibt an, keine regelmäßigen Medikamente, keine rezeptfreien Arzneimittel, Vitamine oder Nahrungsergänzungsmittel einzunehmen und hat auch keine Medikamente zur Linderung der aktuellen Beschwerden eingenommen. Gibt es weitere Angaben zu Medikamenten, die Sie ergänzen möchten?
+  [Pt] Nein, der Patient bestätigt, dass er derzeit keine Medikamente einnimmt und auch keine Schmerzmittel oder Fieberzäpfchen gegen die Symptome eingenommen hat.
+  [30] 796ms  Marina: Haben Sie bekannte Allergien gegen Medikamente, Nahrungsmittel oder andere Substanzen?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Nein, ich habe keine bekannten Allergien gegen Medikamente, Nahrungsmittel oder andere Substanzen.
+  [31] 1001ms  Marina: Medicinsk officer overtager nu. Hvad er patientens iltmætning i procent?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Patientens iltmætning er 91 %.
+  [32] 720ms  Marina: Hvad er patientens vejrtrækningsfrekvens i åndedrag pr. minut?
+  [MO] Patientens vejrtrækningsfrekvens er 28 åndedrag pr. minut.
+  [33] 460ms  Marina: Hvad er patientens puls i slag pr. minut?
+  [MO] Patientens puls er 106 slag pr. minut.
+  [34] 600ms  Marina: Hvad er patientens blodtryk i mmHg, både systolisk og diastolisk?
+  [MO] Patientens blodtryk er 128 mmHg systolisk og 80 mmHg diastolisk.
+  [35] 491ms  Marina: Hvad er patientens kropstemperatur i grader Celsius?
+  [MO] Patientens kropstemperatur er 39,4°C.
+  [36] 863ms  Marina: Hvad er patientens bevidsthed vurderet efter AVPU-skalaen (Alert/Verbal/Pain/Unresponsive)?
+  [MO] Patienten er alert ifølge AVPU-skalaen.
+  [37] 1220ms  Marina: Patientens vitale parametre er følgende: iltmætning er 91 procent, vejrtrækningsfrekvens er 28 åndedrag pr. minut, puls er 106 slag pr. minut, blodtryk er 128 over 80 mmHg, kropstemperatur er 39,4 grader Celsius og bevidsthed er alert efter AVPU-skalaen. Har du noget andet at tilføje omkring de vitale tegn?
+  [MO] Nej, vitale tegn er som angivet: iltmætning 91 %, puls 106/min, blodtryk 128/80 mmHg, vejrtrækningsfrekvens 28/min og temperatur 39,4 °C, bevidsthed alert.
+  [38] 1086ms  Marina: Har du taget en CRP-test, og hvis ja, hvad var resultatet?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] Nej, CRP-test er ikke udført.
+  [39] 551ms  Marina: Har du udført en COVID-19-test, og hvis ja, hvad var resultatet?
+  [MO] Ingen COVID-19-test udført endnu.
+  [40] 1060ms  Marina: Undersøgelserne omfatter ikke CRP-test eller COVID-19-test, da de ikke er udført. Har du noget andet at tilføje omkring undersøgelser?
+  [MO] Nej, der er ikke yderligere undersøgelser at tilføje.
+  [41] 964ms  Marina: Kan patienten tale klart og svare tydeligt?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Ja, patienten er alert og svarer klart og tydeligt.
+  [42] 860ms  Marina: Er vejrtrækningen vanskelig? Ånder patienten gennem munden?
+  [MO] Patienten har øget åndedrætsfrekvens (28/min) og ånder gennem munden.
+  [43] 886ms  Marina: Ser patienten mere bleg eller grå ud end normalt?
+  [MO] Patienten ser bleg ud.
+  [44] 903ms  Marina: Er huden svedig eller varm i berøring?
+  [MO] Huden er varm og svedig i berøring.
+  [45] 704ms  Marina: Er der tegn på traume, såsom sår eller blå mærker?
+  [MO] Ingen tegn på traume, sår eller blå mærker observeret.
+  [46] 997ms  Marina: Bed patienten om at stå op og gå et par meter. Kan han gøre det uden hjælp?
+  [MO] Patienten kan stå og gå et par meter uden hjælp, men med tydelig åndenød.
+  [47] 1532ms  Marina: Patientens almindelige tilstand viser, at han kan tale klart og svare tydeligt, men ånder gennem munden med øget frekvens. Han ser bleg ud, og huden er varm og svedig. Der er ingen tegn på traume. Patienten kan stå og gå uden hjælp, men med tydelig åndenød. Har du noget andet at tilføje omkring den fysiske undersøgelse?
+  [MO] Patienten viser tegn på øget åndedrætsfrekvens med mundåndedræt, bleg og svedig hud, men er alert og kooperativ. Ved auskultation findes bronkial vejrtrækning og nedsat luftgennemstrømning i højre basis, svarende til konsolidering.
+  [48] 1250ms  Marina: Patientens almindelige tilstand viser klar tale, mundåndedræt, bleg og svedig hud, ingen traumer og mulighed for at gå selvstændigt, dog med åndenød. Auskultation afslører bronkial vejrtrækning og nedsat luftgennemstrømning i højre basis, hvilket tyder på konsolidering. Har du noget andet at tilføje omkring den fysiske undersøgelse?
+  [MO] Dullhed ved perkussion i højre underlap, øget taktyl fremitus i samme område, øvrige lungefelter rene, ingen rales eller vêntoner i øvre lapper.
+  [49] 1313ms  Marina: Patientens almindelige tilstand viser klar tale, mundåndedræt, bleg og svedig hud, ingen traumer og mulighed for at gå selvstændigt, dog med åndenød. Auskultation afslører bronkial vejrtrækning og nedsat luftgennemstrømning i højre basis. Perkussion viser dullhed i højre underlap med øget taktyl fremitus, mens øvrige lungefelter er rene uden rales eller vêntoner. Har du noget andet at tilføje omkring den fysiske undersøgelse?
+  [MO] Ingen yderligere tilføjelser – fundene er allerede beskrevet præcist: dullhed, øget taktil fremitus, bronkial vejrtrækning og nedsat luftgennemstrømning i højre underlap.
+  [50] 1323ms  Marina: Interviewet er afsluttet. Rapporten er genereret.
+
+  Interview complete after 50 turns.
+
+── Extract ──
+  Calling /ai/extract with 109 messages (filtered from 127)...
+  ✓ Done  (1999ms)
+
+  dateOfBirth: 43
+  gender: male
+  chiefComplaint: productive cough with yellow sputum, fever, and sharp right-sided chest pain when breathing
+  chiefSymptom: productive cough with yellow sputum, high fever, right-sided chest pain, shortness of breath
+  history: The patient is a 43-year-old male who developed sudden onset of productive cough with yellow sputum, high fever (currently 39.4°C), and sharp right-sided chest pain that worsens with breathing three days ago. He also reports dyspnea, particularly upon inhalation due to the chest pain, generalized weakness, night sweats, and chills. There is no hemoptysis, weight loss, or recent travel. Symptoms are exacerbated by smoking and cold, damp air. The patient is a smoker but has no history of asthma or COPD. No exposure to tuberculosis has been reported.
+  pastHistory: The patient reports no prior medical conditions, including no history of asthma or COPD. He is a smoker, which is noted as a risk factor.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Patient states they do not take any medications.
+  circulation_pulse_per_min: 106
+  circulation_systole: 128
+  circulation_diastole: 80
+  breathing_num_breaths_per_min: 28
+  breathing_oxygen_saturation: 91
+  expose_temperature_measured_mouth: 39.4
+  avpu: Alert
+  problemDescription: 43-year-old male with a three-day history of sudden-onset productive cough with yellow sputum, high fever, and sharp right-sided chest pain that worsens with breathing. He reports dyspnea, especially during inhalation due to pain, generalized weakness, night sweats, and chills. He denies hemoptysis and recent weight loss. Symptoms are worsened by smoking and cold, damp air. He is a smoker with no history of asthma or COPD. No recent tuberculosis exposure or travel. Denies regular medications, over-the-counter drugs, vitamins, or supplements. No known allergies.
+  performedActions: M-EWS score: 9
+
+Patient is alert and answers clearly. Increased respiratory rate with mouth breathing. Pale and sweaty skin. Able to stand and walk independently but with significant dyspnea. Auscultation reveals bronchial breath sounds and decreased air movement in the right lower lobe. Percussion shows dullness in the right lower chest with increased tactile fremitus. Remaining lung fields are clear without crackles or wheezes.

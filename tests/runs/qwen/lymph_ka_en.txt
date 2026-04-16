@@ -1,0 +1,156 @@
+
+════════════════════════════════════════════════════════════
+  Georgian patient / English MO — lymphadenopathy + fever
+════════════════════════════════════════════════════════════
+  Symptom: კისერზე და იღლიაში ლიმფური კვანძები გამიდიდა, ტემპერატურაც მაქვს და ძალიან დამდგა
+
+  ✓ Started  (865ms)
+
+
+── Stage 1: Pathway ──
+  Marina: როგორ შემიძლია დაგეხმაროთ დღეს?
+  [Pt] მაქვს ტკივილი ყელში და თავის ქვეშ, ცხელება და სისუსტე ერთი კვირა.
+  [1] 684ms  Marina: გთხოვთ, უფრო დეტალურად აღწეროთ ტკივილი ყელში?
+  [Pt] ყელში ტკივილი მქონდა დაწყებიდან, უფრო ხასიათდება ფარული გადახრით, გადალევისას უფრო მკვეთრდება, განსაკუთრებით მარცხენა მხარეს.
+  [2] 1116ms  Marina: გაქვთ სხვა სიმპტომები ტკივილთან ერთად, როგორიცაა ხველა, ხმის ჩახრჩობა ან სუნთქვის გაძნელება?
+  [Pt] არ მაქვს ხველა, ხმის ჩახრჩობა ან სუნთქვის გაძნელება. მხოლოდ ტკივილი, ცხელება და დაღლილობა მაქვს ერთი კვირის განმავლობაში.
+  [3] 1780ms  Marina: თქვენ აღნიშნული ძირეული სიმპტომი არის ყელის ტკივილი, რომელიც გამწვავდება გადალევისას, განსაკუთრებით მარცხენა მხარეს. დამოწმდეს, ეს სწორედ ის სიმპტომია, რომლითაც გსურთ კონსულტაცია?
+  [Pt] დიახ, ყელის ტკივილი, განსაკუთრებით მარცხენა მხარეს გადალევისას, ზუსტად ის სიმპტომია, რომლითაც ვეძებ დახმარებას.
+  [4] 1044ms  Marina: რამდენი წლის ხართ?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] მე 31 წლის ვარ.
+  [5] 478ms  Marina: როგორი სქესის ხართ?
+  [Pt] მამრობითი სქესის.
+  [6] 586ms  Marina: როდი დაიწყო ყელის ტკივილი?
+  [Pt] ყელის ტკივილი დაიწყო დაახლოებით ერთი კვირის წინ, როდესაც ცხელება და სისუსტე გაჩნდა.
+  [7] 1095ms  Marina: რამდენად მკვეთრია ტკივილი 10 ბალიანი სკალის მიხედვით, სადაც 0 არის უტკივილო და 10 — მაქსიმალური ტკივილი?
+  [Pt] ტკივილი 5-ია 10-ბალიან სკალაზე.
+  [8] 592ms  Marina: გადალევისას გაქვთ რთული შეგრძნება?
+  [Pt] არა, გადალევისას რთული შეგრძნება არ მაქვს.
+  [9] 702ms  Marina: გქონიათ ხმის ცვლილება ან ხმის ჩახრჩობა ბოლო დროს?
+  [Pt] არა, ხმის ცვლილება ან ჩახრჩობა არ მაქვს განიცდია.
+  [10] 1419ms  Marina: გქონიათ კონტაქტი დაავადებულ პირთან, ვინც ჰქონდა მსგავსი სიმპტომები, მაგალითად ყელის ტკივილი ან ცხელება?
+  [Pt] არ მახსოვს, რომ ვიყავი კონტაქტში ასეთ ადამიანთან ბოლო დროს.
+  [11] 1285ms  Marina: ყელის ტკივილი თქვენთვის უეცრად გაჩნდა თუ დახვეწით?
+  [Pt] ტკივილი ყელში უეცრად გაჩნდა, დახვეწის გარეშე.
+  [12] 2260ms  Marina: პაციენტი არის 31 წლის მამრობითი სქესის. ყელის ტკივილი დაიწყო ერთი კვირის წინ უეცრად, მარცხენა მხარეს, გადალევისას მკვეთრდება, ხოლო ტკივილის ინტენსიურობა 5 10-ბალიანი სკალით. გადალევის რთული შეგრძნება და ხმის ცვლილება არ აღინიშნება. კონტაქტი დაავადებულ პირთან უარყოფილია. გქონიათ რამე დამატებითი ინფორმაცია, რაც გსურთ დაემატოთ ანამნეზში?
+  [Pt] კი, ბოლო ერთი კვირის განმავლობაში გამა ხანდახან ტემპერატურა, სისუსტე და ლიმფური კვანძების შეშუპება ყელში და მკერდის ქვეშ.
+  [13] 2093ms  Marina: პაციენტი არის 31 წლის მამრობითი სქესის. ყელის ტკივილი დაიწყო ერთი კვირის წინ უეცრად, მარცხენა მხარეს, გადალევისას მკვეთრდება, ხოლო ტკივილის ინტენსიურობა 5 10-ბალიანი სკალით. გადალევის რთული შეგრძნება და ხმის ცვლილება არ აღინიშნება. კონტაქტი დაავადებულ პირთან უარყოფილია. დამატებით აღნიშნულია ცხელება, სისუსტე და ლიმფური კვანძების შეშუპება ყელში და მკერდის ქვეშ. გქონიათ რამე დამატებითი ინფორმაცია, რაც გსურთ დაემატოთ ანამნეზში?
+  [Pt] დამატებით ვერაფერს ვამატებ, ყველაფერი უკვე ვთქვი.
+  [14] 930ms  Marina: გაქვთ ცხელება?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] დიახ, ერთი კვირაა ცხელება მაქვს, ტემპერატურა 38.5°C-მდე მეწევა.
+  [15] 858ms  Marina: გაქვთ ყელიდან გამომდინარე წყლული ნაღვლის გამოყოფა?
+  [Pt] არა, ყელიდან წყლული ნაღვლის გამოყოფა არ მაქვს.
+  [16] 498ms  Marina: გაქვთ ხველა?
+  [Pt] არ მაქვს ხველა.
+  [17] 402ms  Marina: გაქვთ თავის ტკივილი?
+  [Pt] არა, თავი არ მტკივა.
+  [18] 1641ms  Marina: გაქვთ სწრაფად მომატებული ყელის შეშუპება 24 საათის განმავლობაში?
+  [Pt] არა, ყელის შეშუპება დაახლოებით ერთი კვირის განმავლობაში განვითარდა, 24 საათში არა.
+  [19] 515ms  Marina: გაქვთ ყურის ტკივილი?
+  [Pt] არ მქონია ყურის ტკივილი.
+  [20] 1357ms  Marina: ხომ არ შეამჩნიეთ თქვენს სხეულზე წიწილებიანი გამონივთვა, განსაკუთრებით წიწილები, რომლებიც ჰგავს სკარლატინას?
+  [Pt] არა, წიწილებიანი გამონივთვა არ მაქვს, სხეულზე არ მაქვს სკარლატინის მსგავსი გამონივთვა.
+  [21] 1185ms  Marina: გაქვთ სუნთქვის გაძნელება ან სუნთქვის ურთიერთობაში რთული შეგრძნება?
+  [Pt] არ მაქვს სუნთქვის გაძნელება, სუნთქვის ურთიერთობაში რთული შეგრძნება არ გამომიწვევს.
+  [22] 2039ms  Marina: პაციენტს აქვს ცხელება, რომელიც 38.5°C-მდე მიდის, მაგრამ არ აღინიშნება წყლული ნაღვლის გამოყოფა, ხველა, თავის ტკივილი, სწრაფად მომატებული ყელის შეშუპება, ყურის ტკივილი, წიწილებიანი გამონივთვა ან სუნთქვის გაძნელება. გქონიათ რამე დამატებითი ინფორმაცია, რომელიც გსურთ დაემატოთ დაკავშირებულ სიმპტომებთან დაკავშირებით?
+  [Pt] არ მაქვს სხვა სიმპტომები, მხოლოდ ყელში და მოხეხილში შეშუპებული ლიმფოუზლები, ცხელება და სისუსტე მაქვს ერთი კვირის განმავლობაში.
+  [23] 1836ms  Marina: პაციენტს აქვს ცხელება, რომელიც 38.5°C-მდე მიდის, ლიმფური კვანძების შეშუპება ყელში და მკერდის ქვეშ, მაგრამ არ აღინიშნება წყლული ნაღვლის გამოყოფა, ხველა, თავის ტკივილი, სწრაფად მომატებული ყელის შეშუპება, ყურის ტკივილი, წიწილებიანი გამონივთვა ან სუნთქვის გაძნება. გქონიათ რამე დამატებითი ინფორმაცია, რომელიც გსურთ დაემატოთ დაკავშირებულ სიმპტომებთან დაკავშირებით?
+  [Pt] არ მაქვს დამატებითი სიმპტომები, მხოლოდ ცხელება, ლიმფური კვანძების შეშუპება და სისუსტე მაქვს ბოლო ერთი კვირის განმავლობაში.
+  [24] 1316ms  Marina: ბოლო დროს გქონიათ ზედა სასუნთქი გზების ინფექცია?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] არა, ბოლო დროს ზედა სასუნთქი გზების ინფექცია არ მქონია.
+  [25] 1869ms  Marina: გაქვთ ტონზილექტომია ან სხვა მოხსნითი ოპერაცია ყელის არეში?
+  [Pt] არ მქონია ტონზილექტომია და არც სხვა ოპერაცია ყელის არეში.
+  [26] 753ms  Marina: ხშირად გქონიათ ტონზილიტი?
+  [Pt] არა, ადრე არასდროს მქონია ტონზილიტი.
+  [27] 737ms  Marina: გქონიათ მჟავური რეფლუქსი?
+  [Pt] არ მქონია მჟავური რეფლუქსი.
+  [28] 1720ms  Marina: პაციენტს არ აქვს ბოლო დროს ზედა სასუნთქი გზების ინფექცია, არ აღნიშნულა ტონზილექტომია ან სხვა ოპერაცია ყელის არეში, არ გქონია რეციდივირებადი ტონზილიტი და არ აღინიშნება მჟავური რეფლუქსი. გქონიათ რამე დამატებითი ინფორმაცია, რომელიც გსურთ დაემატოთ თქვენს ანამნეზში?
+  [Pt] არ მაქვს დამატებითი ინფორმაცია, ყველაფერი ის, რაც ვიცი, უკვე გეუბნეთ.
+  [29] 1565ms  Marina: რეგულარულად იღებთ რაიმე მედიკამენტებს?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] არა, რეგულარულად არ ვიღებ მედიკამენტებს.
+  [30] 1960ms  Marina: იღებთ თუ არა რაიმე არარეცეპტურ მედიკამენტებს, ვიტამინებს ან დამხმარე საშუალებებს?
+  [Pt] არ ვიღებ არარეცეპტურ მედიკამენტებს, ვიტამინებს ან დამხმარე საშუალებებს.
+  [31] 940ms  Marina: ამჟამად იღებთ თუ არა რაიმე მედიკამენტებს თქვენს სიმპტომებთან დაკავშირებით?
+  [Pt] არ ვიღებ მედიკამენტებს სიმპტომებთან დაკავშირებით.
+  [32] 1608ms  Marina: პაციენტი არ იღებს რეგულარულ მედიკამენტებს, არარეცეპტურ საშუალებებს, ვიტამინებს ან დამხმარე საშუალებებს და ამჟამად არც იღებს მედიკამენტებს სიმპტომებთან დაკავშირებით. გქონიათ რამე დამატებითი ინფორმაცია, რომელიც გსურთ დაემატოთ მედიკამენტებთან დაკავშირებით?
+  [Pt] არა, მედიკამენტებთან დაკავშირებით დამატებითი ინფორმაცია არ მაქვს.
+  [33] 1444ms  Marina: გაქვთ რაიმე ალერგია მედიკამენტებზე, საკვებზე ან სხვა ნივთზე?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] არ მაქვს ალერგია მედიკამენტებზე, საკვებზე ან სხვა ნივთზე.
+  [34] 1425ms  Marina: პაციენტს არ აქვს ცნობილი ალერგიები მედიკამენტებზე, საკვებზე ან სხვა ნივთზე. გქონიათ რამე დამატებითი ინფორმაცია, რომელიც გსურთ დაემატოთ ალერგიებთან დაკავშირებით?
+  [Pt] არ მაქვს ალერგიები და არც საკვების, არც სხვა ნივთების მიმართ. ყველაფერი ჩვეულებრივად მაქვს.
+  [35] 1357ms  Marina: What is the patient's oxygen saturation level in percent?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] The patient's oxygen saturation level is 98%.
+  [36] 652ms  Marina: What is the patient's respiratory rate in breaths per minute?
+  [MO] The patient's respiratory rate is 17 breaths per minute.
+  [37] 724ms  Marina: What is the patient's heart rate in beats per minute?
+  [MO] The patient's heart rate is 94 beats per minute.
+  [38] 802ms  Marina: What is the patient's blood pressure, both systolic and diastolic, in mmHg?
+  [MO] The patient's blood pressure is 118/74 mmHg.
+  [39] 949ms  Marina: What is the patient's temperature in degrees Celsius?
+  [MO] The patient's temperature is 38.5°C.
+  [40] 951ms  Marina: What is the patient's level of consciousness according to the AVPU scale—Alert, Verbal, Pain, or Unresponsive?
+  [MO] The patient is Alert.
+  [41] 1211ms  Marina: The patient's vital signs are as follows: oxygen saturation is 98 percent, respiratory rate is 17 breaths per minute, heart rate is 94 beats per minute, blood pressure is 118 over 74 mmHg, temperature is 38.5 degrees Celsius, and the patient is alert according to the AVPU scale. Does the medical officer have anything else to add regarding the vital signs?
+  [MO] All vital signs are within normal limits except for a mild fever, with temperature elevated at 38.5°C. The patient is alert and hemodynamically stable.
+  [42] 1585ms  Marina: Did you take a CRP test, and if yes, what was the result?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] CRP was tested and the result was 78 mg/L.
+  [43] 1186ms  Marina: Did you take a COVID test, and if yes, what was the result?
+  [MO] No, a COVID test was not performed.
+  [44] 1084ms  Marina: The investigations conducted show that a CRP test was performed with a result of 78 mg/L, while a COVID test was not performed. Does the medical officer have anything else to add on investigations?
+  [MO] CRP is elevated at 78 mg/L; COVID-19 testing has not been performed and should be considered.
+  [45] 1766ms  Marina: Use a flashlight. Push the tongue down with a tongue depressor or spoon.  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] No tonsillar exudate or pharyngeal erythema observed.
+  [46] 946ms  Marina: Are the tonsils swollen or can you see white or yellowish patches?
+  [MO] Tonsils are not swollen; no white or yellowish patches observed.
+  [47] 718ms  Marina: Is there any yellow secretion or redness?
+  [MO] No yellow secretion or redness observed.
+  [48] 725ms  Marina: Are the tonsils symmetrical and of similar size?
+  [MO] Tonsils are symmetrical and of similar size, no enlargement noted.
+  [49] 1229ms  Marina: Does the patient have difficulty swallowing or breathing when asked?
+  [MO] No, the patient does not have difficulty swallowing or breathing.
+  [50] 894ms  Marina: Can the patient open their mouth normally? How many fingers can you stack between their upper and lower teeth?
+  [MO] The patient can open their mouth normally; approximately three fingers can be stacked between their upper and lower teeth.
+  [51] 1316ms  Marina: The physical examination of the throat reveals no tonsillar swelling, exudate, or pharyngeal redness. The tonsils are symmetrical and of similar size. There is no yellow secretion or erythema observed. The patient does not report difficulty swallowing or breathing. Mouth opening is normal, with approximately three fingers fitting vertically between the upper and lower teeth, ruling out trismus. Does the medical officer have anything else to add on the examination?
+  [MO] No additional abnormalities noted on oropharyngeal examination.
+  [52] 1369ms  Marina: The interview is complete. The report has been generated.
+
+  Interview complete after 52 turns.
+
+── Extract ──
+  Calling /ai/extract with 113 messages (filtered from 131)...
+  ✓ Done  (2703ms)
+
+  gender: male
+  chiefComplaint: sore throat with fever and weakness
+  chiefSymptom: sore throat, especially on the left side when swallowing
+  history: The patient, a 31-year-old male, developed sudden onset left-sided sore throat one week ago, associated with fever up to 38.5°C, fatigue, and swelling of lymph nodes in the neck and under the chest. The sore throat worsens with swallowing but there is no difficulty swallowing or breathing. There is no cough, hoarseness, ear pain, skin rash, or rapid neck swelling. The patient does not recall recent contact with anyone having similar symptoms.
+  pastHistory: The patient has no history of recurrent tonsillitis, tonsillectomy, or other surgeries in the neck area. He has not had an upper respiratory tract infection recently and does not have a history of acid reflux.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Patient states they do not take any medications.
+  circulation_pulse_per_min: 94
+  circulation_systole: 118
+  circulation_diastole: 74
+  breathing_num_breaths_per_min: 17
+  breathing_oxygen_saturation: 98
+  expose_temperature_measured_mouth: 38.5
+  avpu: Alert
+  problemDescription: The patient is a 31-year-old male who presents with a one-week history of sore throat, particularly on the left side, worsening with swallowing, associated with fever up to 38.5°C, fatigue, and swollen lymph nodes in the neck and under the chest. The sore throat started suddenly without provocation. The pain intensity is 5 out of 10. The patient denies cough, hoarseness, difficulty swallowing, difficulty breathing, ear pain, rash resembling scarlet fever, rapid swelling of the throat within 24 hours, or recent upper respiratory tract infection. He has no history of tonsillectomy or other neck surgeries, no recurrent tonsillitis, and no acid reflux. He does not take regular medications, over-the-counter drugs, vitamins, or supplements, and is not currently taking any medication for his symptoms. He reports no known allergies to medications, food, or other substances. He does not recall recent contact with anyone having similar symptoms.
+  performedActions: M-EWS score: 2
+
+Oxygen saturation is 98 percent, respiratory rate is 17 breaths per minute, heart rate is 94 beats per minute, blood pressure is 118 over 74 mmHg, temperature is 38.5 degrees Celsius, and the patient is alert. CRP was tested and the result was 78 mg/L; COVID-19 testing was not performed. Oropharyngeal examination shows no tonsillar exudate, pharyngeal erythema, tonsillar swelling, or asymmetry. No yellow secretion or redness is observed. The patient has no difficulty swallowing or breathing. Mouth opening is normal, with approximately three fingers fitting vertically between the upper and lower teeth, ruling out trismus. No additional abnormalities were noted on oropharyngeal examination.

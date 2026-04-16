@@ -1,0 +1,1073 @@
+{
+  "run_at": "2026-04-13T12:20:32.643966+00:00",
+  "url": "http://localhost:4000",
+  "total": 20,
+  "passed": 12,
+  "failed": 8,
+  "scenarios": [
+    {
+      "id": 1,
+      "name": "Single message \u2014 bare complaint, no Marina response at all",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "pathway = 'Chest pain' \u2014 expected to contain 'Not identified'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "I feel very sick and have chest pain"
+        }
+      ],
+      "output": {
+        "pathway": "Chest pain",
+        "currentHistoryTaking": "Patient reports feeling very sick and experiencing chest pain.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 2,
+      "name": "Marina proposes pathway but patient never responds \u2014 pathway Not identified",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "pathway = 'Headache' \u2014 expected to contain 'Not identified'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have a bad headache"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Headache. Do you confirm?"
+        }
+      ],
+      "output": {
+        "pathway": "Headache",
+        "currentHistoryTaking": "Patient reports having a bad headache. The complaint was confirmed as headache.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 3,
+      "name": "Three messages \u2014 pathway confirmed and nothing else",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have abdominal pain"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Abdominal Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        }
+      ],
+      "output": {
+        "pathway": "Abdominal Pain",
+        "currentHistoryTaking": "Patient confirmed abdominal pain as the main complaint. No further history was obtained.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 4,
+      "name": "Patient denies Marina's proposed pathway \u2014 pathway Not identified",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "pathway = 'Dizziness/Vertigo' \u2014 expected to contain 'Not identified'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "I feel dizzy and nauseous"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Fever. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "No, I don't have fever \u2014 it's dizziness and nausea"
+        }
+      ],
+      "output": {
+        "pathway": "Dizziness/Vertigo",
+        "currentHistoryTaking": "The patient presents with dizziness and nausea. No further history details were obtained.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 5,
+      "name": "Pathway confirmed + patient spontaneously discloses aspirin allergy in same message",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have chest pain"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Chest pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes \u2014 and I should mention I am allergic to aspirin, it gives me a rash"
+        },
+        {
+          "role": "assistant",
+          "content": "Thank you. Please stay on the line."
+        }
+      ],
+      "output": {
+        "pathway": "Chest pain",
+        "currentHistoryTaking": "The patient presents with chest pain. The patient confirmed this as their main complaint.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Patient reports allergy to aspirin, which causes a rash.",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 6,
+      "name": "Pathway confirmed, Marina asks age, conversation ends before answer",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have back pain"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Back Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "How old are you and what is your gender?"
+        }
+      ],
+      "output": {
+        "pathway": "Back Pain",
+        "currentHistoryTaking": "Patient reports back pain. No further history obtained as Marina was in the process of taking demographic history when the transcript ended.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 7,
+      "name": "Self-reported BP in complaint \u2014 must stay in history, not vitalSigns",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have a terrible headache. I checked my blood pressure at home \u2014 it was 180 over 110."
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Headache. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Thank you. Please hold on."
+        }
+      ],
+      "output": {
+        "pathway": "Headache",
+        "currentHistoryTaking": "Patient reports a terrible headache. They checked their blood pressure at home and it was 180 over 110.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "Patient reported checking their blood pressure at home and finding it to be 180/110."
+      }
+    },
+    {
+      "id": 8,
+      "name": "Two pathway proposals \u2014 first denied, second unconfirmed \u2014 Not identified",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "pathway = 'Nausea and Vomiting' \u2014 expected to contain 'Not identified'",
+        "HALLUCINATION: forbidden string found: '\"pathway\": \"Nausea and Vomiting\"'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "I feel terribly sick with nausea and vomiting"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Fever. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "No, I don't have fever. It's nausea and vomiting."
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Nausea and Vomiting. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": ""
+        }
+      ],
+      "output": {
+        "pathway": "Nausea and Vomiting",
+        "currentHistoryTaking": "The patient reports feeling terribly sick with nausea and vomiting. No further history was obtained beyond this initial complaint.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": "Patient explicitly denied having fever when Marina suggested it as the main complaint, confirming instead that the symptoms are nausea and vomiting."
+      }
+    },
+    {
+      "id": 9,
+      "name": "Pathway confirmed then only medications stage reached \u2014 allergies Not assessed",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have fever"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Fever. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications you are currently taking?"
+        },
+        {
+          "role": "user",
+          "content": "No medications"
+        }
+      ],
+      "output": {
+        "pathway": "Fever",
+        "currentHistoryTaking": "The patient confirmed fever as their main complaint. No further history was obtained.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Patient states no current medications.",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 10,
+      "name": "Only SpO2 given \u2014 all other vital fields must remain empty",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "HALLUCINATION: forbidden string found: '\"heartRate\": \"'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have shortness of breath"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Shortness of Breath. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "95"
+        }
+      ],
+      "output": {
+        "pathway": "Shortness of Breath",
+        "currentHistoryTaking": "Patient reports shortness of breath as the main complaint. No additional history details were provided.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "95",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 11,
+      "name": "Ambiguous confirmation 'I think so, yes' \u2014 pathway should be confirmed",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have pain in my stomach area"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Abdominal Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "I think so, yes, it is in my belly"
+        },
+        {
+          "role": "assistant",
+          "content": "How long have you had the pain?"
+        },
+        {
+          "role": "user",
+          "content": "Since last night, about 10 hours"
+        }
+      ],
+      "output": {
+        "pathway": "Abdominal Pain",
+        "currentHistoryTaking": "Patient reports abdominal pain located in the belly area. The pain started last night, approximately 10 hours ago.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 12,
+      "name": "Six messages \u2014 pathway + age + onset captured from two history questions",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have severe back pain"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Back Pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "How old are you?"
+        },
+        {
+          "role": "user",
+          "content": "38, female"
+        },
+        {
+          "role": "assistant",
+          "content": "When did the pain start?"
+        },
+        {
+          "role": "user",
+          "content": "Three days ago after I slipped on the wet deck"
+        }
+      ],
+      "output": {
+        "pathway": "Back Pain",
+        "currentHistoryTaking": "38-year-old female presenting with back pain that started three days ago after slipping on the wet deck.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 13,
+      "name": "Six messages \u2014 MO gives full vitals set in one abbreviated line",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "The patient has dizziness and cannot stand up properly"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Dizziness/Vertigo. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes, patient confirms"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, please provide vital signs."
+        },
+        {
+          "role": "user",
+          "content": "HR 88, BP 118/72, SpO2 98%, Temp 36.9, RR 16, AVPU Alert."
+        },
+        {
+          "role": "assistant",
+          "content": "Thank you."
+        }
+      ],
+      "output": {
+        "pathway": "Dizziness/Vertigo",
+        "currentHistoryTaking": "The patient reports dizziness and is unable to stand up properly. No further history was obtained.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "88",
+          "oxygenSaturation": "98",
+          "bloodPressureSystolic": "118",
+          "bloodPressureDiastolic": "72",
+          "respirationRate": "16",
+          "AVPU": "Alert",
+          "bodyTemperature": "36.9",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 14,
+      "name": "Seven messages \u2014 PMH, medications, allergies all explicitly denied",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "HALLUCINATION: forbidden string found: 'not assessed'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have a headache"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Headache. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Any previous illnesses?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        }
+      ],
+      "output": {
+        "pathway": "Headache",
+        "currentHistoryTaking": "Patient confirmed headache as the main complaint. No further history of the presenting complaint was obtained.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Patient denies any significant past medical history.",
+        "medications": "Patient states no current medications.",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 15,
+      "name": "Seven messages \u2014 partial vitals (SpO2 + HR) and one investigation result",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have fever"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Fever. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation?"
+        },
+        {
+          "role": "user",
+          "content": "96"
+        },
+        {
+          "role": "assistant",
+          "content": "Heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "104"
+        },
+        {
+          "role": "assistant",
+          "content": "Malaria test result?"
+        },
+        {
+          "role": "user",
+          "content": "Positive \u2014 falciparum malaria"
+        }
+      ],
+      "output": {
+        "pathway": "Fever",
+        "currentHistoryTaking": "The patient confirmed fever as the main complaint. No detailed history of presenting complaint was obtained.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "104",
+          "oxygenSaturation": "96",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "Malaria test: Positive \u2014 falciparum malaria",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 16,
+      "name": "Seven messages \u2014 ear pain pathway with onset and severity captured",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "My ear hurts a lot"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Ear Pain or Hearing Problems. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes, that is right"
+        },
+        {
+          "role": "assistant",
+          "content": "How long has your ear been hurting?"
+        },
+        {
+          "role": "user",
+          "content": "Since yesterday evening, getting worse"
+        },
+        {
+          "role": "assistant",
+          "content": "How severe is the pain on a scale of 1 to 10?"
+        },
+        {
+          "role": "user",
+          "content": "7"
+        }
+      ],
+      "output": {
+        "pathway": "Ear Pain or Hearing Problems",
+        "currentHistoryTaking": "The patient reports ear pain that started yesterday evening and has been getting worse. The pain severity is rated 7 out of 10.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 17,
+      "name": "Eight messages \u2014 age, medications, and two vitals from rapid interview",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have chest pain"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Chest pain. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "How old are you?"
+        },
+        {
+          "role": "user",
+          "content": "62, male"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "Clopidogrel 75mg daily, atorvastatin 40mg daily"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, oxygen saturation and heart rate?"
+        },
+        {
+          "role": "user",
+          "content": "SpO2 94, heart rate 110"
+        }
+      ],
+      "output": {
+        "pathway": "Chest pain",
+        "currentHistoryTaking": "Patient is a 62-year-old male presenting with chest pain. No further details about onset, duration, character, severity, location, radiation, or aggravating/relieving factors were provided.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Not assessed",
+        "medications": "Clopidogrel 75mg daily, atorvastatin 40mg daily",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "110",
+          "oxygenSaturation": "94",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 18,
+      "name": "Eight messages \u2014 onset, PMH denial, and abbreviated vitals",
+      "passed": true,
+      "error": null,
+      "issues": [],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have shortness of breath"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Shortness of Breath. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "When did this start?"
+        },
+        {
+          "role": "user",
+          "content": "About 2 hours ago, came on suddenly"
+        },
+        {
+          "role": "assistant",
+          "content": "Any previous heart or lung conditions?"
+        },
+        {
+          "role": "user",
+          "content": "No, nothing like that"
+        },
+        {
+          "role": "assistant",
+          "content": "Medical officer, vital signs?"
+        },
+        {
+          "role": "user",
+          "content": "SpO2 88, HR 124, BP 140/90, AVPU Alert"
+        }
+      ],
+      "output": {
+        "pathway": "Shortness of Breath",
+        "currentHistoryTaking": "The patient reports shortness of breath that started approximately 2 hours ago with sudden onset. The patient denies any previous heart or lung conditions.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Patient denies any significant past medical history.",
+        "medications": "Not assessed",
+        "allergies": "Not assessed",
+        "vitalSigns": {
+          "heartRate": "124",
+          "oxygenSaturation": "88",
+          "bloodPressureSystolic": "140",
+          "bloodPressureDiastolic": "90",
+          "respirationRate": "",
+          "AVPU": "Alert",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 19,
+      "name": "Nine messages \u2014 all stages reached with minimal one-word answers",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "HALLUCINATION: forbidden string found: 'not assessed'",
+        "MISSING CONTENT: required string not found: 'no vomiting'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "I have nausea"
+        },
+        {
+          "role": "assistant",
+          "content": "If I understand correctly, the main complaint is Nausea and Vomiting. Do you confirm?"
+        },
+        {
+          "role": "user",
+          "content": "Yes"
+        },
+        {
+          "role": "assistant",
+          "content": "Any nausea or vomiting?"
+        },
+        {
+          "role": "user",
+          "content": "Just nausea, no vomiting"
+        },
+        {
+          "role": "assistant",
+          "content": "Any previous illnesses?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        },
+        {
+          "role": "assistant",
+          "content": "Any medications?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        },
+        {
+          "role": "assistant",
+          "content": "Any allergies?"
+        },
+        {
+          "role": "user",
+          "content": "No"
+        }
+      ],
+      "output": {
+        "pathway": "Nausea and Vomiting",
+        "currentHistoryTaking": "The patient presents with nausea. The patient confirmed the main complaint is nausea without vomiting. No additional details about onset, duration, character, severity, or aggravating/relieving factors were provided.",
+        "associatedSymptoms": "Not assessed",
+        "pastMedicalHistory": "Patient denies any significant past medical history.",
+        "medications": "Patient states no current medications.",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "",
+          "oxygenSaturation": "",
+          "bloodPressureSystolic": "",
+          "bloodPressureDiastolic": "",
+          "respirationRate": "",
+          "AVPU": "",
+          "bodyTemperature": "",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    },
+    {
+      "id": 20,
+      "name": "Empty message \u2014 no clinical content at all",
+      "passed": false,
+      "error": null,
+      "issues": [
+        "pathway = 'Fever' \u2014 expected to contain 'Not identified'",
+        "vitalSigns.heartRate = '96' \u2014 expected empty (vitals not taken)",
+        "vitalSigns.oxygenSaturation = '98' \u2014 expected empty (vitals not taken)",
+        "vitalSigns.bloodPressureSystolic = '120' \u2014 expected empty (vitals not taken)",
+        "vitalSigns.bloodPressureDiastolic = '80' \u2014 expected empty (vitals not taken)",
+        "vitalSigns.respirationRate = '20' \u2014 expected empty (vitals not taken)",
+        "vitalSigns.bodyTemperature = '38.5' \u2014 expected empty (vitals not taken)",
+        "'medications' = 'Patient states no current medications.' \u2014 expected 'Not assessed'",
+        "'allergies' = 'No known allergies.' \u2014 expected 'Not assessed'",
+        "'pastMedicalHistory' = 'Patient denies any significant past medical history, includi' \u2014 expected 'Not assessed'",
+        "'associatedSymptoms' = 'Patient denied nausea and vomiting, headache, cough or respi' \u2014 expected 'Not assessed'"
+      ],
+      "input": [
+        {
+          "role": "user",
+          "content": "   "
+        }
+      ],
+      "output": {
+        "pathway": "Fever",
+        "currentHistoryTaking": "The patient is a 42-year-old male. He reports fever and chills as his main complaint. Symptoms began yesterday evening and have been getting progressively worse. The patient describes feeling hot and cold, with weakness and body aches affecting his entire body. He denies any specific aggravating or relieving factors. The symptoms are constant and have worsened since onset.",
+        "associatedSymptoms": "Patient denied nausea and vomiting, headache, cough or respiratory symptoms, diarrhea, urinary symptoms, skin rash, pain other than the fever sensation, and confusion or altered mental status.",
+        "pastMedicalHistory": "Patient denies any significant past medical history, including chronic conditions, surgeries, or hospitalizations.",
+        "medications": "Patient states no current medications.",
+        "allergies": "No known allergies.",
+        "vitalSigns": {
+          "heartRate": "96",
+          "oxygenSaturation": "98",
+          "bloodPressureSystolic": "120",
+          "bloodPressureDiastolic": "80",
+          "respirationRate": "20",
+          "AVPU": "Alert",
+          "bodyTemperature": "38.5",
+          "supplementalOxygen": ""
+        },
+        "investigations": "No investigations performed",
+        "physicalExam": "Not performed",
+        "additionalNotes": ""
+      }
+    }
+  ]
+}

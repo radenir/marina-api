@@ -1,0 +1,159 @@
+
+════════════════════════════════════════════════════════════
+  Polish patient / Russian MO — Renal Colic
+════════════════════════════════════════════════════════════
+  Symptom: Mam bardzo silny ból w prawej okolicy lędźwiowej, który promieniuje do pachwiny. Zaczął się nagle i nie mogę znaleźć żadnej wygodnej pozycji.
+
+  ✓ Started  (637ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Jak mogę pomóc dzisiaj?
+  [Pt] Mam potworne bóle z prawego boku od pleców aż do pachwiny, nie mogę się uspokoić, mdli mnie.
+  [1] 469ms  Marina: Proszę opisać dokładniej ten ból?
+  [Pt] Ból jest bardzo silny, nagły, od prawej strony pleców w kierunku pachwiny, pulsujący, nie ustępuje w żadnej pozycji.
+  [2] 970ms  Marina: Czy towarzyszy temu jeszcze coś innego, np. nudności, wymioty, gorączka lub problemy z oddawaniem moczu?
+  [Pt] Tak, mam silne nudności, ale nie wymiotowałem. Moczu oddaję mniej niż zwykle i to z bólem. Gorączki nie mam.
+  [3] 747ms  Marina: Czy potwierdzasz, że głównym objawem jest silny ból z prawej strony pleców w kierunku pachwiny, który nie ustępuje i towarzyszą mu nudności oraz ból podczas oddawania moczu?
+  [Pt] Tak, głównym objawem jest silny, napromieniujący ból z prawej strony lędźwiowej do pachwiny, trwający bez ustania, z towarzyszącymi nudnościami i bólem podczas oddawania moczu.
+  [4] 1143ms  Marina: Ile masz lat?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Mam 38 lat.
+  [5] 528ms  Marina: Jaka jest Twoja płeć?
+  [Pt] Mężczyzna.
+  [6] 423ms  Marina: Czy miałeś wcześniej podobny ból?
+  [Pt] Nie, nigdy wcześniej nie miałem takiego bólu.
+  [7] 512ms  Marina: Czy ból pojawił się nagle, czy stopniowo narastał?
+  [Pt] Ból pojawił się nagle, bardzo silny od razu, nie narastał stopniowo.
+  [8] 600ms  Marina: Gdzie dokładnie odczuwasz ból i czy napromieniowuje on w inne miejsce?
+  [Pt] Ból zaczyna się w okolicy prawego boku i promieniuje w stronę pachwiny.
+  [9] 695ms  Marina: Jak można by opisać ten ból — np. jako kolkowy, tępy, ostry, pulsujący lub palący?
+  [Pt] Ból jest ostry, kolkowy, promieniujący z prawego boku do pachwiny.
+  [10] 3248ms  Marina: W skali od 1 do 10, gdzie 10 to najsilniejszy możliwy ból, jakbyś ocenił intensywność bólu?
+  [Pt] Ból oceniam na 9, niemal nie do wytrzymania.
+  [11] 510ms  Marina: Czy ból jest stały, czy występuje w napadach, i jak długo już trwa?
+  [Pt] Ból jest stały i trwa od około trzech godzin.
+  [12] 674ms  Marina: Czy jakieś czynności, np. ruch, jedzenie czy pozycja ciała, nasilają lub złagczają ból?
+  [Pt] Ból nasila się przy ruchu, nie mogę znaleźć wygodnej pozycji. Leżenie i stanie jednakowo go nie złagczają.
+  [13] 703ms  Marina: Czy w ciągu ostatnich trzech miesięcy byłeś w jakichś krajach poza krajem zamieszkania? Jeśli tak, to w których?
+  [Pt] Nie, w ciągu ostatnich trzech miesięcy nie byłem poza krajem zamieszkania.
+  [14] 914ms  Marina: Czy w ostatnim czasie jadłeś coś nietypowego, np. surowe mięso, niemyte owoce lub warzywa, albo spożywałeś wodę z niepewnego źródła?
+  [Pt] Nie, jadłem normalnie, tylko posiłki z kuchni statkowej, woda z systemu pokładowego.
+  [15] 1498ms  Marina: Odczuwasz silny, ostry i kolkowy ból w okolicy prawego boku promieniujący do pachwiny, który pojawił się nagle i trwa od około trzech godzin, oceniasz jego intensywność na 9/10, ból nasila się przy ruchu i nie ustępuje w żadnej pozycji, towarzyszą mu nudności oraz ból podczas oddawania moczu, przy czym nie masz gorączki, nie byłeś w ostatnich trzech miesiącach za granicą i nie miałeś kontaktu z nietypową żywnością czy wodą. Czy masz coś jeszcze do dodania w tej kwestii?
+  [Pt] Ból jest naprawdę nieznośny, ledwo się ruszam, a przed chwilą wymiotowałem.
+  [16] 1076ms  Marina: Odczuwasz silny, ostry i kolkowy ból w okolicy prawego boku promieniujący do pachwiny, który pojawił się nagle i trwa od około trzech godzin, oceniasz jego intensywność na 9/10, ból nasila się przy ruchu i nie ustępuje w żadnej pozycji, towarzyszą mu nudności, ból podczas oddawania moczu oraz pojawiły się wymioty, przy czym nie masz gorączki, nie byłeś w ostatnich trzech miesiącach za granicą i nie miałeś kontaktu z nietypową żywnością czy wodą. Czy masz coś jeszcze do dodania w tej kwestii?
+  [Pt] Ból jest naprawdę nieznośny, trudno mi się skupić, ale nie mam żadnych dodatkowych objawów – żadnej krwi w moczu, żadnych problemów z oddychaniem.
+  [17] 833ms  Marina: Czy odczuwasz nudności lub wymioty?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Tak, mam silne nudności, ale jeszcze nie wymiotowałem.
+  [18] 499ms  Marina: Czy masz biegunkę lub zaparcia?
+  [Pt] Nie mam biegunki ani zaparć.
+  [19] 591ms  Marina: Czy odczuwasz gorączkę lub dreszcze?
+  [Pt] Nie, nie mam gorączki ani dreszczy.
+  [20] 861ms  Marina: Czy zauważyłeś krew w wymiocinach, czarny stolec lub krew w stolcu?
+  [Pt] Nie, nie zauważyłem krwi w wymiocinach, czarnego stolca ani krwi w stolcu.
+  [21] 618ms  Marina: Czy masz ból podczas oddawania moczu, uczucie pieczenia lub inne dolegliwości związane z moczem?
+  [Pt] Nie, nie mam bólu podczas oddawania moczu ani uczucia pieczenia.
+  [22] 1732ms  Marina: Pacjent to mężczyzna, więc pytanie o krwawienie pochwy lub wydzielinę nie jest stosowne. Odczuwa silny, ostry i kolkowy ból w okolicy prawego boku promieniujący do pachwiny, który pojawił się nagle i trwa od około trzech godzin, oceniasz jego intensywność na 9/10, ból nasila się przy ruchu i nie ustępuje w żadnej pozycji, towarzyszą mu nudności, pojawiły się wymioty, nie ma biegunki ani zaparć, nie ma gorączki ani dreszczy, nie zauważono krwi w wymiocinach, czarnego stolca ani krwi w stolcu, oraz nie ma bólu ani pieczenia podczas oddawania moczu. Czy masz coś jeszcze do dodania w tej kwestii?
+  [Pt] Nie mam nic do dodania, wszystko zostało już dokładnie opisane.
+  [23] 816ms  Marina: Czy miałeś wcześniej jakieś operacje brzucha?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Nie, nigdy nie miałem operacji brzucha.
+  [24] 1069ms  Marina: Czy cierpisz na jakieś choroby przewlekłe, takie jak kamica nerkowa, choroby jelit, nadciśnienie, cukrzyca lub inne schorzenia układu moczowego?
+  [Pt] Nie, nie cierpię na żadne choroby przewlekłe, nie miałem wcześniej kamicy nerkowej ani problemów z układem moczowym.
+  [25] 563ms  Marina: Czy jesteś aktualnie w ciąży lub korzystasz z antykoncepcji?
+  [Pt] Nie, jestem mężczyzną, więc nie stosuję antykoncepcji i nie mogę być w ciąży.
+  [26] 1828ms  Marina: Pacjent to mężczyzna, 38 lat, nie miał operacji brzucha, nie cierpi na żadne przewlekłe choroby, w tym kamicy nerkowej, chorób jelit, nadciśnienia, cukrzycy ani schorzeń układu moczowego, oraz jako mężczyzna nie stosuje antykoncepcji i nie jest w ciąży. Czy masz coś jeszcze do dodania w zakresie wywiadu lekarskiego?
+  [Pt] Nie mam dodatkowych informacji do uzupełnienia w wywiadzie lekarskim.
+  [27] 823ms  Marina: Czy przyjmujesz regularnie jakieś leki?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Nie, nie przyjmuję żadnych leków.
+  [28] 841ms  Marina: Czy przyjmujesz jakieś leki bez recepty, suplementy diety lub witaminy?
+  [Pt] Nie przyjmuję żadnych leków bez recepty, suplementów ani witamin.
+  [29] 574ms  Marina: Czy w związku z obecnym bólem zażyłeś jakieś leki?
+  [Pt] Nie, nie zażyłem żadnych leków.
+  [30] 1685ms  Marina: Nie przyjmujesz żadnych regularnych leków, nie korzystasz z leków bez recepty, suplementów diety ani witamin, a także nie zażyłeś żadnych leków w związku z obecnym bólem. Czy masz coś jeszcze do dodania na temat przyjmowanych leków?
+  [Pt] Nie, nie przyjmuję żadnych leków, suplementów ani witamin, również nie używałem niczego na ból.
+  [31] 1808ms  Marina: Czy masz alergie na jakieś leki, pokarmy lub inne substancje?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Nie, nie mam żadnych alergii.
+  [32] 1516ms  Marina: Nie znasz żadnych alergii na leki, pokarmy ani inne substancje. Czy masz coś jeszcze do dodania na temat alergii?
+  [Pt] Nie, nie mam żadnych alergii.
+  [33] 1052ms  Marina: Медицинский офицер, измерьте уровень насыщения кислородом пациента в процентах.  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Уровень насыщения кислородом — 99%.
+  [34] 554ms  Marina: Медицинский офицер, измерьте частоту дыхания пациента в минуту.
+  [MO] Частота дыхания — 20 в минуту.
+  [35] 785ms  Marina: Медицинский офицер, измерьте частоту сердечных сокращений пациента в минуту.
+  [MO] Частота сердечных сокращений — 108 ударов в минуту.
+  [36] 672ms  Marina: Медицинский офицер, измерьте артериальное давление пациента — систолическое и диастолическое, в мм рт. ст.
+  [MO] Артериальное давление: 148/92 мм рт. ст.
+  [37] 591ms  Marina: Медицинский офицер, измерьте температуру тела пациента в градусах Цельсия.
+  [MO] Температура тела пациента составляет 37,1°C.
+  [38] 1835ms  Marina: Медицинский офицер, оцените уровень сознания пациента по шкале AVPU: бодрствует, реагирует на голос, на болевой раздражитель или не реагирует.
+  [MO] Пациент бодрствует, полностью ориентирован — уровень сознания «бодрствует» по шкале AVPU.
+  [39] 1265ms  Marina: Уровень насыщения кислородом составляет 99 %, частота дыхания — 20 в минуту, частота сердечных сокращений — 108 ударов в минуту, артериальное давление — 148 на 92 мм рт. ст., температура тела — 37,1 °C, уровень сознания по шкале AVPU — «бодрствует». Есть что-то ещё, что вы хотели бы добавить по поводу показателей жизнедеятельности?
+  [MO] Жизненные показатели стабильны, однако отмечается тахикардия (ЧСС 108 уд/мин) при нормальной сатурации кислородом (99 %) и умеренно повышенном артериальном давлении (148/92 мм рт. ст.).
+  [40] 1151ms  Marina: Медицинский офицер, проводился ли анализ мочи, и если да, то какой был результат?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] Анализ мочи проведён, выявлена видимая гематурия по тест-полоске.
+  [41] 844ms  Marina: Медицинский офицер, проводился ли тест на уровень С-реактивного белка (СРБ), и если да, то какой был результат?
+  [MO] Тест на уровень С-реактивного белка не проводился.
+  [42] 1017ms  Marina: Медицинский офицер, проводился ли тест на малярию, и если да, то какой был результат?
+  [MO] Тест на малярию не проводился.
+  [43] 632ms  Marina: Медицинский офицер, проводилось ли измерение уровня глюкозы в крови, и если да, то какой был результат?
+  [MO] Измерение уровня глюкозы в крови не проводилось.
+  [44] 1008ms  Marina: Проведён анализ мочи с выявлением гематурии по тест-полоске, остальные исследования — СРБ, малярия и глюкоза в крови — не проводились. Есть ли что-то ещё, что вы хотели бы добавить по поводу проведённых исследований?
+  [MO] Проведён только анализ мочи с выявлением гематурии; СРБ, тест на малярию и глюкоза в крови не исследовались.
+  [45] 2696ms  Marina: Пациент жалуется на сильную боль в правой поясничной области, иррадиирующую в пах, с тошнотой и болью при мочеиспускании. Учитывая основной симптом — боль в животе, выбрано физикальное обследование: осмотр живота. Медицинский офицер, пожалуйста, уложите пациента лежа на спине. Видно ли вздутие живота или его асимметрию?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Живот симметричный, вздутия нет.
+  [46] 1133ms  Marina: Пальпируйте все четыре квадранта живота мягкими движениями. Есть ли болезненность или напряжение мышц брюшной стенки при надавливании?
+  [MO] Брюшная стенка мягкая, болезненность и напряжение мышц отсутствуют.
+  [47] 868ms  Marina: Проведите глубокую пальпацию всех квадрантов живота. Ощущаются ли какие-либо образования, увеличение органов или участки глубокой болезненности?
+  [MO] Живот мягкий, без пальпируемых образований или увеличенных органов, глубокой болезненности в квадрантах нет.
+  [48] 977ms  Marina: Поместите ладонь под правое ребро и попросите пациента глубоко вдохнуть. Останавливает ли он дыхание или морщится от боли при вдохе?
+  [MO] Пациент морщится от боли при глубоком вдохе, но не останавливает дыхание.
+  [49] 894ms  Marina: Надавите на левый нижний квадрант живота. Возникает ли боль в правой нижней части живота?
+  [MO] При надавливании на левый нижний квадрант боли в правой нижней части живота нет.
+  [50] 1047ms  Marina: Найдите точку на одну треть расстояния от правой передней верхней подвздошной ости до пупка. Есть ли локальная боль или болезненность в точке Макберни?
+  [MO] Точка Макберни не болезненна при пальпации.
+  [51] 2051ms  Marina: При осмотре живота: живот симметричный, без вздутия; при поверхностной пальпации — брюшная стенка мягкая, без болезненности и напряжения мышц; при глубокой пальпации — нет пальпируемых образований, увеличения органов или глубокой болезненности; при пробе Ровзинга — отрицательно; точка Макберни безболезненна; при пальпации под правым ребром пациент морщится от боли при вдохе. Есть ли что-то ещё, что вы хотели бы добавить по результатам физикального обследования?
+  [MO] При пальпации справа по ребру — положительный симптом Мурфи.
+  [52] 1125ms  Marina: Rozmowa zakończona. Raport został wygenerowany.
+
+  Interview complete after 52 turns.
+
+── Extract ──
+  Calling /ai/extract with 113 messages (filtered from 131)...
+  ✓ Done  (2425ms)
+
+  dateOfBirth: 38
+  gender: male
+  chiefComplaint: severe pain from the right back side to the groin, nausea, vomiting, and pain during urination
+  chiefSymptom: sharp, colicky pain radiating from the right flank to the groin, rated 9/10 in intensity, constant, worsened by movement
+  history: The patient is a 38-year-old man who developed sudden, severe, sharp, colicky pain in the right flank radiating to the groin approximately three hours ago. The pain is constant, rated 9/10 in intensity, and worsens with movement. It is not relieved by any position. The patient reports associated nausea, which has progressed to vomiting, and painful urination with decreased urine output. He denies fever, chills, hematuria, dyspnea, diarrhea, or constipation. The pain started abruptly without gradual escalation. No similar episodes in the past.
+  pastHistory: The patient has no history of chronic diseases, including kidney stones, gastrointestinal disorders, hypertension, diabetes, or urinary tract problems. He has never had abdominal surgery.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Patient states they do not take any medications.
+  circulation_pulse_per_min: 108
+  circulation_systole: 148
+  circulation_diastole: 92
+  breathing_num_breaths_per_min: 20
+  breathing_oxygen_saturation: 99
+  expose_temperature_measured_mouth: 37.1
+  avpu: Alert
+  redFlag: yes
+  redFlagType: severe sudden pain with nausea and vomiting
+  problemDescription: 38-year-old male with sudden onset of severe, sharp, colicky pain in the right flank radiating to the groin, lasting for about three hours, rated 9/10 in intensity, worsening with movement and not relieved by any position, accompanied by nausea, vomiting, and pain during urination. Denies fever, chills, diarrhea, constipation, blood in vomit, black stool, blood in stool, burning sensation during urination, or previous similar episodes. No history of chronic diseases such as kidney stones, gastrointestinal disorders, hypertension, diabetes, or urinary tract disorders. No abdominal surgeries. No allergies. Not taking any regular medications, over-the-counter drugs, supplements, or vitamins. No recent travel or exposure to unusual food or water sources.
+  performedActions: M-EWS score: 1
+
+Urine test shows hematuria on dipstick. Abdominal examination reveals a symmetric, non-distended abdomen; soft abdominal wall with no tenderness or muscle rigidity on superficial palpation; no palpable masses, organ enlargement, or deep tenderness in any quadrant; negative Rovsing's sign; McBurney's point not tender; positive Murphy's sign on deep palpation under the right rib margin with grimacing during deep inspiration.

@@ -1,0 +1,175 @@
+
+════════════════════════════════════════════════════════════
+  Arabic patient / French MO — post-ictal state after seizure
+════════════════════════════════════════════════════════════
+  Symptom: أُخبرت أنني أصبت بنوبة تشنجية وفقدت الوعي، وأنا الآن مرتبك جداً ومتعب
+
+  ✓ Started  (526ms)
+
+
+── Stage 1: Pathway ──
+  Marina: كيف يمكنني مساعدتك اليوم؟
+  [Pt] أحتاج إلى مساعدتك في تقييم المريض بعد النوبة الصرعية، وهو الآن في حالة ارتباك ويتطلب مراقبة دقيقة. هل يمكنني الحصول على تاريخ دوائي أكثر تفصيلاً ووقت الجرعة الأخيرة من الليفيتيرسيتام؟
+  [1] 1714ms  Marina: هل يمكنك وصف العرض بشكل أكثر تفصيلاً؟
+  [Pt] أُصيب بنوبة صرعية توترية رمعية، الآن في طور ما بعد النوبة مع تشوش ذهني، ويُستجاب بصوت.
+  [2] 715ms  Marina: هل هناك أي أعراض أخرى مصاحبة مثل الصداع أو ألم في الجسم أو إصابة أثناء النوبة؟
+  [Pt] يشكو من صداع خفيف ولا يوجد ألم في الجسم أو إصابات واضحة أثناء النوبة.
+  [3] 859ms  Marina: لقد حددت أن العرض الأساسي هو نوبة صرعية توترية رمعية متبوعة بحالة ارتباك وصداع خفيف. هل تؤكد أن هذه هي الأعراض الرئيسية التي ترغب في تقييمها؟
+  [Pt] نعم، النوبة التوترية الرمعية متبوعة بحالة ارتباك بعد النوبة هي الأعراض الرئيسية.
+  [4] 831ms  Marina: ما هو عمر المريض؟  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] عمر المريض 35 سنة.
+  [5] 960ms  Marina: ما هو جنس المريض؟
+  [Pt] المريض ذكر.
+  [6] 956ms  Marina: هل كانت بداية الأعراض مفاجئة أم تدريجية؟
+  [Pt] كانت بداية الأعراض مفاجئة.
+  [7] 489ms  Marina: منذ متى بدأ المريض يعاني من هذه الأعراض؟
+  [Pt] بدأت الأعراض منذ حوالي 10 دقائق بتشنجات تالية بحالة ارتباك.
+  [8] 541ms  Marina: هل يعاني المريض من ضعف في أحد الأطراف؟
+  [Pt] لا، لا يوجد ضعف ملحوظ في الأطراف حاليًا.
+  [9] 1152ms  Marina: هل يعاني المريض من تغير في مستوى الوعي أو تشوش ذهني؟
+  [Pt] نعم، المريض في حالة ما بعد النوبة، ويُعاني من تشوش ذهني ومستوى وعي منخفض (يستجيب للصوت).
+  [10] 436ms  Marina: هل يعاني المريض من تغيرات في الرؤية؟
+  [Pt] لا، لا يعاني المريض من تغيرات في الرؤية.
+  [11] 530ms  Marina: هل يعاني المريض من تنميل أو خدر في أي جزء من الجسم؟
+  [Pt] لا، المريض لا يشكو من تنميل أو خدر في أي جزء من الجسم.
+  [12] 539ms  Marina: هل سبق أن عانى المريض من نوبات صرعية سابقة؟
+  [Pt] نعم، المريض لديه تاريخ معروف بالصرع.
+  [13] 435ms  Marina: هل يعاني المريض من صعوبة في الكلام؟
+  [Pt] المريض في حالة ارتباك بعد النوبة، ويتكلم بصعوبة.
+  [14] 1257ms  Marina: المريض ذكر يبلغ من العمر 35 سنة، بدأت الأعراض لديه بشكل مفاجئ منذ حوالي 10 دقائق بتشنجات تالية بحالة ارتباك، ويُعاني من تشوش ذهني وصعوبة في الكلام، مع صداع خفيف، دون وجود ضعف في الأطراف أو تنميل أو تغيرات في الرؤية. لا توجد إصابات واضحة أثناء النوبة. المريض لديه تاريخ مرضي بالصرع. هل لديك أي شيء آخر ترغب في إضافته حول التاريخ المرضي؟
+  [Pt] يأخذ المريض ليفيتيروسيتام لكنه فاتته جرعات في الأيام الماضية، ولا يعاني من أي حساسية، ولا يدخن، ولا يشكو من إصابات أثناء النوبة.
+  [15] 1049ms  Marina: المريض ذكر يبلغ من العمر 35 سنة، بدأت الأعراض لديه بشكل مفاجئ منذ حوالي 10 دقائق بتشنجات تالية بحالة ارتباك، ويُعاني من تشوش ذهني وصعوبة في الكلام، مع صداع خفيف، دون وجود ضعف في الأطراف أو تنميل أو تغيرات في الرؤية. لا توجد إصابات واضحة أثناء النوبة. المريض لديه تاريخ مرضي بالصرع، ويأخذ ليفيتيروسيتام لكنه فاتته جرعات في الأيام الماضية، ولا يعاني من حساسيات، ولا يدخن. هل لديك أي شيء آخر ترغب في إضافته حول التاريخ المرضي؟
+  [Pt] لا، لا يوجد شيء آخر لإضافته في التاريخ المرضي.
+  [16] 728ms  Marina: هل يشعر المريض بضعف أو تنميل في جانب واحد من الجسم؟  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] لا، المريض لا يشعر بضعف أو تنميل في جانب واحد من الجسم.
+  [17] 472ms  Marina: هل يعاني المريض من تلعثم في الكلام أو تشوش في التفكير؟
+  [Pt] المريض في حالة ارتباك بعد النوبة، ويظهر عليه تشوش في التفكير، لكن لا يوجد تلعثم في الكلام ملحوظ حاليًا.
+  [18] 643ms  Marina: هل يعاني المريض من صداع شديد أو تيبس في الرقبة؟
+  [Pt] لا، المريض لا يشكو من صداع شديد أو تيبس في الرقبة.
+  [19] 548ms  Marina: هل يعاني المريض من رؤية مزدوجة أو حدقة غير متساوية؟
+  [Pt] لا، المريض لا يعاني من رؤية مزدوجة، والحُدقتان متساويتان ومستجيبتان.
+  [20] 544ms  Marina: هل تعرض المريض لنوبة صرعية أو فقدان للوعي مرة أخرى منذ الحدث الأول؟
+  [Pt] لا، المريض لم يتعرض لنوبة أخرى منذ الحدث الأول، وهو حاليًا في طور ما بعد النوبة مع حالة ارتباك.
+  [21] 1111ms  Marina: المريض لا يعاني من ضعف أو تنميل في جانب واحد من الجسم، يعاني من تشوش في التفكير لكن دون تلعثم في الكلام، لا يعاني من صداع شديد أو تيبس في الرقبة، لا يعاني من رؤية مزدوجة أو حدقة غير متساوية، ولم يتعرض لنوبة صرعية أو فقدان للوعي مرة أخرى منذ الحدث الأول. هل لديك أي شيء آخر ترغب في إضافته حول الأعراض المصاحبة؟
+  [Pt] لا، لا توجد أعراض مصاحبة إضافية. المريض لا يزال في حالة ما بعد النوبة مع تشوش ذهني، لكنه يستجيب للمنبهات الصوتية دون علامات عصبية ب focality.
+  [22] 945ms  Marina: هل سبق أن عانى المريض من نوبة سكتة دماغية أو صرع من قبل؟  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] نعم، المريض مصاب بالصرع ويتناول ليفيتيروسيتام، لكنه فاتته بعض الجرعات.
+  [23] 586ms  Marina: هل يعاني المريض من نوبات صداع نصفي (شقيقة) متكررة؟
+  [Pt] لا، المريض لا يعاني من صداع نصفي متكرر، وتشير التاريخ الطبي إلى إصابة بنوبات صرعية فقط.
+  [24] 594ms  Marina: هل يعاني المريض من ارتفاع ضغط الدم أو داء السكري؟
+  [Pt] لا، المريض لا يعاني من ارتفاع ضغط الدم أو داء السكري.
+  [25] 788ms  Marina: المريض يعاني من الصرع ويتناول ليفيتيروسيتام مع تفويت بعض الجرعات، ولا يعاني من الصداع النصفي، ولا يعاني من ارتفاع ضغط الدم أو داء السكري. هل لديك أي شيء آخر ترغب في إضافته حول التاريخ المرضي السابق؟
+  [Pt] لا، لا يوجد شيء آخر أرغب في إضافته حول التاريخ المرضي السابق.
+  [26] 1041ms  Marina: هل تتناول أي أدوية بانتظام؟  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] أتناول ليفيتيروسيتام لعلاج الصرع، لكنني نسيت تناول جرعات خلال الأيام الماضية.
+  [27] 537ms  Marina: ما هي الجرعة المعتادة من ليفيتيروسيتام التي تتناولها؟
+  [Pt] أتناول عادة 500 ملغ مرتين يوميًا، لكنني نسيت جرعتين بالأمس.
+  [28] 741ms  Marina: هل تتناول أي أدوية بدون وصفة طبية أو مكملات أو فيتامينات؟
+  [Pt] لا، لا أتناول أي أدوية بدون وصفة أو مكملات أو فيتامينات.
+  [29] 1152ms  Marina: هل تتناول أي دواء خصيصًا بسبب الأعراض الحالية؟
+  [Pt] أتناول ليفيتيروسيتام لعلاج الصرع، لكني تفويت جرعات近期.
+  [30] 1048ms  Marina: المريض يتناول ليفيتيروسيتام بجرعة 500 ملغ مرتين يوميًا لعلاج الصرع، وقد فاتته جرعتان بالأمس، ولا يتناول أي أدوية بدون وصفة طبية أو مكملات أو فيتامينات، ولا يتناول أي دواء خصيصًا بسبب الأعراض الحالية. هل لديك أي شيء آخر ترغب في إضافته حول الأدوية؟
+  [Pt] لا، لا يوجد شيء آخر أرغب في إضافته حول الأدوية.
+  [31] 1079ms  Marina: هل لديك أي حساسية معروفة من أدوية أو أطعمة أو مواد أخرى؟  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] لا، ليس لدي أي حساسية معروفة.
+  [32] 563ms  Marina: لا توجد حساسيات معروفة. هل لديك أي شيء آخر ترغب في إضافته حول الحساسيات؟
+  [Pt] لا، لا توجد لدي أي حساسيات معروفة.
+  [33] 1082ms  Marina: Quel est le taux d'oxygénation du patient en pourcentage ?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Le taux d'oxygénation du patient est de 97 %.
+  [34] 514ms  Marina: Quelle est la fréquence respiratoire du patient en respirations par minute ?
+  [MO] La fréquence respiratoire du patient est de 18 respirations par minute.
+  [35] 363ms  Marina: Quelle est la fréquence cardiaque du patient en battements par minute ?
+  [MO] La fréquence cardiaque du patient est de 98 battements par minute.
+  [36] 617ms  Marina: Quelle est la pression artérielle du patient en mmHg ?
+  [MO] La pression artérielle du patient est de 128/82 mmHg.
+  [37] 537ms  Marina: Quelle est la température du patient en degrés Celsius ?
+  [MO] La température du patient est de 37,1°C.
+  [38] 792ms  Marina: Quel est le niveau de conscience du patient selon l'échelle AVPU ?
+  [MO] Le niveau de conscience du patient est "V" (répond à la voix) selon l'échelle AVPU.
+  [39] 945ms  Marina: Le patient présente un taux d'oxygénation de 97 %, une fréquence respiratoire de 18 respirations par minute, une fréquence cardiaque de 98 battements par minute, une pression artérielle de 128/82 mmHg, une température de 37,1 °C et un niveau de conscience répondant à la voix selon l'échelle AVPU. Avez-vous autre chose à ajouter concernant les signes vitaux ?
+  [MO] Les signes vitaux sont stables : saturation en oxygène à 97 %, FR 18, FC 98, PAS 128 mmHg, PAD 82 mmHg, température 37,1 °C. Aucune anomalie détectée.
+  [40] 1050ms  Marina: Avez-vous effectué un test de glycémie, et si oui, quel en est le résultat ?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] La glycémie n'a pas encore été testée.
+  [41] 718ms  Marina: La température du patient est de 37,1 °C, qui est inférieure à 38 °C. Par conséquent, le test de CRP n'est pas requis. Avez-vous autre chose à ajouter concernant les investigations ?
+  [MO] Température : 37,1 °C. Pas d’indication pour un dosage de CRP. Aucune autre investigation complémentaire requise en l’absence de signes de focus infectieux ou de décompensation.
+  [42] 872ms  Marina: Aucune investigation n'a été réalisée : la glycémie n'a pas été testée et le test de CRP n'était pas indiqué étant donné que la température est de 37,1 °C. Avez-vous autre chose à ajouter concernant les investigations ?
+  [MO] Aucune autre investigation n'est nécessaire en l'absence de signes de sepsie, de traumatisme ou de cause métabolique évidente ; la clinique post-critique est en faveur d'une rechute convulsive liée au défaut d'observance du traitement anticonvulsivant.
+  [43] 1563ms  Marina: Le symptôme principal est de nature neurologique. Veuillez réaliser un examen neurologique avancé. Le patient sait-il son nom, où il est et quel jour on est ?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Le patient connaît son nom, sa localisation et la date actuelle.
+  [44] 742ms  Marina: La parole du patient est-elle claire ou pâteuse ?
+  [MO] La parole du patient est pâteuse.
+  [45] 710ms  Marina: Le patient peut-il nommer correctement un objet courant comme un stylo ou une lampe de poche ?
+  [MO] Oui, le patient peut nommer correctement un objet courant comme un stylo ou une lampe de poche.
+  [46] 663ms  Marina: Les pupilles sont-elles de taille égale et rondes ?
+  [MO] Oui, les pupilles sont de taille égale et rondes.
+  [47] 832ms  Marina: Les pupilles rétrécissent-elles lorsqu'elles sont exposées à la lumière ?
+  [MO] Oui, les pupilles se rétrécissent lorsqu'elles sont exposées à la lumière.
+  [48] 946ms  Marina: Le patient peut-il suivre un doigt que vous déplacez lentement d'un côté à l'autre uniquement avec les yeux, sans mouvements oculaires saccadés ? Cela provoque-t-il une vision double ?
+  [MO] Le patient parvient à suivre le doigt avec les yeux sans mouvements oculaires saccadés, sans rapporter de vision double.
+  [49] 1012ms  Marina: Le patient peut-il sourire ? Le visage apparaît-il symétrique et normal ?
+  [MO] Le patient peut sourire, le visage apparaît symétrique et normal.
+  [50] 1173ms  Marina: Le patient peut-il montrer les dents ? Le visage apparaît-il symétrique et normal ?
+  [MO] Le patient peut montrer les dents ; le visage apparaît symétrique et normal.
+  [51] 866ms  Marina: Le patient peut-il lever les sourcils ? Le visage apparaît-il symétrique et normal ?
+  [MO] Le patient peut lever les sourcils. Le visage apparaît symétrique et normal.
+  [52] 780ms  Marina: Le patient peut-il avaler sans tousser ou s'étouffer ?
+  [MO] Le patient répond à la voix avec une GCS de 13, mais l'évaluation de la déglutition n'est pas précisée.
+  [53] 810ms  Marina: Le patient a-t-il des lésions sur la langue ou les lèvres ?
+  [MO] Oui, une lésion de la langue est notée.
+  [54] 846ms  Marina: Le patient peut-il soulever les épaules ? Un côté est-il plus faible ?
+  [MO] Le patient peut soulever les épaules, aucune faiblesse latéralisée n'est observée.
+  [55] 707ms  Marina: Le patient peut-il serrer vos mains ? Une main est-elle plus faible ?
+  [MO] Le patient serre les mains avec une force symétrique, aucune faiblesse n'est détectée.
+  [56] 951ms  Marina: Le patient, allongé, peut-il lever une jambe à la fois du lit ? Ensuite, en poussant vers le bas, une jambe est-elle plus faible ?
+  [MO] Le patient peut soulever une jambe à la fois du lit. Aucune différence de force n'est observée lors de la poussée contre résistance.
+  [57] 845ms  Marina: Le patient peut-il lever les deux bras tendus devant lui puis fermer les yeux ? Un bras descend-il ?
+  [MO] Le patient parvient à lever les deux bras tendus ; aucun bras ne descend lorsqu'il ferme les yeux.
+  [58] 715ms  Marina: Le patient peut-il se tenir debout et marcher à travers la pièce sans aide ?
+  [MO] Le patient est conscient et répond à la voix, mais son équilibre et sa coordination n'ont pas été testés ; il n'a pas encore tenté de marcher.
+  [59] 743ms  Marina: Le patient peut-il poser son menton sur sa poitrine ? Cela est-il possible ?
+  [MO] Oui, le patient peut poser son menton sur sa poitrine sans difficulté.
+  [60] 2177ms  Marina: L'examen neurologique avancé montre que le patient est orienté dans le temps et l'espace, présente une parole pâteuse mais une compréhension préservée avec une bonne désignation d'objets, des pupilles isocoriques et réactives à la lumière, des mouvements oculaires coordonnés sans nystagmus ni diplopie, une motricité faciale symétrique, une lésion de la langue notée, une force musculaire symétrique au niveau des épaules, des mains et des jambes, aucun signe de déviation unilatérale des bras les yeux fermés, et une flexion cervicale normale. La marche n'a pas été testée. Avez-vous autre chose à ajouter concernant l'examen physique ?
+  [MO] Aucun autre anormalité détectée à l'examen physique ; tous les éléments rapportés sont cohérents avec un examen neurologique post-critique sans déficit focal persistant.
+  [61] 1359ms  Marina: تم الانتهاء من المقابلة. تم إعداد التقرير.
+
+  Interview complete after 61 turns.
+
+── Extract ──
+  Calling /ai/extract with 131 messages (filtered from 149)...
+  ✓ Done  (2758ms)
+
+  dateOfBirth: 35
+  gender: male
+  chiefComplaint: tonic-clonic seizure followed by post-ictal confusion
+  chiefSymptom: confusion, mild headache, slurred speech
+  history: The patient, a 35-year-old male, experienced a sudden onset generalized tonic-clonic seizure approximately 10 minutes ago, followed by postictal confusion, altered mental status (responds to voice), mild headache, and slurred speech. There was no focal neurological deficit, no injury during the seizure, no double vision, no neck stiffness, and no visual changes. The patient is currently in the postictal phase without recurrence of seizures.
+  pastHistory: The patient has a known history of epilepsy. He does not have a history of migraines, hypertension, or diabetes. There is no mention of prior stroke or other significant medical conditions.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Levetiracetam 500mg twice daily, but the patient missed two doses yesterday. The patient does not take any over-the-counter medications, supplements, or vitamins.
+  circulation_pulse_per_min: 98
+  circulation_systole: 128
+  circulation_diastole: 82
+  breathing_num_breaths_per_min: 18
+  breathing_oxygen_saturation: 97
+  expose_temperature_measured_mouth: 37.1
+  avpu: Voice
+  problemDescription: Male patient, 35 years old, with known history of epilepsy, presents approximately 10 minutes after a generalized tonic-clonic seizure followed by postictal confusion and mild headache. Symptoms started suddenly. Patient is currently responsive to voice, experiences difficulty speaking and mental clouding, but no focal neurological deficits. No weakness, numbness, visual changes, double vision, neck stiffness, or severe headache. No injuries during the seizure, but tongue injury noted. Patient takes levetiracetam 500 mg twice daily but missed two doses yesterday. No known allergies, smoking, diabetes, or hypertension. No history of migraine. Denies recurrent seizures since the initial event.
+  performedActions: M-EWS score: 4
+
+Patient oriented to name, location, and date. Slurred speech noted but comprehension and object naming intact. Pupils equal, round, and reactive to light. Coordinated eye movements without nystagmus or diplopia. Symmetrical facial movements with normal smile, teeth showing, and eyebrow elevation. Symmetrical shoulder, hand, and leg strength with no lateralized weakness. No arm drift on eyes-closed arm extension test. Neck flexion possible without resistance. Tongue injury observed. Gag reflex and swallowing not assessed. Gait and balance not tested.

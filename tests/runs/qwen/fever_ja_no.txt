@@ -1,0 +1,156 @@
+
+════════════════════════════════════════════════════════════
+  Japanese patient / Norwegian MO — Fever with Petechial Rash (meningococcal)
+════════════════════════════════════════════════════════════
+  Symptom: 昨日から高熱があって、今朝体に赤い斑点が出てきました。首が痛くて曲げることができません。
+
+  ✓ Started  (638ms)
+
+
+── Stage 1: Pathway ──
+  Marina: おはようございます、私は船医補助のマリーナです。今日はどのような症状でお困りですか？
+  [Pt] 昨日から高熱があり、今朝は首がとても固くなり、皮膚に小さな赤い斑点が現れました。
+  [1] 435ms  Marina: 症状についてもう少し詳しく教えていただけますか？
+  [Pt] 昨日から高熱があり、今朝から全身に点状の発疹が現れました。首がとても固くなり、痛みもあります。
+  [2] 845ms  Marina: 他に頭痛や吐き気など、発疹や発熱とは別に気になる症状はありますか？
+  [Pt] はい、激しい頭痛と吐き気もあります。首を前に倒すと痛みが強くなります。
+  [3] 843ms  Marina: 確認させてください。主な症状は発熱、全身の点状の発疹、首のこわばりと痛み、それに激しい頭痛と吐き気ですね。特に発熱と発疹が目立つ症状として正しいですか？
+  [Pt] はい、正しいです。昨日から高熱があり、今朝から全身に点状の発疹が出て、首のこわばりと激しい頭痛があります。
+  [4] 840ms  Marina: 発熱が突然始まったか、それとも徐々に始まったか、覚えていますか？  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] 急に高熱が出ました。昨日の昼ごろから急激に悪寒と発熱が始まりました。
+  [5] 434ms  Marina: 発熱はすでに何日間続いていますか？
+  [Pt] 発熱は昨日から続いています。
+  [6] 578ms  Marina: 発熱のパターンについて教えてください。熱は下がったり上がったりしていますか、それとも常に高いままですか？
+  [Pt] 熱は下がることなく、ずっと高いままです。
+  [7] 848ms  Marina: 発熱の際に悪寒や震え（しびれるような強い寒気）がありましたか？
+  [Pt] はい、昨日の発熱時に強い悪寒と震えがありました。
+  [8] 712ms  Marina: 最近、風邪を引いている人や感染症の疑いのある人と接触したことがありますか？
+  [Pt] はい、先週、咳と発熱があった乗組員と密接に接触しました。
+  [9] 516ms  Marina: 過去3か月以内に海外や流行地域へ旅行したことがありますか？
+  [Pt] いいえ、過去3か月以内の海外旅行や流行地域への渡航歴はありません。
+  [10] 645ms  Marina: あなたの年齢を教えていただけますか？
+  [Pt] 19歳です。
+  [11] 2845ms  Marina: 性別を教えてください。
+  [Pt] 男性です。
+  [12] 1284ms  Marina: 発熱は急に始まり、すでに1日間続いています。熱は下がらず、常に高い状態が続いており、悪寒と震えも伴っています。最近、咳と発熱のある乗組員と密接に接触しましたが、過去3か月以内の海外旅行や流行地域への渡航歴はありません。年齢は19歳で、男性です。このほかに、これまでの話に補足したいことはありますか？
+  [Pt] 特に追加情報はありません。首の痛みと頭痛がひどく、光をまぶしく感じます。
+  [13] 1053ms  Marina: 発熱は急に始まり、すでに1日間続いています。熱は下がらず、常に高い状態が続いており、悪寒と震えも伴っています。最近、咳と発熱のある乗組員と密接に接触しましたが、過去3か月以内の海外旅行や流行地域への渡航歴はありません。年齢は19歳で、男性です。また、首の痛み、激しい頭痛、および光に対する過敏さも報告されています。このほかに、これまでの話に補足したいことはありますか？
+  [Pt] 特に追加情報はありません。首の痛みと頭痛がひどく、光がまぶしいです。
+  [14] 857ms  Marina: 発疹と一緒に、咳やのどの痛みはありますか？  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] 咳やのどの痛みはありません。
+  [15] 534ms  Marina: 腹痛、吐き気、下痢などの腹部の症状はありますか？
+  [Pt] いいえ、腹痛や吐き気、下痢はありません。
+  [16] 649ms  Marina: 排尿時に痛みや違和感、またはトイレに行く回数が増えたようなことはありますか？
+  [Pt] いいえ、排尿時の痛みや違和感もなく、トイレの回数が増えることもありません。
+  [17] 540ms  Marina: 関節の痛みや腫れはありますか？
+  [Pt] 関節の痛みや腫れはありません。
+  [18] 571ms  Marina: 頭痛や光に対する過敏さ（光をまぶしく感じること）はありますか？
+  [Pt] はい、ひどい頭痛があり、光がとてもまぶしく感じます。
+  [19] 844ms  Marina: 夜間に汗をかくことはありますか？ 例えば、寝汗で服が濡れることなどはありますか？
+  [Pt] はい、昨晩から高熱があり、寝汗で服が少し濡れました。
+  [20] 1154ms  Marina: これまでの症状をまとめます。発熱に伴い、全身に点状の発疹が現れています。咳やのどの痛みはなく、腹痛、吐き気、下痢もありません。排尿時の痛みや頻尿もありません。関節痛や腫れも報告されていません。ただし、ひどい頭痛と光に対する過敏さがあり、夜間の寝汗も認めます。このほかに、関連する症状について補足したいことはありますか？
+  [Pt] 首の痛みがひどく、前後に動かすとさらに強くなります。意識ははっきりしていますが、明かりを見ると頭痛が悪化します。
+  [21] 1050ms  Marina: これまでの症状をまとめます。発熱に伴い、全身に点状の発疹が現れています。咳やのどの痛みはなく、腹痛、吐き気、下痢もありません。排尿時の痛みや頻尿もありません。関節痛や腫れも報告されていません。ただし、ひどい頭痛と光に対する過敏さがあり、夜間の寝汗も認めます。また、首のこわばりと痛みが強く、首の動きで頭痛が悪化します。このほかに、関連する症状について補足したいことはありますか？
+  [Pt] 首を前に曲げようとしても強い抵抗と痛みがあり、意識はもうろうとしています。吐き気はありますが、嘔吐はまだしていません。
+  [22] 1050ms  Marina: 免疫が弱くなるような病気や状態、例えばHIV、がん、ステロイドの長期使用などをお持ちですか？  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] いいえ、持っていません。
+  [23] 689ms  Marina: 慢性的な病気、例えば高血圧、糖尿病、心臓病、喘息などはありますか？
+  [Pt] いいえ、特にありません。
+  [24] 593ms  Marina: 過去数週間以内に、抗生物質やその他の薬を服用したことがありますか？
+  [Pt] いいえ、過去数週間以内に抗生物質やその他の薬を服用していません。
+  [25] 848ms  Marina: これまでの情報を確認します。免疫を弱める病気や状態はなく、慢性的な病気も報告されていません。また、過去数週間以内に抗生物質やその他の薬を服用していません。このほかに、過去の病歴について補足したいことはありますか？
+  [Pt] 特に補足する過去の病歴はありません。
+  [26] 1789ms  Marina: 現在、定期的に服用している薬はありますか？  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] いいえ、現在定期的に服用している薬はありません。
+  [27] 601ms  Marina: 市販の薬、ビタミン、サプリメントなどは、何か摂取していますか？
+  [Pt] いいえ、何も摂取していません。
+  [28] 620ms  Marina: 今回の症状のために、特別に何か薬を飲んでいますか？例えば、解熱剤や鎮痛剤などです。
+  [Pt] いいえ、何も飲んでいません。
+  [29] 695ms  Marina: これまでの情報をまとめます。現在、定期的に服用している薬はなく、市販の薬やビタミン、サプリメントも摂取していません。また、今回の症状のために特別に薬を飲んでもいません。このほかに、薬に関する補足したいことはありますか？
+  [Pt] いいえ、特にありません。
+  [30] 1474ms  Marina: 薬、食べ物、または他の物質に対してアレルギー反応を起こしたことがありますか？  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] いいえ、アレルギーはありません。
+  [31] 598ms  Marina: アレルギーは報告されていません。このほかに、アレルギーに関する補足したいことはありますか？
+  [Pt] アレルギーはありません。
+  [32] 1184ms  Marina: Den medisinske offiseren tar over nå. Hva er pasientens oksygenmetning i prosent?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Pasientens oksygenmetning er 96 prosent.
+  [33] 655ms  Marina: Hva er pasientens respirasjonsfrekvens i pust per minutt?
+  [MO] Pasientens respirasjonsfrekvens er 22 pust per minutt.
+  [34] 536ms  Marina: Hva er pasientens puls i slag per minutt?
+  [MO] Pasientens puls er 120 slag per minutt.
+  [35] 752ms  Marina: Hva er pasientens blodtrykk, både systolisk og diastolisk, i mmHg?
+  [MO] Pasientens blodtrykk er 104 mmHg systolisk og 62 mmHg diastolisk.
+  [36] 544ms  Marina: Hva er pasientens kroppstemperatur i grader Celsius?
+  [MO] Pasientens kroppstemperatur er 40,1 °C.
+  [37] 640ms  Marina: Hva er pasientens bevisstnivå ifølge AVPU-skalaen (Alert/Verbal/Pain/Unresponsive)?
+  [MO] Pasientens bevisstnivå er "V" (Verbal) – reagerer på verbalt stimuli.
+  [38] 1972ms  Marina: Oksygenmetningen er 96 prosent, respirasjonsfrekvensen er 22 pust per minutt, pulsen er 120 slag per minutt, blodtrykket er 104/62 mmHg, kroppstemperaturen er 40,1 °C, og bevisstnivået er klassifisert som "V" (Verbal). Ønsker du å legge til noe mer om pasientens vitale tegn?
+  [MO] Nei, vitale tegn er fullstendig rapportert.
+  [39] 1009ms  Marina: Tok du CRP-test, og i så fall, hva var resultatet?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] CRP-test ble ikke utført.
+  [40] 772ms  Marina: Har pasienten dysuri eller hyppig vannlating som kan indikere urinveisinfeksjon?
+  [MO] Pasienten har ikke rapportert dysuri eller hyppig vannlating.
+  [41] 1051ms  Marina: Pasientens temperatur er 40,1 °C, og det er derfor aktuelt med malariatest. Har du utført malariatest, og i så fall, hva var resultatet?
+  [MO] Malariatest er ikke utført.
+  [42] 744ms  Marina: Pasienten har feber, som er en indikasjon for COVID-19-test. Har du utført COVID-19-test, og i så fall, hva var resultatet?
+  [MO] Pasienten har feber på 40,1 °C, men det er ikke utført COVID-19-test foreløpig.
+  [43] 1460ms  Marina: Pasienten har ikke tidligere nevnt diabetes, så blodsukkermåling er ikke nødvendig. Samlet sett er følgende undersøkelser aktuelle: CRP-test ble ikke utført, malariatest ble ikke utført, og COVID-19-test er ikke utført. Ingen urinanalyse ble utført da det ikke er symptomer som tilsier dette. Blodsukkermåling er ikke utført da pasienten ikke har diabetes. Ønsker du å legge til noe mer om undersøkelser?
+  [MO] Ingen ytterligere undersøkelser ønskes foreløpig.
+  [44] 1385ms  Marina: Hva er pasientens generelle tilstand? Kan pasienten snakke fritt og svare klart?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Pasienten er opptatt, men reagerer på lyd (AVPU: Voice), GCS er 13. Han kan snakke, men svarene er ikke alltid klare og tilstrekkelige.
+  [45] 745ms  Marina: Puster pasienten tungt? Puster han med munnen?
+  [MO] Pasienten puster ikke tungt, men har økt respirasjonsfrekvens (22/min). Han puster ikke med munnen.
+  [46] 745ms  Marina: Ser pasienten mer blek eller grå ut enn vanlig?
+  [MO] Ja, pasienten ser grå ut i ansiktet.
+  [47] 720ms  Marina: Er huden svett eller varm i berøring?
+  [MO] Huden er varm og svett i berøring.
+  [48] 770ms  Marina: Er det tegn på skade, som sår eller blåmerker?
+  [MO] Ingen tegn på sår eller blåmerker. Petekkial utslett er ikke-blancherende og lokalisert til trunkus og nedre ekstremiteter.
+  [49] 637ms  Marina: Kan pasienten stå opp og gå noen meter uten hjelp?
+  [MO] Nei, pasienten er for svak og desorientert til å stå eller gå uten hjelp.
+  [50] 1969ms  Marina: Pasienten kan snakke, men svarene er ikke alltid klare og tilstrekkelige, og han er klassifisert som "V" på AVPU med GCS 13. Han puster ikke tungt og bruker ikke munnen til å puste, men har økt pustfrekvens. Han ser grå ut i ansiktet, og huden er varm og svett. Det er ingen sår eller blåmerker, men det er ikke-blancherende petekkial utslett på torso og nedre ekstremiteter. Pasienten er for svak og desorientert til å stå eller gå uten hjelp. Ønsker du å legge til noe mer om den fysiske undersøkelsen?
+  [MO] Nei, den fysiske undersøkelsen er fullstendig beskrevet.
+  [51] 1356ms  Marina: Intervjuet er avsluttet. Rapporten er generert. Du kan nå vurdere pasientens tilstand og videre behandling.
+
+  Interview complete after 51 turns.
+
+── Extract ──
+  Calling /ai/extract with 111 messages (filtered from 129)...
+  ✓ Done  (2156ms)
+
+  gender: male
+  chiefComplaint: fever, rash, stiff neck, severe headache, nausea, photophobia
+  chiefSymptom: high fever, non-blanching petechial rash, neck stiffness, severe headache, photophobia
+  history: The patient developed sudden high fever yesterday afternoon with chills and shaking. Since this morning, he has had a generalized petechial rash, severe headache, neck stiffness and pain, and photophobia. The fever has remained consistently high without improvement. He also reports nausea and night sweats. Neck movement, especially flexion, worsens the pain. He feels disoriented but is responsive to verbal stimuli. He had close contact with a crew member who had cough and fever last week.
+  pastHistory: The patient reports no chronic medical conditions such as hypertension, diabetes, heart disease, or asthma. He has no known immunocompromising conditions such as HIV, cancer, or long-term steroid use. He has not taken antibiotics or other medications in the past few weeks.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Patient states they do not take any medications. No over-the-counter drugs, vitamins, or supplements are being used. The patient has not taken any medication for the current symptoms.
+  circulation_pulse_per_min: 120
+  circulation_systole: 104
+  circulation_diastole: 62
+  breathing_num_breaths_per_min: 22
+  breathing_oxygen_saturation: 96
+  expose_temperature_measured_mouth: 40.1
+  avpu: Voice
+  redFlag: yes
+  redFlagType: meningitis suspicion due to fever, rash, neck stiffness, headache, photophobia, and altered consciousness
+  problemDescription: 19-year-old male with sudden onset high fever starting yesterday, associated with chills and shaking. Fever has persisted without improvement. Reports generalized pinpoint rash appearing this morning, severe headache, neck stiffness and pain worsened by neck flexion, photophobia, and night sweats. Denies cough, sore throat, abdominal pain, nausea, vomiting, diarrhea, dysuria, increased urinary frequency, joint pain, or swelling. No history of chronic illness, immunocompromising conditions, recent antibiotic use, or regular medications. No known allergies. Recently had close contact with a crew member who had cough and fever. No travel history to endemic areas in the past three months. Patient is confused, responds to verbal stimuli, and is unable to stand or walk due to weakness and disorientation.
+  performedActions: M-EWS score: 11
+
+Patient appears unwell, pale and grayish in color, responds to verbal stimuli (AVPU: V), with Glasgow Coma Scale score of 13. Skin is warm and sweaty to touch. Non-blanching petechial rash observed on trunk and lower extremities. Respiratory rate is elevated at 22 breaths per minute, but no labored breathing or mouth breathing. Patient is too weak and disoriented to stand or walk unassisted.

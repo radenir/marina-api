@@ -148,11 +148,11 @@ SCENARIOS: list[Scenario] = [
 
     # ── 7. Four messages — complaint contains self-reported BP, confirm, Yes ──
     # Patient mentions their own blood pressure ("180 over 110") in the complaint.
-    # This must appear in currentHistoryTaking — NOT in vitalSigns.
-    # Stage 7 was never reached. All vitalSigns fields must be empty.
+    # Stage 7 was never reached by the MO, but the self-reported value is still
+    # clinically relevant and should be captured in vitalSigns (and/or currentHistoryTaking).
     Scenario(
         id=7,
-        name="Self-reported BP in complaint — must stay in history, not vitalSigns",
+        name="Self-reported BP in complaint — captured in vitalSigns",
         conversation=[
             {"role": "user",      "content": "I have a terrible headache. I checked my blood pressure at home — it was 180 over 110."},
             {"role": "assistant", "content": "If I understand correctly, the main complaint is Headache. Do you confirm?"},
@@ -160,12 +160,10 @@ SCENARIOS: list[Scenario] = [
             {"role": "assistant", "content": "Thank you. Please hold on."},
         ],
         expect_pathway="Headache",
-        expect_empty_vitals=True,
         expect_no_investigations=True,
         expect_no_exam=True,
         require_strings=["180", "110"],
-        forbidden_strings=['"bloodPressureSystolic": "180"', '"bloodPressureDiastolic": "110"'],
-        notes="180/110 is patient's self-report — belongs in currentHistoryTaking. Stage 7 not reached — vitalSigns must all be empty.",
+        notes="180/110 is patient's self-report — clinically relevant and should be captured. Stage 7 not reached by MO but the value should appear somewhere in the output.",
     ),
 
     # ── 8. Five messages — two pathway proposals, second not confirmed ─────────

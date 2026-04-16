@@ -1,0 +1,136 @@
+
+════════════════════════════════════════════════════════════
+  German patient / Polish MO — Conjunctivitis / Red Eye with Discharge
+════════════════════════════════════════════════════════════
+  Symptom: Mein rechtes Auge ist seit gestern rot und schmerzt. Morgens klebt es zu und es läuft viel gelblicher Schleim.
+
+  ✓ Started  (437ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Wie kann ich Ihnen heute helfen?
+  [Pt] Ich habe seit einem Tag Schmerzen, Rötung und eitrigen Ausfluss im rechten Auge, besonders morgens verkrustet.
+  [1] 386ms  Marina: Bitte beschreiben Sie das Symptom genauer?
+  [Pt] Das rechte Auge ist gerötet, schmerzt und zeigt eitrigen Ausfluss, besonders morgens mit Verkrustung der Wimpern.
+  [2] 654ms  Marina: Treten zusätzlich Augenschmerzen, Sehstörungen oder Lichtempfindlichkeit auf?
+  [Pt] Ja, ich habe Augenschmerzen und Lichtempfindlichkeit, aber keine Sehstörungen.
+  [3] 705ms  Marina: Sie leiden also unter Rötung, Schmerzen und eitrigem Ausfluss im rechten Auge mit morgendlicher Verkrustung, begleitet von Augenschmerzen und Lichtempfindlichkeit, aber ohne Sehstörungen. Ist das korrekt?
+  [Pt] Ja, das ist korrekt. Ich habe seit einem Tag Rötung, Schmerzen und eitriges Sekret im rechten Auge, morgendliche Verkrustung der Lider und Lichtempfindlichkeit, aber keine Sehstörungen.
+  [4] 1203ms  Marina: Wie alt sind Sie?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Ich bin 34 Jahre alt.
+  [5] 499ms  Marina: Geben Sie bitte Ihr Geschlecht an?
+  [Pt] Männlich.
+  [6] 558ms  Marina: Seit wann haben Sie die Symptome?
+  [Pt] Ich habe die Symptome seit einem Tag.
+  [7] 478ms  Marina: Ist die Rötung nur im rechten Auge oder auch im linken Auge vorhanden?
+  [Pt] Die Rötung ist ausschließlich im rechten Auge vorhanden. Das linke Auge zeigt keine Veränderungen.
+  [8] 513ms  Marina: Haben Sie zusätzlich zu den genannten Symptomen vermehrtes Tränen, Juckreiz oder einen weiteren Ausfluss im Auge?
+  [Pt] Ja, mein rechtes Auge tränt verstärkt und fühlt sich juckend an, der Ausfluss ist hauptsächlich mukopurulent.
+  [9] 958ms  Marina: Sie sind 34 Jahre alt, männlich, leiden seit einem Tag an Rötung, Schmerzen und eitrigem, mukopurulentem Ausfluss im rechten Auge mit morgendlicher Verkrustung, begleitet von Lichtempfindlichkeit, verstärktem Tränen und Juckreiz. Das linke Auge ist unauffällig. Haben Sie noch etwas zur Krankengeschichte hinzuzufügen?
+  [Pt] Nein, sonst ist alles unauffällig, keine Vorerkrankungen, keine Medikamente, keine Allergien.
+  [10] 816ms  Marina: Ist der Ausfluss aus dem Auge wässrig oder eitrig?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Der Ausfluss aus dem Auge ist eitrig.
+  [11] 551ms  Marina: Haben Sie ein Gefühl von Sand im Auge oder eine leichte Reizung?
+  [Pt] Ja, ich habe das Gefühl, als ob Sand im Auge wäre, und es brennt leicht.
+  [12] 446ms  Marina: Haben Sie Schmerzen im Auge?
+  [Pt] Ja, mein rechtes Auge tut weh, besonders beim Blinzeln.
+  [13] 500ms  Marina: Haben Sie eine Verschlechterung des Sehvermögens bemerkt?
+  [Pt] Nein, mein Sehvermögen ist nicht beeinträchtigt.
+  [14] 806ms  Marina: Sie berichten eitrigen Ausfluss, ein Gefühl von Sand im Auge, leichte Reizung, Schmerzen beim Blinzeln im rechten Auge, jedoch keine Sehverschlechterung. Haben Sie noch etwas anderes zu den Begleitsymptomen hinzuzufügen?
+  [Pt] Nein, sonst keine weiteren Beschwerden, kein Fieber, keine Kopfschmerzen, kein Lichtempfindlichkeit.
+  [15] 795ms  Marina: Benutzen Sie Kontaktlinsen?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Nein, ich trage keine Kontaktlinsen.
+  [16] 512ms  Marina: Hatten Sie in der Vergangenheit bereits Augeninfektionen oder bekannte Augenerkrankungen?
+  [Pt] Nein, ich hatte noch nie Augeninfektionen oder bekannte Augenerkrankungen.
+  [17] 687ms  Marina: Sie benutzen keine Kontaktlinsen und hatten bisher keine Augeninfektionen oder bekannten Augenerkrankungen. Haben Sie noch etwas zur Krankengeschichte hinzuzufügen?
+  [Pt] Nein, sonst ist meine Augengesundheit unauffällig, keine vorherigen Infektionen oder Verletzungen.
+  [18] 711ms  Marina: Nehmen Sie derzeit regelmäßig Medikamente ein?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Nein, ich nehme derzeit keine regelmäßigen Medikamente ein.
+  [19] 588ms  Marina: Nehmen Sie rezeptfreie Arzneimittel, Vitamine oder Nahrungsergänzungsmittel ein?
+  [Pt] Nein, ich nehme keine rezeptfreien Arzneimittel, Vitamine oder Nahrungsergänzungsmittel ein.
+  [20] 661ms  Marina: Haben Sie in Bezug auf die aktuellen Augenbeschwerden ein Medikament eingenommen oder Augentropfen verwendet?
+  [Pt] Nein, ich habe bisher kein Medikament eingenommen und keine Augentropfen verwendet.
+  [21] 822ms  Marina: Sie nehmen derzeit keine regelmäßigen Medikamente, keine rezeptfreien Arzneimittel, Vitamine oder Nahrungsergänzungsmittel und haben bisher keine Medikamente oder Augentropfen wegen der aktuellen Augenbeschwerden verwendet. Haben Sie noch etwas zu den Medikamenten hinzuzufügen?
+  [Pt] Nein, ich habe nichts hinzuzufügen. Ich nehme derzeit keine Medikamente oder Augentropfen.
+  [22] 930ms  Marina: Haben Sie bekannte Allergien gegen Medikamente, Nahrungsmittel oder andere Substanzen?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Nein, ich habe keine bekannten Allergien gegen Medikamente, Nahrungsmittel oder andere Substanzen.
+  [23] 1090ms  Marina: Proszę podać nasycenie tlenem w procentach.  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Nasycenie tlenem wynosi 99%.
+  [24] 498ms  Marina: Proszę podać częstość oddechów na minutę.
+  [MO] Częstość oddechów wynosi 16 na minutę.
+  [25] 1074ms  Marina: Proszę podać tętno w uderzeniach na minutę.
+  [MO] Tętno wynosi 76 uderzeń na minutę.
+  [26] 1044ms  Marina: Proszę podać ciśnienie krwi, najpierw wartość skurczową, a następnie rozkurczową, w milimetrach słupka rtęci.
+  [MO] Ciśnienie krwi wynosi 122 mmHg skurczowe i 78 mmHg rozkurczowe.
+  [27] 515ms  Marina: Proszę podać temperaturę ciała w stopniach Celsjusza.
+  [MO] Temperatura ciała wynosi 37,0°C.
+  [28] 1100ms  Marina: Proszę ocenić poziom świadomości według skali AVPU: czy pacjent jest czujny, reaguje na głos, na ból, czy jest nieprzytomny?
+  [MO] Pacjent jest czujny.
+  [29] 1037ms  Marina: Zarejestrowane wartości to: nasycenie tlenem 99%, częstość oddechów 16 na minutę, tętno 76 uderzeń na minutę, ciśnienie krwi 122/78 mmHg, temperatura ciała 37,0°C, poziom świadomości AVPU: czujny. Czy ma pan coś jeszcze do dodania w zakresie parametrów życiowych?
+  [MO] Nie, parametry życiowe są stabilne, bez dodatkowych odchyleń od normy.
+  [30] 942ms  Marina: Czy wykonano test z fluoryceiną, a jeśli tak, jaki był wynik?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] Test z fluoryceiną nie został wykonany.
+  [31] 581ms  Marina: Nie przeprowadzono badania z fluoryceiną. Czy ma pan coś jeszcze do dodania w zakresie badań?
+  [MO] Nie stwierdzono zatrzymania fluoresceiny, nie oceniano za pomocą lampy szluzowej. Nie dodano żadnych innych badań.
+  [32] 1129ms  Marina: Czy występuje zaczerwienienie wokół tęczówki, czyli w kolorowej części oka?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Nie, zaczerwienienie dotyczy spojówki, a nie wokół tęczówki.
+  [33] 634ms  Marina: Czy występuje zaczerwienienie wokół białej części oka?
+  [MO] Tak, występuje zaczerwienienie białej części oka.
+  [34] 675ms  Marina: Czy występuje wydzielina lub płyn, a jeśli tak, to jakiego koloru?
+  [MO] Występuje obfita wydzielina ropna w oku prawym.
+  [35] 657ms  Marina: Czy źrenice są okrągłe?
+  [MO] Źrenice są okrągłe, prawidłowo reagujące na światło.
+  [36] 590ms  Marina: Czy źrenice są tej samej wielkości?
+  [MO] Nie oceniano wielkości źrenic.
+  [37] 605ms  Marina: Jakie jest oszacowane rozmiar źrenic w milimetrach?
+  [MO] Rozmiar źrenic nie został podany w badaniu.
+  [38] 825ms  Marina: Czy źrenice zwężają się, gdy świecisz światłem do jednego oka?
+  [MO] Tak, źrenice zwężają się, gdy świecisz światłem do jednego oka.
+  [39] 719ms  Marina: Czy osoba potrafi poprawnie policzyć palce z odległości jednego metra?
+  [MO] Tak, osoba poprawnie policzyła palce z odległości jednego metra.
+  [40] 840ms  Marina: Delikatnie uciągnij dolne powieki i unieś górne powieki. Czy znajdują się tam kurz, ciało obce lub cząstki?
+  [MO] Nie stwierdzono ciała obcego, kurzu ani obcych cząstek pod dolną ani górną powieką.
+  [41] 1647ms  Marina: Badanie oka wykazało zaczerwienienie białej części oka, obfity ropny wydzielina w oku prawym, źrenice okrągłe i reagujące na światło, prawidłową zdolność rozpoznawania palców z odległości jednego metra, brak ciała obcego pod powiekami. Nie oceniono zaczerwienienia wokół tęczówki, wielkości źrenic ani ich symetrii. Czy ma pan coś jeszcze do dodania w zakresie badania fizykalnego?
+  [MO] W badaniu fizykalnym stwierdzono rozlane zaczerwienienie spojówek i obfity wydzielina ropna w oku prawym, źrenice okrągłe i reagujące na światło, prawidłową ostrość wzroku w odległości jednego metra, brak obrzęku okolica oczodołowych i ciała obcego pod powiekami.
+  [42] 1224ms  Marina: Wywiad zakończony. Raport został wygenerowany. Proszę poinformować oficera medycznego, że procedura została zakończona.
+
+  Interview complete after 42 turns.
+
+── Extract ──
+  Calling /ai/extract with 93 messages (filtered from 111)...
+  ✓ Done  (1995ms)
+
+  gender: male
+  chiefComplaint: right eye pain, redness, and purulent discharge
+  chiefSymptom: redness, pain, purulent discharge, morning crusting, photophobia, tearing, itching, foreign body sensation
+  history: The patient has had redness, pain, and purulent discharge in the right eye for one day, with morning crusting of the eyelashes, accompanied by photophobia, increased tearing, itching, and a sensation of sand in the eye. The symptoms are present only in the right eye, with no changes in the left eye. There is no change in vision, fever, or headache.
+  pastHistory: The patient reports no previous eye infections, eye diseases, or other medical conditions.
+  currentMedications: Patient states they do not take any medications.
+  allergies: Patient states they have no known allergies.
+  circulation_pulse_per_min: 76
+  circulation_systole: 122
+  circulation_diastole: 78
+  breathing_num_breaths_per_min: 16
+  breathing_oxygen_saturation: 99
+  expose_temperature_measured_mouth: 37.0
+  avpu: Alert
+  problemDescription: 34-year-old male with one day of right eye redness, pain, and purulent discharge with morning crusting of eyelids, accompanied by photophobia, increased tearing, itching, and a foreign body sensation described as sand in the eye. The patient reports pain when blinking but denies any changes in vision, fever, or headache. The left eye is unaffected. The patient has no history of eye infections, eye diseases, or contact lens use, and denies any chronic medical conditions, medications, allergies, or previous eye injuries.
+  performedActions: M-EWS score: 0
+
+Physical examination revealed diffuse conjunctival redness and abundant purulent discharge in the right eye, no periorbital swelling or foreign body under the eyelids. Pupils are round and react to light, finger counting at one meter is normal in both eyes.

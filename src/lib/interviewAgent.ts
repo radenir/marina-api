@@ -12,7 +12,7 @@ function toMessages(history: Record<string, unknown>[]): ChatCompletionMessagePa
 const MAX_TOKENS = 2048;
 const MAX_TOOL_ITERATIONS = 40;
 const TEMPERATURE = 0.3;
-const FREQUENCY_PENALTY = 0.5;
+const FREQUENCY_PENALTY = 0.1;
 const STAGE_ADVANCING_TOOLS = new Set(['completeStage', 'logPrimarySymptom']);
 
 interface AgentResult {
@@ -20,6 +20,28 @@ interface AgentResult {
   newState: InterviewState;
   done: boolean;
   report: string | null;
+}
+
+/** Strip <think>...</think> reasoning blocks emitted by models like Qwen3 / Nemotron. */
+function stripThinking(text: string | null | undefined): string {
+  if (!text) return '';
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+}
+
+/** Retry an async call up to `retries` times with exponential backoff on any error. */
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, baseDelayMs = 2000): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, baseDelayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
 }
 
 function buildResult(state: InterviewState, reply: string): AgentResult {
@@ -78,12 +100,12 @@ export async function runAgent(state: InterviewState, userText: string): Promise
       requestParams.tool_choice = 'auto';
     }
 
-    const response = await nebius.chat.completions.create(requestParams) as ChatCompletion;
+    const response = await withRetry(() => nebius.chat.completions.create(requestParams) as Promise<ChatCompletion>) as ChatCompletion;
     const choice = response.choices[0];
     const msg = choice.message;
 
     // Store the assistant turn in history (with tool_calls if present)
-    const assistantEntry: Record<string, unknown> = { role: 'assistant', content: msg.content ?? null };
+    const assistantEntry: Record<string, unknown> = { role: 'assistant', content: stripThinking(msg.content) || null };
     if (msg.tool_calls && msg.tool_calls.length > 0) {
       assistantEntry.tool_calls = msg.tool_calls;
     }
@@ -94,7 +116,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
 
     // ── No tool calls → done with this user turn ──────────────────────────
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
-      const replyText = msg.content?.trim() || '';
+      const replyText = stripThinking(msg.content);
 
       // If reply is empty, discard the empty assistant entry and retry once
       // with a nudge so the LLM has something new to react to.
@@ -115,7 +137,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
           retryParams.tools = stageTools as Parameters<typeof nebius.chat.completions.create>[0]['tools'];
           retryParams.tool_choice = 'auto';
         }
-        const retryResponse = await nebius.chat.completions.create(retryParams) as ChatCompletion;
+        const retryResponse = await withRetry(() => nebius.chat.completions.create(retryParams) as Promise<ChatCompletion>) as ChatCompletion;
         const retryMsg = retryResponse.choices[0].message;
 
         if (retryMsg.tool_calls && retryMsg.tool_calls.length > 0) {
@@ -126,9 +148,9 @@ export async function runAgent(state: InterviewState, userText: string): Promise
 
         currentState = {
           ...currentState,
-          conversationHistory: [...cleanHistory, { role: 'assistant', content: retryMsg.content ?? null }],
+          conversationHistory: [...cleanHistory, { role: 'assistant', content: stripThinking(retryMsg.content) || null }],
         };
-        return buildResult(currentState, retryMsg.content?.trim() || '');
+        return buildResult(currentState, stripThinking(retryMsg.content));
       }
 
       return buildResult(currentState, replyText);
@@ -185,9 +207,13 @@ export async function runAgent(state: InterviewState, userText: string): Promise
       // working correctly and adding a language reminder there conflicts with the
       // "call completeStage with no text output" completion rule.
       const isMOStage = currentState.stage >= 7;
-      const langReminder = isMOStage && currentState.variables.medicalOfficerLanguage
-        ? ` You MUST respond in ${currentState.variables.medicalOfficerLanguage} only — do not use any other language.`
-        : '';
+      const langReminder = isMOStage
+        ? (currentState.variables.medicalOfficerLanguage
+            ? ` You MUST respond in ${currentState.variables.medicalOfficerLanguage} only — do not use any other language.`
+            : '')
+        : (currentState.variables.patientLanguage
+            ? ` You MUST respond in ${currentState.variables.patientLanguage} only — do not use English or any other language.`
+            : '');
       // Patient stages: force the first question. MO stages: allow completeStage immediately
       // (needed when stage 7 has no applicable investigations — all conditions unmet).
       const stageInstruction = isMOStage
@@ -217,10 +243,10 @@ export async function runAgent(state: InterviewState, userText: string): Promise
         openingRequestParams.tools = stageTools as Parameters<typeof nebius.chat.completions.create>[0]['tools'];
         openingRequestParams.tool_choice = 'auto';
       }
-      const openingResponse = await nebius.chat.completions.create(openingRequestParams) as ChatCompletion;
+      const openingResponse = await withRetry(() => nebius.chat.completions.create(openingRequestParams) as Promise<ChatCompletion>) as ChatCompletion;
       const openingMsg = openingResponse.choices[0].message;
 
-      const openingEntry: Record<string, unknown> = { role: 'assistant', content: openingMsg.content ?? null };
+      const openingEntry: Record<string, unknown> = { role: 'assistant', content: stripThinking(openingMsg.content) || null };
       if (openingMsg.tool_calls && openingMsg.tool_calls.length > 0) {
         openingEntry.tool_calls = openingMsg.tool_calls;
       }
@@ -234,7 +260,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
         continue;
       }
 
-      return buildResult(currentState, openingMsg.content || '');
+      return buildResult(currentState, stripThinking(openingMsg.content));
     }
 
     // Loop — next iteration lets the model respond to tool results
@@ -242,7 +268,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
 
   // Iteration limit hit — make one final text-only call to get a graceful response
   try {
-    const fallbackResponse = await nebius.chat.completions.create({
+    const fallbackResponse = await withRetry(() => nebius.chat.completions.create({
       model: config.nebius.model,
       max_tokens: MAX_TOKENS,
       temperature: TEMPERATURE,
@@ -252,13 +278,13 @@ export async function runAgent(state: InterviewState, userText: string): Promise
         ...toMessages(currentState.conversationHistory),
         { role: 'user', content: '[Please summarise what has been covered so far and ask if the medical officer has anything to add.]' },
       ],
-    });
+    }) as Promise<ChatCompletion>) as ChatCompletion;
     const fallbackMsg = fallbackResponse.choices[0].message;
     currentState = {
       ...currentState,
-      conversationHistory: [...currentState.conversationHistory, { role: 'assistant', content: fallbackMsg.content ?? null }],
+      conversationHistory: [...currentState.conversationHistory, { role: 'assistant', content: stripThinking(fallbackMsg.content) || null }],
     };
-    return buildResult(currentState, fallbackMsg.content || '');
+    return buildResult(currentState, stripThinking(fallbackMsg.content));
   } catch {
     return buildResult(currentState, '');
   }
@@ -270,7 +296,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
  */
 export async function generateGreeting(state: InterviewState): Promise<AgentResult> {
   const systemPrompt = buildSystemPrompt(state);
-  const response = await nebius.chat.completions.create({
+  const response = await withRetry(() => nebius.chat.completions.create({
     model: config.nebius.model,
     max_tokens: 128,
     temperature: TEMPERATURE,
@@ -279,7 +305,7 @@ export async function generateGreeting(state: InterviewState): Promise<AgentResu
       { role: 'system', content: systemPrompt },
       { role: 'user', content: `[Begin: introduce yourself as Marina and ask the patient what is going on. Respond in ${state.variables.patientLanguage}. One sentence only.]` },
     ],
-  });
-  const reply = response.choices[0]?.message?.content?.trim() || '';
+  }) as Promise<ChatCompletion>) as ChatCompletion;
+  const reply = stripThinking(response.choices[0]?.message?.content);
   return { reply, newState: state, done: false, report: null };
 }

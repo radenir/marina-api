@@ -1,0 +1,170 @@
+
+════════════════════════════════════════════════════════════
+  Norwegian patient / Polish MO — STEMI (Chest Pain)
+════════════════════════════════════════════════════════════
+  Symptom: Jeg har hatt knusende brystsmerter siden i natt som stråler ut i venstre arm og kjeven. Jeg er klam og svett.
+
+  ✓ Started  (665ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Hva kan jeg hjelpe deg med i dag?
+  [Pt] Jeg har voldsom brystsmerter som stråler til venstre arm og kjeve, svette og pustebesvær siden i natt.
+  [1] 1446ms  Marina: Kan du beskrive symptomene dine mer detaljert?
+  [Pt] Jeg har hatt kvalmende brystsmerter siden i går kveld, som stråler ut til venstre arm og kjeve, med kraftig svette.
+  [2] 626ms  Marina: Har du også problemer med å puste eller føler du at du får for lite luft?
+  [Pt] Ja, jeg puster fort og kjenner litt trykk i brystet, men klarer å snakke.
+  [3] 5811ms  Marina: Er det riktig at hovedsymptomet ditt er brystsmerter som stråler til venstre arm og kjeve, sammen med svette og pustebesvær?
+  [Pt] Ja, det er riktig. Jeg har hatt kvelende brystsmerter som stråler til venstre arm og kjeve, med svette og lett pustebesvær siden i natt.
+  [4] 831ms  Marina: Hvor gammel er du?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Jeg er 58 år gammel.
+  [5] 396ms  Marina: Er du mann eller kvinne?
+  [Pt] Jeg er mann.
+  [6] 424ms  Marina: Kommer smerten plutselig eller har den kommet gradvis?
+  [Pt] Smerten kom plutselig i natt, svært kraftig med én gang, og har vart siden da.
+  [7] 575ms  Marina: Hvor føler du smerten nøyaktig i brystet, og stråler den til andre steder enn venstre arm og kjeve?
+  [Pt] Jeg føler en kvelende smerte i brystet, mest i midten, og den stråler ut til venstre arm og nedover kjeve. Jeg merker den ikke tydelig andre steder.
+  [8] 719ms  Marina: Hvordan vil du beskrive smerten – er den som trykk, stikkende, brennende eller noe annet?
+  [Pt] Smerten er et sterkt trykk i brystet, som om noe tyngre seg over meg, og den stråler ut til venstre arm og kjeve.
+  [9] 830ms  Marina: På en skala fra 0 til 10, hvor 0 er ingen smerte og 10 er verst tenkelig smerte, hvor voldsom er smerten din nå?
+  [Pt] Smerten er på 9 av 10 – den er voldsom og pressende.
+  [10] 758ms  Marina: Er smerten konstant, eller kommer og går den? Og i så fall, hvor lenge har den vart til sammen?
+  [Pt] Smerten er konstant siden i går kveld, varer fortsatt og er veldig sterk.
+  [11] 565ms  Marina: Gjør pusten, bevegelse eller fysisk anstrengelse smerten verre?
+  [Pt] Smerten blir verre ved fysisk anstrengelse, men ikke ved pusten eller bevegelse.
+  [12] 572ms  Marina: Får du bedring av smerten ved hvile, endring av kroppsstilling eller ved bruk av medisiner?
+  [Pt] Nei, smerten forverres ikke av kroppsstilling, men den har ikke bedret seg ved hvile eller ved bruk av aspirin.
+  [13] 775ms  Marina: Har du vært i en situasjon med nedsatt bevegelse nylig, for eksempel lang reise, flyreise eller ligget i sengen i lengre tid?
+  [Pt] Nei, jeg har ikke vært i noen situasjon med nedsatt bevegelse nylig.
+  [14] 501ms  Marina: Har du hatt noen skade eller traume i brystet eller ryggen nylig?
+  [Pt] Nei, ingen skade eller traume nylig. Smerten startet plutselig i natt uten noen ytre årsak.
+  [15] 2474ms  Marina: Pasienten er en 58 år gammel mann som opplever plutselig, konstant og kvelende brystsmerter med intensitet på 9 av 10, lokalisert i midten av brystet og stråler til venstre arm og kjeve. Smerten beskrives som trykk og har vart siden i går kveld. Den forverres av fysisk anstrengelse, men ikke av pust eller bevegelse, og det er ingen lindring ved hvile eller aspirin. Det er ingen nylig immobilisering eller traume i brystet eller ryggen. Tilleggssymptomer inkluderer svette og lett pustebesvær.  
+
+Har du noe mer å tilføye om sykehistorien din?
+  [Pt] Ja, jeg har hatt høyt blodtrykk lenge og røyker, men har ikke hatt lignende smerter før. Får ikke bedring med aspirin, og sveden fortsetter.
+  [16] 1533ms  Marina: Pasienten er en 58 år gammel mann som opplever plutselig, konstant og kvelende brystsmerter med intensitet på 9 av 10, lokalisert i midten av brystet og stråler til venstre arm og kjeve. Smerten beskrives som trykk og har vart siden i går kveld. Den forverres av fysisk anstrengelse, men ikke av pust eller bevegelse, og det er ingen lindring ved hvile eller aspirin. Det er ingen nylig immobilisering eller traume i brystet eller ryggen. Tilleggssymptomer inkluderer svette og lett pustebesvær. Pasienten har langvarig høyt blodtrykk, er røyker og har ikke hatt lignende smerter tidligere.  
+
+Har du noe mer å tilføye om sykehistorien din?
+  [Pt] Nei, det er alt – smerterne er som et klemme og vil ikke gå over.
+  [17] 828ms  Marina: Føler du at du får for lite luft eller har vanskelig for å puste?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Ja, jeg puster fort og kjennes som om jeg ikke får nok luft.
+  [18] 624ms  Marina: Har du svedt mye, spesielt mer enn vanlig?
+  [Pt] Ja, jeg har svedt kraftig, spesielt mer enn vanlig, siden i natt.
+  [19] 821ms  Marina: Har du hostet?
+  [Pt] Nei, jeg har ikke hostet.
+  [20] 577ms  Marina: Føler du deg kvalm eller har du kastet opp?
+  [Pt] Ja, jeg føler meg litt kvalm, men har ikke kastet opp.
+  [21] 759ms  Marina: Føler du at hjertet slår ukontrollert, raskt eller rart?
+  [Pt] Nei, jeg føler ikke at hjertet slår rart, men det slår fort og jeg er svett og sliten.
+  [22] 528ms  Marina: Har du mistet bevisstheten eller følt at du skal besvime?
+  [Pt] Nei, jeg har ikke mistet bevisstheten, men jeg har følt meg svimmel og svak.
+  [23] 1385ms  Marina: Pasienten har pustebesvær, svedt mye, ikke hostet, følt seg kvalm men ikke kastet opp, ikke opplevd hjertebank eller ukontrollert hjerteslag, og har ikke mistet bevisstheten men følt seg svimmel og svak.  
+
+Har du noe mer å tilføye om tilknyttede symptomer?
+  [Pt] Nei, det er alt.
+  [24] 981ms  Marina: Har du hatt hypertensjon?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Ja, jeg har hatt høytrykk i mange år.
+  [25] 580ms  Marina: Har du hatt hjerte- eller karsykdom?
+  [Pt] Ja, jeg har hatt høyt blodtrykk i mange år, men ingen tidligere hjerteinfarkt.
+  [26] 496ms  Marina: Har du hatt dyb venetrombose eller lungemboli?
+  [Pt] Nei, jeg har aldri hatt dyb venetrombose eller lungemboli før.
+  [27] 421ms  Marina: Røyker du?
+  [Pt] Ja, jeg røyker.
+  [28] 940ms  Marina: Pasienten har hypertensjon i mange år, ingen tidligere hjerte- eller karsykdom som hjerteinfarkt, ingen historie med dyb venetrombose eller lungemboli, og er røyker.  
+
+Har du noe mer å tilføye om din medisinske historie?
+  [Pt] Nei, det er alt viktigste. Har kun hatt høyt blodtrykk i mange år, røyker, men ellers ingen tidligere hjerteproblemer eller andre alvorlige sykdommer.
+  [29] 938ms  Marina: Tar du noen medisiner jevnlig?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Jeg tar vanlig aspirin én gang om dagen, ialt annet tar jeg ikke jevnlig.
+  [30] 1139ms  Marina: Hva er navnet på medisinen du tar, og hvor mye tar du av den?
+  [Pt] Jeg tar aspirin, én tablett om dagen.
+  [31] 450ms  Marina: Hvor ofte tar du aspirin?
+  [Pt] Jeg tar en aspirin daglig, som foreskrevet.
+  [32] 605ms  Marina: Tar du noen andre medisiner, som over-the-counter midler, vitaminer eller kosttilskudd?
+  [Pt] Nei, bare aspirin.
+  [33] 632ms  Marina: Tar du noen medisiner spesielt for de symptomet du har nå, som brystsmerter?
+  [Pt] Nei, jeg tar bare vanlig aspirin som jeg alltid gjør. Ingen nye medisiner for brystsmerter.
+  [34] 1701ms  Marina: Pasienten tar jevnlig én tablett aspirin daglig, ingen andre legemidler, vitaminer eller kosttilskudd. Tar ikke ytterligere medisiner for nåværende symptomer.  
+
+Har du noe mer å tilføye om medisiner du tar?
+  [Pt] Nei, jeg tar bare én tablett aspirin daglig, ingen andre medisiner, vitaminer eller kosttilskudd.
+  [35] 927ms  Marina: Har du noen kjente allergier mot medisiner, mat eller andre stoffer?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Nei, jeg har ingen kjente allergier.
+  [36] 1245ms  Marina: Pomiar saturacji tlenowej u pacjenta został wykonany. Proszę podać wartość saturacji tlenowej w procentach.  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Saturacja tlenowa wynosi 93%.
+  [37] 729ms  Marina: Proszę zmierzyć i podać częstość oddechów pacjenta w ciągu jednej minuty.
+  [MO] Częstość oddechów pacjenta wynosi 22 oddechy na minutę.
+  [38] 552ms  Marina: Proszę zmierzyć i podać tętno pacjenta w uderzeniach na minutę.
+  [MO] Tętno pacjenta wynosi 106 uderzeń na minutę.
+  [39] 766ms  Marina: Proszę podać wynik pomiaru ciśnienia krwi pacjenta, zarówno skurczowego jak i rozkurczowego, w mmHg.
+  [MO] Ciśnienie krwi pacjenta wynosi 152/96 mmHg.
+  [40] 602ms  Marina: Proszę podać temperaturę ciała pacjenta w stopniach Celsjusza.
+  [MO] Temperatura ciała pacjenta wynosi 37,1°C.
+  [41] 1064ms  Marina: Proszę ocenić stan świadomości pacjenta według skali AVPU: czy jest on czujny (Alert), reaguje na głos (Verbal), reaguje na ból (Pain), czy jest nieprzytomny (Unresponsive)?
+  [MO] Pacjent jest czujny (Alert).
+  [42] 4663ms  Marina: Saturacja tlenowa pacjenta wynosi 93%, częstość oddechów to 22 na minutę, tętno to 106 uderzeń na minutę, ciśnienie krwi to 152/96 mmHg, temperatura ciała to 37,1°C, a stan świadomości według skali AVPU to czujny (Alert). Czy ma Pan coś więcej do dodania dotyczącej parametrów życiowych?
+  [MO] Parametry życiowe stabilne, brak niewydolności krążeniowej ani oddechowej, saturacja 93% przy samooczyszczaniu, bez konieczności suplementacji tlenu.
+  [43] 1189ms  Marina: Czy wykonano test CRP, mimo że pacjent nie ma kaszlu ani temperatury ≥38°C? Jeśli tak, jaki był wynik?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] Nie wykonano testu CRP, ponieważ pacjent nie ma kaszlu ani podwyższonej temperatury.
+  [44] 1027ms  Marina: Czy EKG zostało wykonane, biorąc pod uwagę, że ból w klatce piersiowej nie jest spowodowany urazem? Jeśli tak, jaki był wynik?
+  [MO] EKG zostało wykonane – stwierdzono podwyższenie odcinka ST w odprowadzeniach przednich.
+  [45] 819ms  Marina: Przeprowadzono badanie EKG, które wykazało podwyższenie odcinka ST w odprowadzeniach przednich. Badanie CRP nie zostało wykonane, ponieważ pacjent nie ma kaszlu ani temperatury ≥38°C. Czy ma Pan coś więcej do dodania dotyczącej badań?
+  [MO] EKG potwierdza podwyższenie odcinka ST w odprowadzeniach przednich. CRP nie zostało wykonane ze względu na brak objawów infekcyjnych.
+  [46] 1170ms  Marina: Czy pacjent mówi swobodnie i odpowiada wyraźnie?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Pacjent mówi swobodnie i odpowiada wyraźnie.
+  [47] 745ms  Marina: Czy oddychanie jest trudne? Czy pacjent oddycha przez usta?
+  [MO] Oddychanie nie jest trudne, pacjent oddycha przez usta.
+  [48] 737ms  Marina: Czy osoba wygląda bardziej bladej lub szarawo niż zwykle?
+  [MO] Tak, osoba wygląda bladej niż zwykle.
+  [49] 1543ms  Marina: Czy skóra jest spocona lub ciepła w dotyku?
+  [MO] Skóra jest spocona, temperatura w dotyku nie była oceniana.
+  [50] 1044ms  Marina: Czy są widoczne oznaki urazu, takie jak rany czy siniaki?
+  [MO] Nie stwierdzono widocznych ran ani siniaków.
+  [51] 1071ms  Marina: Proszę poprosić pacjenta, aby wstał i przeszedł kilka metrów. Czy może to zrobić bez pomocy?
+  [MO] Pacjent nie może wstać ani chodzić — pozostaje w pozycji leżącej z powodu nasilonego bólu 9/10 i objawów ostrej niedokrwieniowej choroby serca.
+  [52] 1636ms  Marina: Pacjent mówi swobodnie i odpowiada wyraźnie, oddycha przez usta bez znaczącego trudu, wygląda bladej niż zwykle, skóra jest spocona, nie stwierdza się ran ani siniaków, ale pacjent nie może wstać ani chodzić z powodu nasilonego bólu i podejrzenia ostrej niedokrwieniowej choroby serca. Czy ma Pan coś więcej do dodania dotyczącej badania fizykalnego?
+  [MO] Skóra chłodna i wilgotna, bradykardia lub nieregularne odgłosy serca nie stwierdzone, płuca suche, żadnych dodatkowych odgłosów oddechowych.
+  [53] 1939ms  Marina: Wywiad zakończony. Raport został wygenerowany.
+
+  Interview complete after 53 turns.
+
+── Extract ──
+  Calling /ai/extract with 115 messages (filtered from 133)...
+  ✓ Done  (2084ms)
+
+  gender: male
+  chiefComplaint: crushing chest pain radiating to left arm and jaw, with sweating and shortness of breath
+  chiefSymptom: crushing chest pain
+  history: The patient, a 58-year-old male, experienced sudden onset of severe, crushing chest pain at night, rated 9 out of 10 in intensity. The pain is located in the center of the chest and radiates to the left arm and jaw. Associated symptoms include profuse sweating, shortness of breath, nausea, dizziness, and weakness. The pain is constant, worsens with physical exertion, and has not improved with rest or aspirin. No recent trauma or immobility was reported.
+  pastHistory: The patient has a history of long-standing hypertension and is a smoker. He has no prior history of heart attack, heart disease, deep vein thrombosis, or pulmonary embolism.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Aspirin one tablet daily
+  circulation_pulse_per_min: 106
+  circulation_systole: 152
+  circulation_diastole: 96
+  breathing_num_breaths_per_min: 22
+  breathing_oxygen_saturation: 93
+  expose_temperature_measured_mouth: 37.1
+  avpu: Alert
+  redFlag: yes
+  redFlagType: chest pain radiating to left arm and jaw with sweating and shortness of breath
+  problemDescription: 58-year-old male with sudden onset of constant, crushing central chest pain radiating to the left arm and jaw, rated 9 out of 10 in intensity, ongoing since last night. Pain worsens with physical exertion but not with breathing or movement, and there is no relief with rest or aspirin. Associated symptoms include profuse sweating, shortness of breath, nausea, dizziness, and weakness. Patient has a history of long-standing hypertension, is a smoker, and denies previous similar pain, heart attack, deep vein thrombosis, or pulmonary embolism. Denies cough, loss of consciousness, or palpitations. No recent trauma or immobility. Takes daily aspirin with no other medications, supplements, or known allergies.
+  performedActions: M-EWS score: 5
+
+EKG performed showing ST-segment elevation in anterior leads. Patient appears pale, skin is cool and moist. Lungs are clear with no adventitious sounds. Patient is alert, speaks clearly, breathes through mouth without significant distress, and has no visible wounds or bruises. Unable to stand or walk due to severe chest pain and suspected acute ischemic heart disease. CRP test not performed due to absence of infectious symptoms.

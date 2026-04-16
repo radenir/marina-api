@@ -1,0 +1,143 @@
+
+════════════════════════════════════════════════════════════
+  Polish patient / English MO — Facial Trauma with Suspected Orbital Fracture
+════════════════════════════════════════════════════════════
+  Symptom: Uderzyłem twarzą w pokrywę włazu gdy statek się przechylił. Nos mocno krwawił, jest opuchnięty i krzywy, a teraz widzę podwójnie.
+
+  ✓ Started  (409ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Jak mogę pomóc dzisiaj?
+  [Pt] Uderzyłem twarzą w pokrywę włazu, leci mi krew z nosa, nos jest spuchnięty i krzywy, a do tego pojawiła się podwójna wizja.
+  [1] 706ms  Marina: Proszę opisać objaw bardziej szczegółowo?
+  [Pt] Uderzyłem twarzą w pokrywę włazu, od razu poszła krew z nosa, nos jest opuchnięty i krzywy, a od niedawna widzę podwójnie, szczególnie patrząc w bok.
+  [2] 698ms  Marina: Czy są jakieś inne objawy oprócz krwawienia z nosa, opuchnięcia i zniekształcenia nosa oraz podwójnego widzenia?
+  [Pt] Oprócz krwawienia z nosa, opuchnięcia, zniekształcenia i podwójnego widzenia nie zgłaszam innych objawów. Jestem przytomny, bez utraty świadomości.
+  [3] 1009ms  Marina: Czy potwierdzasz, że głównym objawem jest krwotoka z nosa po urazie, towarzyszone opuchnięciem, zniekształceniem nosa i podwójnym widzeniem?
+  [Pt] Tak, potwierdzam – głównym objawem jest silny krwotok z nosa po uderzeniu w pokrywę włazu, z towarzyszącym obrzękiem, zniekształceniem nosa i nowym podwójnym widzeniem.
+  [4] 764ms  Marina: Ile masz lat?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Mam 29 lat.
+  [5] 756ms  Marina: Jaka jest Twoja płeć?
+  [Pt] Mężczyzna.
+  [6] 447ms  Marina: Kiedy zaczął się krwotok z nosa i jak długo trwał?
+  [Pt] Krwotok z nosa rozpoczął się natychmiast po uderzeniu w pokrywę włazu. Trwa nadal, mimo ucisku.
+  [7] 524ms  Marina: Z której strony występuje krwotok — z jednego czy obu nozdrzy?
+  [Pt] Krwotok występuje z obu nozdrzy.
+  [8] 562ms  Marina: Czy doszło do urazu lub czy miałeś ostatnio nawyk dłubania w nosie?
+  [Pt] Doszło do urazu – uderzyłem twarzą w pokrywę włazu. Nie miałem nawyku dłubania w nosie.
+  [9] 866ms  Marina: Czy przyjmujesz leki takie jak leki przeciwzakrzepowe, aspirynę lub niesteroidowe leki przeciwzapalne?
+  [Pt] Nie przyjmuję żadnych leków, w tym leków przeciwzakrzepowych, aspiryny ani niesteroidowych leków przeciwzapalnych.
+  [10] 623ms  Marina: Czy masz nadciśnienie tętnicze lub przebywasz w suchym środowisku na statku?
+  [Pt] Nie mam nadciśnienia tętniczego. Środowisko na statku nie jest szczególnie suche.
+  [11] 490ms  Marina: Czy krwotok ustał i ponownie się uruchomił?
+  [Pt] Krwotok nie ustał całkowicie, ale zmniejszył się po ucisku.
+  [12] 1912ms  Marina: Podsumowując: jesteś 29-letnim mężczyzną, który doznał urazu twarzy w wyniku uderzenia w pokrywę włazu, co spowodowało natychmiastowy i trwający krwotok z obu nozdrzy. Nie ma nawyku dłubania w nosie, nie przyjmuje leków przeciwzakrzepowych, aspiryny ani niesteroidowych leków przeciwzapalnych. Nie stwierdzono nadciśnienia tętniczego, a środowisko na statku nie jest suche. Krwotok nie ustał całkowicie, ale zmniejszył się po ucisku. Dodatkowo zgłaszasz obrzęk, zniekształcenie nosa i nowe podwójne widzenie. Czy masz coś jeszcze do dodania w zakresie wywiadu?
+  [Pt] Nie mam nic więcej do dodania – nie miałem wcześniejszych urazów twarzy, nie lecę żadnych chorób, nie przyjmuję leków i nie mam alergii.
+  [13] 729ms  Marina: Czy odczuwasz zawroty głowy?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Nie, nie mam zawrotów głowy.
+  [14] 487ms  Marina: Czy odczuwasz zmęczenie?
+  [Pt] Nie, nie odczuwam zmęczenia. Jestem całkowicie przytomny.
+  [15] 582ms  Marina: Czy odczuwasz nudności, zwłaszcza gdy połkujesz krew?
+  [Pt] Tak, czuję lekkie nudności, szczególnie gdy połykam krew.
+  [16] 916ms  Marina: Podsumowując: nie odczuwasz zawrotów głowy ani zmęczenia, ale zgłaszasz lekkie nudności, zwłaszcza podczas połykania krwi. Czy masz coś jeszcze do dodania w zakresie objawów towarzyszących?
+  [Pt] Nie, tylko lekkie nudności przy połykaniu krwi, więcej nic nie dolega.
+  [17] 919ms  Marina: Czy przyjmujesz leki przeciwzakrzepowe lub inne leki wpływające na krzepnięcie krwi?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Nie przyjmuję żadnych leków, w tym leków przeciwzakrzepowych.
+  [18] 845ms  Marina: Czy kiedykolwiek stwierdzono u Ciebie zaburzenia krzepnięcia krwi lub choroby krwotoczne?
+  [Pt] Nie, nigdy nie stwierdzono u mnie zaburzeń krzepnięcia krwi ani chorób krwotocznych.
+  [19] 570ms  Marina: Czy często doświadczasz krwawień z nosa, nawet bez poważnego urazu?
+  [Pt] Nie, wcześniej nigdy nie miałem krwawień z nosa, nawet po niewielkich urazach.
+  [20] 775ms  Marina: Czy masz jakiekolwiek zniekształcenie nosa, które występowało przed tym urazem?
+  [Pt] Nie, wcześniej nie miałem żadnych zniekształceń nosa.
+  [21] 1295ms  Marina: Podsumowując: nie przyjmujesz leków przeciwzakrzepowych ani innych wpływających na krzepnięcie krwi, nie stwierdzono u Ciebie zaburzeń krzepnięcia ani chorób krwotocznych, nie doświadczałeś wcześniej częstych krwawień z nosa, a zniekształcenie nosa pojawiło się dopiero po tym urazie. Czy masz coś jeszcze do dodania w zakresie chorób przewlekłych lub wywiadu medycznego?
+  [Pt] Nie, nie mam innych chorób przewlekłych ani ważnych informacji medycznych do dodania.
+  [22] 788ms  Marina: Czy przyjmujesz regularnie jakieś leki?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Nie przyjmuję żadnych leków.
+  [23] 641ms  Marina: Czy przyjmujesz leki bez recepty, suplementy lub witaminy?
+  [Pt] Nie przyjmuję żadnych leków, suplementów ani witamin.
+  [24] 797ms  Marina: Czy przyjmujesz jakieś leki specyficznie związane z obecnym objawem, takie jak środki przeciwbólowe lub leki na katar?
+  [Pt] Nie przyjmuję żadnych leków, w tym środków przeciwbólowych czy na katar.
+  [25] 731ms  Marina: Podsumowując: nie przyjmujesz żadnych regularnych leków, leków bez recepty, suplementów, witamin ani żadnych środków związanych z obecnym objawem. Czy masz coś jeszcze do dodania w zakresie przyjmowanych leków?
+  [Pt] Nie, nie przyjmuję żadnych leków, suplementów ani witamin.
+  [26] 999ms  Marina: Czy masz alergie na leki, pokarmy lub inne substancje?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Nie, nie mam żadnych alergii.
+  [27] 830ms  Marina: Medical officer, please measure the patient's oxygen saturation level in percent.  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Oxygen saturation is 99%.
+  [28] 430ms  Marina: Medical officer, please measure the patient's respiratory rate in breaths per minute.
+  [MO] Respiratory rate is 16 breaths per minute.
+  [29] 275ms  Marina: Medical officer, please measure the patient's heart rate in beats per minute.
+  [MO] Heart rate is 88 beats per minute.
+  [30] 526ms  Marina: Medical officer, please measure the patient's blood pressure and provide both systolic and diastolic values in mmHg.
+  [MO] Blood pressure is 128/80 mmHg.
+  [31] 435ms  Marina: Medical officer, please measure the patient's temperature in degrees Celsius.
+  [MO] Temperature is 36.9°C.
+  [32] 440ms  Marina: Medical officer, please assess the patient's level of consciousness using the AVPU scale: is the patient Alert, responsive to Verbal stimuli, responsive to Pain, or Unresponsive?
+  [MO] The patient is Alert.
+  [33] 760ms  Marina: The patient has an oxygen saturation of 99 percent, respiratory rate of 16 breaths per minute, heart rate of 88 beats per minute, blood pressure of 128 over 80 mmHg, temperature of 36.9 degrees Celsius, and is alert according to the AVPU scale. Is there anything else you would like to add regarding the vital signs?
+  [MO] Vital signs are within normal limits; no abnormalities noted.
+  [34] 932ms  Marina: No investigations were required for this case. Is there anything else you would like to add regarding investigations?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] No, no further investigations are required at this time. Clinical findings are sufficient for management planning.
+  [35] 1515ms  Marina: Is there swelling, bruising, or deformity around the nose?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Yes, there is nasal deformity with swelling and bilateral periorbital ecchymosis.
+  [36] 490ms  Marina: Is there redness or yellow secretion around the nose or in the nostrils?
+  [MO] No redness or yellow secretion observed around the nose or in the nostrils.
+  [37] 680ms  Marina: Is one or both nostrils blocked when breathing?
+  [MO] Both nostrils are partially blocked due to nasal swelling and trauma.
+  [38] 522ms  Marina: Is there active bleeding? If yes, from one or both nostrils?
+  [MO] Epistaxis is present but controlled; no active bleeding observed from either nostril.
+  [39] 610ms  Marina: Is there any blood in the mouth or throat?
+  [MO] No blood is observed in the mouth or throat.
+  [40] 797ms  Marina: Use a light to look inside the nostrils, is there crusting or clots?
+  [MO] No crusting or clots observed inside the nostrils.
+  [41] 609ms  Marina: Can you see any foreign bodies in the nose?
+  [MO] No foreign bodies observed in the nasal cavity.
+  [42] 481ms  Marina: Press on both sides above eyebrows and cheeks below the eyes, does it hurt?
+  [MO] Tenderness noted on palpation over the right infraorbital margin and maxillary sinus area. No tenderness on the left side.
+  [43] 1151ms  Marina: The patient has swelling, bruising, and deformity around the nose with bilateral periorbital ecchymosis. There is no redness or yellow secretion. Both nostrils are partially blocked due to swelling. No active bleeding is observed, and there is no blood in the mouth or throat. On internal examination, no crusting, clots, or foreign bodies are seen. Tenderness is present on the right infraorbital margin and maxillary sinus area, but not on the left. Is there anything else you would like to add regarding the physical examination?
+  [MO] Tenderness along the right infraorbital margin and maxillary sinus, with no tenderness on the left.
+  [44] 882ms  Marina: Wywiad został zakończony. Raport został wygenerowany.
+
+  Interview complete after 44 turns.
+
+── Extract ──
+  Calling /ai/extract with 97 messages (filtered from 115)...
+  ✓ Done  (1962ms)
+
+  dateOfBirth: 29
+  gender: male
+  chiefComplaint: nosebleed after facial trauma
+  chiefSymptom: epistaxis, nasal swelling, deformity, and double vision
+  history: The patient, a 29-year-old male, sustained facial trauma after hitting his face on a hatch cover, resulting in immediate and ongoing epistaxis from both nostrils. He reports nasal swelling, nasal deformity, and new-onset double vision, particularly when looking sideways. The bleeding has decreased with pressure but has not completely stopped. He also experiences mild nausea, especially when swallowing blood. There was no loss of consciousness, and he is fully alert.
+  pastHistory: The patient has no history of previous facial trauma, chronic illnesses, bleeding disorders, or nasal deformities prior to this incident.
+  currentMedications: Patient states they do not take any medications, including prescription drugs, over-the-counter medications, supplements, or vitamins.
+  allergies: Patient states they have no known allergies.
+  circulation_pulse_per_min: 88
+  circulation_systole: 128
+  circulation_diastole: 80
+  breathing_num_breaths_per_min: 16
+  breathing_oxygen_saturation: 99
+  expose_temperature_measured_mouth: 36.9
+  avpu: Alert
+  redFlag: yes
+  redFlagType: facial trauma with double vision and nasal deformity
+  problemDescription: 29-year-old male with immediate and persistent epistaxis from both nostrils following facial trauma after hitting his face on a hatch cover. Reports nasal swelling, deformity, and new-onset double vision, especially when looking sideways. Denies dizziness, fatigue, loss of consciousness, prior facial injuries, chronic diseases, medication use, allergies, or history of bleeding disorders. Reports mild nausea, particularly when swallowing blood. No previous episodes of nosebleeds or nasal deformities prior to this injury.
+  performedActions: M-EWS score: 0
+
+Nasal deformity with swelling and bilateral periorbital ecchymosis observed. Both nostrils partially obstructed due to swelling. No active bleeding, blood in mouth or throat, redness, yellow secretion, crusting, clots, or foreign bodies noted. Tenderness on palpation over the right infraorbital margin and maxillary sinus area, absent on the left side.

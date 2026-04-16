@@ -1,0 +1,143 @@
+
+════════════════════════════════════════════════════════════
+  Persian patient / English MO — constipation + abdominal bloating
+════════════════════════════════════════════════════════════
+  Symptom: چند روزه که نتوانستم به دستشویی بروم و شکمم خیلی باد کرده و درد دارم
+
+  ✓ Started  (772ms)
+
+
+── Stage 1: Pathway ──
+  Marina: سلام، من مارینا هستم و به شما کمک می‌کنم تا اطلاعات پزشکی‌تان را جمع‌آوری کنیم. امروز چه مشکلی دارید؟
+  [Pt] سلام، من از چهار روز پیش هیچ مدفوعی نداشتم و حالا شکمم خیلی باد کرده و درد دارم.
+  [1] 624ms  Marina: لطفاً علامت خود را با جزئیات بیشتری توصیف کنید؟
+  [Pt] چهار روز است که مدفوع نداشتم، شکمم متورم و دردناک است، اما تب یا تهوع ندارم.
+  [2] 3006ms  Marina: آیا علائم دیگری همراه با این وضعیت دارید، مثلاً تهوع، استفراغ، تب، یا درد در نقاط دیگر بدن؟
+  [Pt] تهوع دارم اما استفراغ نکرده‌ام، تب ندارم و درد فقط در ناحیه شکم است.
+  [3] 558ms  Marina: آیا علامت اصلی شما عدم دفع مدفوع به مدت چهار روز همراه با تورم و درد شکم است؟
+  [Pt] بله، علامت اصلی من عدم دفع مدفوع به مدت چهار روز همراه با تورم و درد شکم است.
+  [4] 888ms  Marina: سن شما چند سال است؟  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] ۴۵ سال دارم.
+  [5] 1442ms  Marina: جنسیت شما چیست؟
+  [Pt] من مرد هستم.
+  [6] 533ms  Marina: آخرین باری که مدفوع داشتید، چه زمانی بود؟
+  [Pt] آخرین باری که مدفوع داشتم چهار روز پیش بود.
+  [7] 512ms  Marina: آیا احساس باد کردن شکم یا تورم دارید؟
+  [Pt] بله، احساس تورم و باد شکم دارم.
+  [8] 843ms  Marina: آیا تهوع یا حالت تهوع دارید؟
+  [Pt] خیر، تهوع یا حالت تهوع ندارم.
+  [9] 603ms  Marina: آیا درد یا ناراحتی در ناحیه شکم دارید؟
+  [Pt] بله، درد و ناراحتی در ناحیه شکم دارم و حالت تورم هم وجود دارد.
+  [10] 746ms  Marina: آیا این علائم به تازگی شروع شده‌اند یا قبلاً هم چنین وضعیتی را تجربه کرده‌اید؟
+  [Pt] این علائم حدود چهار روز پیش به طور کامل شروع شده و قبلاً چنین مشکلی نداشته‌ام.
+  [11] 1757ms  Marina: شما ۴۵ سال دارید و جنسیت شما مرد است. آخرین باری که مدفوع داشتید چهار روز پیش بوده و از آن زمان تاکنون هیچ دفعی انجام نداده‌اید. احساس تورم و باد شکم دارید و درد و ناراحتی در ناحیه شکم حس می‌کنید. این علائم حدود چهار روز پیش شروع شده و سابقه مشابه در گذشته ندارید. آیا چیز دیگری در مورد سابقه پزشکی خود می‌خواهید اضافه کنید؟
+  [Pt] هیچ بیماری مزمن یا آلرژی خاصی ندارم و دارویی هم مصرف نمی‌کنم.
+  [12] 1252ms  Marina: شما ۴۵ سال دارید و جنسیت شما مرد است. آخرین باری که مدفوع داشتید چهار روز پیش بوده و از آن زمان تاکنون هیچ دفعی انجام نداده‌اید. احساس تورم و باد شکم دارید و درد و ناراحتی در ناحیه شکم حس می‌کنید. این علائم حدود چهار روز پیش شروع شده و سابقه مشابه در گذشته ندارید. هیچ بیماری مزمن یا آلرژی خاصی ندارید و دارویی هم مصرف نمی‌کنید. آیا چیز دیگری در مورد سابقه پزشکی خود می‌خواهید اضافه کنید؟
+  [Pt] خیر، هیچ چیز دیگری وجود ندارد که بخواهم اضافه کنم.
+  [13] 873ms  Marina: آیا تهوع یا استفراغ دارید؟  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] نه، تهوع یا استفراغ ندارم.
+  [14] 688ms  Marina: آیا گاز از مقعد خارج می‌شود یا هیچ گازی دفع نمی‌کنید؟
+  [Pt] بله، گاز از مقعد خارج می‌شود، اما مدفوعی دفع نمی‌کنم.
+  [15] 548ms  Marina: آیا درد یا تورم در شکم دارید؟
+  [Pt] بله، شکم من متورم است و درد دارم.
+  [16] 637ms  Marina: آیا اشتها برای غذا خوردن کاهش یافته است؟
+  [Pt] بله، اشتهای من کم شده است.
+  [17] 932ms  Marina: شما تهوع یا استفراغ ندارید. گاز از مقعد خارج می‌شود اما مدفوعی دفع نمی‌کنید. شکم شما متورم است و درد دارید و اشتهای شما کم شده است. آیا چیز دیگری در مورد علائم همراه دارید که بخواهید اضافه کنید؟
+  [Pt] نه، فقط نفخ و درد شکم دارم، تب هم ندارم.
+  [18] 1154ms  Marina: آیا قبلاً هرگز دچار مشکل عدم دفع مدفوع یا ایلئوس شده‌اید؟  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] خیر، قبلاً هرگز دچار چنین مشکلی نشده‌ام.
+  [19] 642ms  Marina: آیا قبلاً جراحی معده یا روده داشته‌اید؟
+  [Pt] نه، هیچ جراحی معده یا روده نداشته‌ام.
+  [20] 643ms  Marina: آیا سابقه بیماری فتق (هرنیا) را دارید؟
+  [Pt] خیر، سابقه فتق یا هرنیا ندارم.
+  [21] 1152ms  Marina: آیا داروهایی مانند مسکن‌های اوپیوئیدی یا مکمل‌های آهن مصرف می‌کنید که ممکن است باعث یبوست شوند؟
+  [Pt] نه، هیچ دارویی مصرف نمی‌کنم.
+  [22] 1151ms  Marina: شما قبلاً هرگز دچار مشکل عدم دفع مدفوع یا ایلئوس نشده‌اید. جراحی معده یا روده نداشته‌اید. سابقه بیماری فتق (هرنیا) ندارید و داروهایی مانند مسکن‌های اوپیوئیدی یا مکمل‌های آهن را مصرف نمی‌کنید. آیا چیز دیگری در مورد سابقه پزشکی خود می‌خواهید اضافه کنید؟
+  [Pt] خیر، هیچ چیز دیگری وجود ندارد که بخواهم اضافه کنم.
+  [23] 1050ms  Marina: آیا داروهایی را به طور منظم مصرف می‌کنید؟  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] نه، هیچ دارویی را به طور منظم مصرف نمی‌کنم.
+  [24] 1048ms  Marina: آیا داروهای بدون نسخه، ویتامین‌ها یا مکمل‌های غذایی مصرف می‌کنید؟
+  [Pt] نه، هیچ دارو، ویتامین یا مکمل غذایی مصرف نمی‌کنم.
+  [25] 848ms  Marina: آیا برای این علامت خاص دارویی مصرف کرده‌اید؟
+  [Pt] نه، هیچ دارویی برای این علامت مصرف نکرده‌ام.
+  [26] 1052ms  Marina: شما هیچ دارویی را به طور منظم مصرف نمی‌کنید، داروهای بدون نسخه، ویتامین‌ها یا مکمل‌های غذایی هم مصرف نمی‌کنید و برای این علامت خاص نیز هیچ دارویی مصرف نکرده‌اید. آیا چیز دیگری در مورد داروهای مصرفی خود می‌خواهید اضافه کنید؟
+  [Pt] خیر، هیچ دارو، ویتامین یا مکملی مصرف نمی‌کنم.
+  [27] 1357ms  Marina: آیا به دارو، غذا یا هر ماده دیگری حساسیت دارید؟  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] خیر، به هیچ دارو، غذا یا ماده‌ای حساسیت ندارم.
+  [28] 843ms  Marina: شما هیچ حساسیتی به دارو، غذا یا سایر مواد ندارید. آیا چیز دیگری در مورد حساسیت‌های خود می‌خواهید اضافه کنید؟
+  [Pt] خیر، هیچ حساسیت دیگری ندارم.
+  [29] 1015ms  Marina: Medical Officer, please measure the patient's oxygen saturation level in percent.  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Oxygen saturation is 99%.
+  [30] 671ms  Marina: Medical Officer, please measure the patient's respiratory rate in breaths per minute.
+  [MO] Respiratory rate is 16 breaths per minute.
+  [31] 811ms  Marina: Medical Officer, please measure the patient's heart rate in beats per minute.
+  [MO] Heart rate is 78 beats per minute.
+  [32] 579ms  Marina: Medical Officer, please measure the patient's blood pressure and report both systolic and diastolic values in mmHg.
+  [MO] Blood pressure is 124/80 mmHg.
+  [33] 639ms  Marina: Medical Officer, please measure the patient's temperature in degrees Celsius.
+  [MO] Temperature is 37.0°C.
+  [34] 486ms  Marina: Medical Officer, please assess the patient's level of consciousness using the AVPU scale: Alert, responds to Verbal stimuli, responds to Pain, or Unresponsive.
+  [MO] The patient is Alert.
+  [35] 819ms  Marina: The patient's oxygen saturation is 99 percent, respiratory rate is 16 breaths per minute, heart rate is 78 beats per minute, blood pressure is 124 over 80 mmHg, temperature is 37.0 degrees Celsius, and the patient is alert on the AVPU scale. Would you like to add anything more regarding the vital signs?
+  [MO] Vital signs are within normal limits; no abnormalities noted.
+  [36] 1050ms  Marina: Did you take a CRP test, and if yes, what was the result?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] No CRP test was performed.
+  [37] 600ms  Marina: No investigations were required for this case. Would you like to add anything more on investigations?
+  [MO] No, no investigations were required for this case.
+  [38] 1258ms  Marina: Please position the patient lying flat on their back with abdomen exposed from below the chest to the groin. Can you see any distension, asymmetry, discoloration, or surgical scars?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] The abdomen is distended and symmetrical with no visible discoloration or surgical scars.
+  [39] 638ms  Marina: Using the pads of your fingers, gently press (about 1 cm deep) across all four quadrants of the abdomen. Is there any area of tenderness or guarding when you press?
+  [MO] There is diffuse mild tenderness in all quadrants with no guarding.
+  [40] 1356ms  Marina: Now using the flat of your hand, apply deeper pressure (4-5 cm) systematically across all quadrants. Do you feel any masses, organ enlargement, or areas of deep tenderness?
+  [MO] No masses, organ enlargement, or areas of deep tenderness felt in any quadrant.
+  [41] 640ms  Marina: Place your hand under the right rib cage and ask the patient to take a deep breath while maintaining pressure. Does the patient stop breathing or wince in pain during inspiration?
+  [MO] No, the patient does not stop breathing or wince in pain during inspiration.
+  [42] 843ms  Marina: Press firmly on the left lower quadrant of the abdomen. Does this cause pain on the right side of the abdomen?
+  [MO] No, pressing on the left lower quadrant does not cause pain on the right side of the abdomen.
+  [43] 721ms  Marina: Locate a point approximately one-third of the way from the right hip bone to the umbilicus. Apply gentle but firm pressure at this point. Is there localized pain or tenderness at McBurney's point?
+  [MO] No localized pain or tenderness at McBurney's point.
+  [44] 1060ms  Marina: The abdomen is distended and symmetrical with no visible discoloration or surgical scars. There is diffuse mild tenderness in all quadrants with no guarding. No masses, organ enlargement, or areas of deep tenderness were felt in any quadrant. The patient does not stop breathing or wince in pain during inspiration when pressure is applied under the right rib cage. Pressing on the left lower quadrant does not cause pain on the right side of the abdomen. There is no localized pain or tenderness at McBurney's point. Do you have anything else to add on the examination?
+  [MO] Bowel sounds are reduced in all quadrants; no rebound tenderness is present.
+  [45] 1563ms  Marina: مصاحبه به پایان رسیده است. گزارش تهیه شده است. به پزشک اطلاع دهید که مصاحبه کامل شده است.
+
+  Interview complete after 45 turns.
+
+── Extract ──
+  Calling /ai/extract with 99 messages (filtered from 117)...
+  ✓ Done  (1742ms)
+
+  dateOfBirth: 1979
+  gender: male
+  chiefComplaint: no bowel movement for four days with abdominal distension and pain
+  chiefSymptom: abdominal distension and pain
+  history: The patient has not had a bowel movement for four days and now reports significant abdominal bloating and pain. Symptoms started approximately four days ago and are new, with no prior similar episodes. The patient experiences nausea but no vomiting, fever, or other systemic symptoms. Appetite has decreased. Gas is still passing through the rectum, but no stool has been passed.
+  pastHistory: The patient has no history of chronic diseases, previous episodes of constipation or ileus, abdominal surgeries, or hernia.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Patient states they do not take any medications, including prescription drugs, over-the-counter medications, vitamins, or supplements, on a regular or as-needed basis.
+  circulation_pulse_per_min: 78
+  circulation_systole: 124
+  circulation_diastole: 80
+  breathing_num_breaths_per_min: 16
+  breathing_oxygen_saturation: 99
+  expose_temperature_measured_mouth: 37.0
+  avpu: Alert
+  problemDescription: 45-year-old male with no history of chronic illness, allergies, or regular medication use reports no bowel movement for four days, associated with abdominal distension, pain, and reduced appetite. The patient confirms passing gas but denies nausea, vomiting, fever, or previous episodes of constipation or abdominal surgery. He denies any history of hernia or use of medications that could cause constipation.
+  performedActions: M-EWS score: 0
+
+Abdomen is distended and symmetrical with no visible discoloration or surgical scars. There is diffuse mild tenderness in all quadrants with no guarding. No masses, organ enlargement, or areas of deep tenderness felt in any quadrant. Patient does not stop breathing or wince in pain during inspiration when pressure is applied under the right rib cage. Pressing on the left lower quadrant does not cause pain on the right side of the abdomen. No localized pain or tenderness at McBurney's point. Bowel sounds are reduced in all quadrants; no rebound tenderness is present.

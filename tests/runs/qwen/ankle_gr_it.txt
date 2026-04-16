@@ -1,0 +1,147 @@
+
+════════════════════════════════════════════════════════════
+  Greek patient / Italian MO — ankle sprain + suspected fracture
+════════════════════════════════════════════════════════════
+  Symptom: Στράβωσα τον αστράγαλο μου πατώντας άσχημα και τώρα είναι πολύ πρησμένος και δεν μπορώ να περπατήσω
+
+  ✓ Started  (721ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Πώς μπορώ να σας βοηθήσω σήμερα;
+  [Pt] Στραμπούλησα τον δεξιό μου αστράγαλο, είναι πολύ πρησμένος και δεν μπορώ να περπατήσω.
+  [1] 723ms  Marina: Παρακαλώ περιγράψτε το σύμπτωμα με περισσότερες λεπτομέρειες;
+  [Pt] Στράμπωσα το δεξί μου αστράγαλο πριν από λίγες ώρες, έχει πρησμένο πολύ και δεν αντέχω να σταθώ ούτε να περπατήσω. Πονάει πολύ, ειδικά όταν προσπαθώ να τον κινήσω.
+  [2] 882ms  Marina: Εκτός από τον πρησμένο αστράγαλο και τον πόνο, υπάρχει κάποιο άλλο σύμπτωμα που νιώθετε;
+  [Pt] Όχι, δεν υπάρχει άλλο σύμπτωμα. Μόνο ο πόνος και ο πρησμός στον αστράγαλο.
+  [3] 968ms  Marina: Επιβεβαιώνεται ότι το κύριο σύμπτωμα είναι η στρέψη στον δεξιό αστράγαλο με έντονο πρησμό και πόνο;
+  [Pt] Ναι, επιβεβαιώνεται. Έχω στρέψει τον δεξιό αστράγαλο, έχει πρησμό και πολύς πόνος, δεν μπορώ να περπατήσω.
+  [4] 1047ms  Marina: Ποια είναι η ηλικία σας;  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Είμαι 38 ετών.
+  [5] 425ms  Marina: Ποιο είναι το φύλο σας;
+  [Pt] Άνδρας.
+  [6] 844ms  Marina: Πώς συνέβη ο τραυματισμός; Μπορείτε να περιγράψετε τι συνέβη τη στιγμή του ατυχήματος;
+  [Pt] Έστριψα το δεξί μου πόδι όταν γλίστρησα στα βρεγμένα ξύλα του καταστρώματος. Ένιωσα αμέσως έντονο πόνο και δεν μπορώ να σταθώ πάνω στο πόδι.
+  [7] 601ms  Marina: Πού ακριβώς πονάει και πότε άρχισε ο πόνος;
+  [Pt] Μου πονάει στον δεξιό αστράγαλο, από όταν στράβωσε πριν από περίπου μια ώρα.
+  [8] 703ms  Marina: Υπάρχει ορατή πρήξιμο ή μώλωπες στην περιοχή;
+  [Pt] Ναι, υπάρχει σημαντικό πρήξιμο στην περιοχή της εξωτερικής πλευράς του δεξιού αστραγάλου, χωρίς όμως έντονους μώλωπες.
+  [9] 522ms  Marina: Μπορείτε να σταθείτε ή να βαδίσετε στο πόδι;
+  [Pt] Δεν μπορώ να σταθώ ούτε να βαδίσω, πονάει πολύ και είναι πολύ πρησμένο.
+  [10] 691ms  Marina: Έχετε υποστεί παρόμοιο τραυματισμό στο παρελθόν;
+  [Pt] Όχι, δεν έχω υποστεί παρόμοιο τραυματισμό στο παρελθόν.
+  [11] 959ms  Marina: Κάνετε επαναλαμβανόμενες κινήσεις ή σηκώνετε βαριά αντικείμενα στη δουλειά σας στο κατάστρωμα;
+  [Pt] Όχι, δεν κάνω επαναλαμβανόμενες κινήσεις ούτε σηκώνω βαριά αντικείμενα στη δουλειά μου.
+  [12] 3447ms  Marina: Συνοψίζοντας, ο ασθενής είναι 38 ετών, άνδρας, με τραυματισμό στον δεξιό αστράγαλο λόγω στρέψης κατά την οποία γλίστρησε σε βρεγμένα ξύλα στο κατάστρωμα. Ο πόνος εντοπίζεται στην περιοχή του δεξιού αστραγάλου και άρχισε αμέσως μετά το ατύχημα. Υπάρχει σημαντικό πρήξιμο στην εξωτερική πλευρά του αστραγάλου, χωρίς έντονους μώλωπες. Δεν μπορεί να σταθεί ούτε να βαδίσει λόγω του πόνου. Δεν υπάρχει ιστορικό παρόμοιου τραυματισμού στο παρελθόν και δεν εκτίθεται σε επαναλαμβανόμενες κινήσεις ή σήκωμα βαρών στη δουλειά του. Έχετε να προσθέσετε κάτι ακόμη σχετικά με την ιστορία του τραυματισμού;
+  [Pt] Όχι, δεν έχω να προσθέσω κάτι άλλο. Ο τραυματισμός συνέβη ξαφνικά από γλίστρημα, χωρίς προηγούμενο παρόμοιο επεισόδιο.
+  [13] 1929ms  Marina: Νιώθετε δυσκαμψία στην άρθρωση του αστραγάλου;  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Ναι, αισθάνομαι έντονη δυσκαμψία στον αστράγαλο. Δεν μπορώ καθόλου να σταθώ στο πόδι.
+  [14] 981ms  Marina: Ακούγεται κάποιος ήχος, όπως κλικ ή αίσθηση αστάθειας όταν προσπαθείτε να κινήσετε τον αστράγαλο;
+  [Pt] Ναι, αισθάνομαι έναν κλικ και αίσθηση αστάθειας όταν προσπαθώ να κινήσω τον αστράγαλο.
+  [15] 1146ms  Marina: Νιώθετε μούδιασμα ή φούσκωμα στο πόδι ή τον αστράγαλο;
+  [Pt] Νιώθω έντονο φούσκωμα στον αστράγαλο, αλλά όχι μούδιασμα.
+  [16] 1733ms  Marina: Συνοψίζοντας, ο ασθενής αναφέρει έντονη δυσκαμψία στον δεξιό αστράγαλο, κλικ και αίσθηση αστάθειας κατά την κίνηση, καθώς και φούσκωμα στην περιοχή χωρίς μούδιασμα. Έχετε να προσθέσετε κάτι άλλο σχετικά με συμπτώματα που σχετίζονται με τον τραυματισμό;
+  [Pt] Όχι, δεν έχω να προσθέσω κάτι άλλο. Τα συμπτώματα είναι ήδη πλήρως περιγραμμένα.
+  [17] 1139ms  Marina: Έχετε υποστεί κάποια προηγούμενη κάκωση σε αρθρώσεις ή τένοντες;  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Όχι, δεν έχω υποστεί προηγούμενη κάκωση σε αρθρώσεις ή τένοντες.
+  [18] 1103ms  Marina: Έχετε διαγνωστεί ποτέ με χρόνια αρθρίτιδα ή γούτα;
+  [Pt] Όχι, δεν έχω διαγνωστεί ποτέ με χρόνια αρθρίτιδα ή γούτα.
+  [19] 927ms  Marina: Ποιος είναι ο ρόλος σας στο πλοίο και εμπλέκει τη δουλειά σας επαναλαμβανόμενες κινήσεις;
+  [Pt] Είμαι μηχανικός στο πλοίο και η δουλειά μου περιλαμβάνει επαναλαμβανόμενες κινήσεις, όπως η επισκευή και ο έλεγχος εξοπλισμού.
+  [20] 1982ms  Marina: Συνοψίζοντας, ο ασθενής δεν έχει υποστεί προηγούμενη κάκωση σε αρθρώσεις ή τένοντες, δεν έχει διαγνωστεί με χρόνια αρθρίτιδα ή γούτα, και εργάζεται ως μηχανικός στο πλοίο, όπου η δουλειά του περιλαμβάνει επαναλαμβανόμενες κινήσεις στον εξοπλισμό. Έχετε να προσθέσετε κάτι άλλο σχετικά με το ιατρικό σας ιστορικό;
+  [Pt] Όχι, δεν έχω να προσθέσω κάτι άλλο στο ιατρικό μου ιστορικό.
+  [21] 1070ms  Marina: Παίρνετε κάποια φάρμακα τακτικά;  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Όχι, δεν παίρνω κανένα φάρμακο τακτικά.
+  [22] 1013ms  Marina: Παίρνετε κάποια φάρμακα χωρίς συνταγή, βιταμίνες ή συμπληρώματα διατροφής;
+  [Pt] Όχι, δεν παίρνω κανένα φάρμακο, βιταμίνη ή συμπλήρωμα διατροφής.
+  [23] 673ms  Marina: Παίρνετε κάποιο φάρμακο ειδικά για τον πόνο στον αστράγαλο;
+  [Pt] Όχι, δεν παίρνω κανένα φάρμακο για τον πόνο στον αστράγαλο.
+  [24] 1400ms  Marina: Συνοψίζοντας, ο ασθενής δεν παίρνει κανένα φάρμακο τακτικά, ούτε φάρμακα χωρίς συνταγή, βιταμίνες ή συμπληρώματα διατροφής, και δεν χρησιμοποιεί κανένα φάρμακο ειδικά για τον πόνο στον αστράγαλο. Έχετε να προσθέσετε κάτι άλλο σχετικά με τη χρήση φαρμάκων;
+  [Pt] Όχι, δεν χρησιμοποιώ κανένα φάρμακο για τον πόνο ή για οποιονδήποτε άλλο λόγο.
+  [25] 1389ms  Marina: Έχετε κάποια γνωστή αλλεργία σε φάρμακα, τρόφιμα ή άλλες ουσίες;  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Όχι, δεν έχω καμία γνωστή αλλεργία.
+  [26] 1053ms  Marina: Συνοψίζοντας, ο ασθενής δεν έχει γνωστές αλλεργίες σε φάρμακα, τρόφιμα ή άλλες ουσίες. Έχετε να προσθέσετε κάτι άλλο σχετικά με αλλεργίες;
+  [Pt] Δεν έχω άλλες αλλεργίες πέρα από αυτές που είπα.
+  [27] 1127ms  Marina: Qual è la saturazione di ossigeno del paziente in percentuale?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] La saturazione di ossigeno del paziente è del 99%.
+  [28] 646ms  Marina: Qual è la frequenza respiratoria del paziente in atti respiratori al minuto?
+  [MO] La frequenza respiratoria del paziente è di 16 atti respiratori al minuto.
+  [29] 576ms  Marina: Qual è la frequenza cardiaca del paziente in battiti al minuto?
+  [MO] La frequenza cardiaca del paziente è di 90 battiti al minuto.
+  [30] 758ms  Marina: Qual è la pressione arteriosa del paziente, indicando sia il valore sistolico che il diastolico in mmHg?
+  [MO] La pressione arteriosa del paziente è 126 mmHg sistolica e 80 mmHg diastolica.
+  [31] 1020ms  Marina: Qual è la temperatura corporea del paziente in gradi Celsius?
+  [MO] La temperatura corporea del paziente è di 36,8°C.
+  [32] 1142ms  Marina: Qual è il livello di coscienza del paziente secondo la scala AVPU: Vigile, a risposta Verbale, a risposta al Dolore, o Non responsivo?
+  [MO] Il paziente è Vigile.
+  [33] 1037ms  Marina: I segni vitali del paziente sono i seguenti: saturazione di ossigeno al 99%, frequenza respiratoria di 16 atti al minuto, frequenza cardiaca di 90 battiti al minuto, pressione arteriosa di 126/80 mmHg, temperatura corporea di 36,8°C e stato di coscienza vigile secondo la scala AVPU. Ha qualcosa da aggiungere riguardo ai segni vitali?
+  [MO] I segni vitali sono tutti nella norma, nessuna alterazione rilevata.
+  [34] 2274ms  Marina: La temperatura del paziente è inferiore a 38°C e non presenta articolazione calda o gonfia oltre al trauma diretto dell'astragalo. Non è indicato il test PCR. Non sono necessari altri esami secondo il protocollo. Ha qualcosa da aggiungere sugli esami effettuati?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] Temperatura 36,8°C, nessuna articolazione calda o gonfia oltre al trauma diretto. Nessun esame aggiuntivo indicato secondo il protocollo.
+  [35] 1327ms  Marina: L'infortunio appare storto, deformato o fuori posto?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] L'arto inferiore destro presenta evidente deformità a livello della caviglia.
+  [36] 794ms  Marina: È presente una ferita aperta, ematoma o gonfiore?
+  [MO] È presente un marcato gonfiore. Non ci sono ferite aperte né ematoma evidente.
+  [37] 755ms  Marina: È doloroso al tatto?
+  [MO] Sì, è doloroso al tatto, con dolore alla palpazione del margine posteriore del malleolo laterale.
+  [38] 1388ms  Marina: Si percepiscono escrescenze anomale, lacune o crepitii sotto la pelle?
+  [MO] Nessuna escrescenza anomala, lacuna o crepitio percepiti sotto la pelle.
+  [39] 1109ms  Marina: Il paziente riesce a muovere l'articolazione o l'arto normalmente?
+  [MO] No, il paziente non riesce a muovere normalmente l'arto a causa del dolore e del gonfiore all'articolazione della caviglia destra.
+  [40] 844ms  Marina: Chieda al paziente di piegare e distendere la parte. Il movimento è limitato?
+  [MO] Il movimento attivo della caviglia destra è limitato a causa del dolore e del gonfiore.
+  [41] 785ms  Marina: La forza è simile rispetto al lato opposto?
+  [MO] La forza è simile rispetto al lato opposto.
+  [42] 1721ms  Marina: Tocchi la pelle sotto la lesione. Risulta normale, o vi è intorpidimento, formicolio o perdita di sensibilità?  
+Inoltre, prema lungo il bordo esterno della gamba inferiore, dove corre l'osso della fibula fino al ginocchio. Fa male?  
+Infine, chieda al paziente di piegare e distendere il gomito: ha limitazioni o dolore?
+  [MO] La sensibilità sotto la lesione è normale.  
+La pressione lungo il bordo esterno della gamba fino al ginocchio non provoca dolore.  
+Flessione ed estensione del gomito sono indolori e senza limitazioni.
+  [43] 1545ms  Marina: L'esame locale rivela deformità a livello della caviglia destra, marcato gonfiore senza ferite aperte né ematoma evidente. È doloroso alla palpazione del margine posteriore del malleolo laterale, ma non si percepiscono escrescenze anomale, lacune o crepitii. Il movimento attivo della caviglia è limitato a causa del dolore e del gonfiore, mentre la forza è simile rispetto al lato opposto. La sensibilità sotto la lesione è normale. La pressione lungo il bordo esterno della gamba fino al ginocchio non provoca dolore. Flessione ed estensione del gomito sono indolori e senza limitazioni. Ha altro da aggiungere riguardo all'esame fisico?
+  [MO] Nessun altro reperto rilevante all'esame fisico. La stabilità dei legamenti non è testabile per dolore e gonfiore.
+  [44] 1503ms  Marina: Η συνέντευξη ολοκληρώθηκε. Το ιατρικό ιστορικό έχει καταγραφεί και η αναφορά δημιουργήθηκε.
+
+  Interview complete after 44 turns.
+
+── Extract ──
+  Calling /ai/extract with 97 messages (filtered from 115)...
+  ✓ Done  (3133ms)
+
+  gender: male
+  position: mechanic
+  chiefComplaint: sprained right ankle
+  chiefSymptom: severe swelling and pain in the right ankle
+  history: The patient, a 38-year-old male, sustained a right ankle injury after twisting his right foot while slipping on wet wooden deck planks. He experienced immediate, severe pain and significant swelling on the lateral aspect of the right ankle. He is unable to bear weight or walk due to pain and stiffness. The symptoms started about one hour prior to the consultation. There is no history of similar injury in the past. The patient reports a clicking sensation and a feeling of instability when attempting to move the ankle, along with significant swelling but no numbness.
+  pastHistory: The patient has no history of previous joint or tendon injuries. He has never been diagnosed with chronic arthritis or gout. He works as a ship mechanic, which involves repetitive movements related to equipment maintenance and inspection.
+  allergies: Patient states they have no known allergies.
+  currentMedications: Patient states they do not take any medications.
+  circulation_pulse_per_min: 90
+  circulation_systole: 126
+  circulation_diastole: 80
+  breathing_num_breaths_per_min: 16
+  breathing_oxygen_saturation: 99
+  expose_temperature_measured_mouth: 36.8
+  avpu: Alert
+  redFlag: yes
+  redFlagType: deformity and inability to bear weight on the affected limb
+  problemDescription: 38-year-old man with a recent right ankle sprain after slipping on wet deck wood, resulting in immediate severe pain, significant swelling on the lateral aspect of the right ankle, inability to bear weight or walk, and no history of similar injury. Patient reports stiffness, clicking sensation, instability during movement, and swelling in the ankle, but denies numbness, bruising, or other symptoms. No prior joint or tendon injuries, chronic arthritis, or gout. Works as a ship mechanic involving repetitive movements. Not taking any regular medications, over-the-counter drugs, vitamins, supplements, or pain medication, and has no known allergies.
+  performedActions: M-EWS score: 0
+
+Right lower limb shows obvious deformity at the ankle with marked swelling, no open wounds or visible hematoma. Tenderness on palpation at the posterior edge of the lateral malleolus. No abnormal protrusions, gaps, or crepitus detected. Active movement of the right ankle is limited due to pain and swelling, but muscle strength is equal compared to the opposite side. Sensation under the injury site is normal. No pain on palpation along the lateral border of the lower leg up to the knee. Elbow flexion and extension are pain-free with no limitations. Ligament stability cannot be assessed due to pain and swelling.

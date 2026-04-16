@@ -1,0 +1,178 @@
+
+════════════════════════════════════════════════════════════
+  Russian patient / Norwegian MO — Hypertensive Emergency with Focal Symptoms
+════════════════════════════════════════════════════════════
+  Symptom: У меня очень сильная головная боль, зрение стало нечётким и я чувствую онемение в правой руке. Таблетки от давления кончились три дня назад.
+
+  ✓ Started  (643ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Здравствуйте, я Марина, медицинский ассистент. Расскажите, пожалуйста, что вас беспокоит?
+  [Pt] У меня сильная головная боль, размытое зрение и онемение правой руки. Давление у меня высокое, а таблетки закончились три дня назад.
+  [1] 425ms  Marina: Пожалуйста, опишите симптом подробнее?
+  [Pt] Сильная головная боль началась внезапно, давящая, в области лба и темени, сопровождается размытым зрением и онемением правой руки.
+  [2] 414ms  Marina: Какие еще симптомы возникают одновременно с головной болью?
+  [Pt] Помимо головной боли, у меня немеет правая рука и двоится в глазах.
+  [3] 792ms  Marina: Вы подтверждаете, что основной симптом — сильная головная боль, которая началась внезапно, давящая, в области лба и темени, и сопровождается размытым зрением и онемением правой руки?
+  [Pt] Да, головная боль началась внезапно, очень сильная, в лбу и темени, давит, перед глазами — мутно, правая рука онемела.
+  [4] 880ms  Marina: Сколько вам лет?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] Мне 60 лет.
+  [5] 368ms  Marina: Какой у вас пол?
+  [Pt] Мужской.
+  [6] 437ms  Marina: Как началась головная боль — внезапно, как удар (гром среди ясного неба), или постепенно?
+  [Pt] Головная боль началась внезапно, как удар — сразу очень сильная, словно гром среди ясного неба.
+  [7] 766ms  Marina: Где вы чувствуете головную боль — с одной стороны головы или с обеих сторон?
+  [Pt] Головная боль давящая, по всей голове, особенно в затылочной области.
+  [8] 639ms  Marina: Как бы вы описали характер боли — пульсирующая, давящая, колющая или как-то иначе?
+  [Pt] Боль пульсирующая, очень сильная, как будто голову сжимают.
+  [9] 709ms  Marina: По шкале от 0 до 10, где 0 — нет боли, а 10 — самая сильная боль, как бы вы оценили интенсивность боли?
+  [Pt] Оцениваю головную боль как 9 из 10.
+  [10] 457ms  Marina: Головная боль продолжается постоянно, или она возникает приступами?
+  [Pt] Головная боль началась три дня назад и с тех пор не прекращается, постепенно усиливалась.
+  [11] 530ms  Marina: Что ухудшает головную боль — свет, шум, движение или что-то другое?
+  [Pt] Головная боль усиливается от яркого света и движений.
+  [12] 295ms  Marina: Была ли у вас недавняя травма головы?
+  [Pt] Нет, недавней травмы головы не было.
+  [13] 1289ms  Marina: Пациенту 60 лет, мужчина. Головная боль началась внезапно, как удар, характер боли — пульсирующая, давящая, локализуется по всей голове, особенно в затылочной области. Интенсивность боли — 9 из 10 по шкале. Боль носит постоянный характер, не прекращается уже три дня, усиливается от яркого света и движений. Недавней травмы головы не было. Также отмечается размытое зрение и онемение правой руки. Есть ли что-то еще, что вы хотели бы добавить по поводу анамнеза?
+  [Pt] Да, три дня назад закончились таблетки от давления, с тех пор не принимал никаких лекарств. Ранее давление было стабильным при приёме медикаментов.
+  [14] 1508ms  Marina: Пациенту 60 лет, мужчина. Головная боль началась внезапно, как удар, характер боли — пульсирующая, давящая, локализуется по всей голове, особенно в затылочной области. Интенсивность боли — 9 из 10 по шкале. Боль носит постоянный характер, не прекращается уже три дня, усиливается от яркого света и движений. Недавней травмы головы не было. Также отмечается размытое зрение и онемение правой руки. Три дня назад закончились таблетки от давления, с тех пор не принимал лекарства, ранее давление было стабильным на фоне терапии. Есть ли что-то еще, что вы хотели бы добавить по поводу анамнеза?
+  [Pt] Да, у меня уже была высокая давление раньше, лечился таблетками, но три дня как нет лекарств. Никогда не курил, аллергий нет.
+  [15] 842ms  Marina: Была ли у вас температура или ощущение жара?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Нет, температуры и ощущения жара не было.
+  [16] 467ms  Marina: Была ли у вас тошнота или рвота?
+  [Pt] Нет, тошноты и рвоты не было.
+  [17] 548ms  Marina: Были ли у вас нарушения зрения — двоение, затемнение, вспышки, потеря части поля зрения?
+  [Pt] Да, у меня размытое зрение, особенно справа, как будто часть поля зрения выпала.
+  [18] 535ms  Marina: Была ли у вас скованность или боль в шее, особенно при наклоне головы вперед?
+  [Pt] Нет, скованности или боли в шее не было.
+  [19] 613ms  Marina: Были ли у вас спутанность сознания, затруднения с речью или ориентацией?
+  [Pt] Нет, сознание ясное, речь не нарушена, ориентация сохранена.
+  [20] 504ms  Marina: Была ли у вас слабость в руках или ногах, кроме онемения правой руки?
+  [Pt] Да, слабость есть в правой руке, ноги пока не затронуты.
+  [21] 1383ms  Marina: Пациент отметил отсутствие температуры, тошноты и рвоты, скованности в шее, спутанности сознания или нарушений речи. Есть размытое зрение справа с выпадением части поля зрения. Отмечается онемение и слабость в правой руке. Есть ли что-то еще, что вы хотели бы добавить по поводу сопутствующих симптомов?
+  [Pt] Нет, других симптомов нет. Боль в голове резкая, в затылочной области, начала резко три часа назад.
+  [22] 1757ms  Marina: Были ли у вас ранее приступы мигрени?  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Нет, ранее приступов мигрени не было.
+  [23] 501ms  Marina: Было ли у вас ранее повышенное артериальное давление?
+  [Pt] Да, у меня гипертония, но три дня назад закончились таблетки.
+  [24] 692ms  Marina: Были ли у вас ранее инсульт или кровоизлияние в мозг?
+  [Pt] Нет, ранее инсульта или кровоизлияния в мозг не было.
+  [25] 954ms  Marina: Пациент ранее не страдал мигренью, имеет диагноз гипертонии, которая ранее была под контролем на фоне медикаментов, но последние три дня лекарства не принимал. Инсульта или кровоизлияния в мозг в анамнезе не было. Есть ли что-то еще, что вы хотели бы добавить по поводу прошлых заболеваний?
+  [Pt] Никаких других серьезных заболеваний в анамнезе нет, сердечно-сосудистые проблемы только гипертония, сахарный диабет отрицает.
+  [26] 839ms  Marina: Принимаете ли вы какие-либо лекарства регулярно?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Да, у меня гипертония, но лекарства закончились три дня назад.
+  [27] 498ms  Marina: Как называлось лекарство, которое вы принимали от давления?
+  [Pt] Я принимал таблетки от давления, но не помню названия — выписывал врач на берегу.
+  [28] 743ms  Marina: Какова была дозировка этого лекарства?
+  [Pt] Не помню точную дозировку, но принимал таблетки от давления утром и вечером.
+  [29] 559ms  Marina: С какой частотой вы принимали это лекарство — сколько раз в день?
+  [Pt] Принимал один раз в день, как и назначил врач.
+  [30] 696ms  Marina: Принимаете ли вы какие-либо лекарства без рецепта, витамины или добавки?
+  [Pt] Нет, никаких лекарств, витаминов или добавок я сейчас не принимаю.
+  [31] 499ms  Marina: Принимали ли вы какие-либо лекарства специально для устранения текущей головной боли?
+  [Pt] Нет, не принимал. У меня закончились таблетки от давления три дня назад, с тех пор ничего не пил.
+  [32] 1703ms  Marina: Пациент ранее регулярно принимал неизвестное по названию лекарство от гипертонии по одной таблетке один раз в день, но последние три дня не принимал из-за отсутствия. Других препаратов, включая безрецептурные средства, витамины и добавки, не использует. Для купирования текущей головной боли лекарства не применял. Есть ли что-то еще, что вы хотели бы добавить по поводу принимаемых лекарств?
+  [Pt] Нет, других лекарств не принимаю, только та одна таблетка от давления, но её больше нет.
+  [33] 1120ms  Marina: Есть ли у вас аллергия на какие-либо лекарства, продукты или другие вещества?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Нет, у меня нет аллергии на лекарства, продукты или другие вещества.
+  [34] 1159ms  Marina: Medisinske tjenestemannen tar nå over. Hva er pasientens oksygenmetning i prosent?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Pasientens oksygenmetning er 97 prosent.
+  [35] 695ms  Marina: Hva er pasientens respirasjonsfrekvens i pust per minutt?
+  [MO] Pasientens respirasjonsfrekvens er 18 pust per minutt.
+  [36] 302ms  Marina: Hva er pasientens puls i slag per minutt?
+  [MO] Pasientens puls er 94 slag per minutt.
+  [37] 732ms  Marina: Hva er pasientens blodtrykk, både systolisk og diastolisk, i mmHg?
+  [MO] Pasientens blodtrykk er 204 mmHg systolisk og 124 mmHg diastolisk.
+  [38] 514ms  Marina: Hva er pasientens kroppstemperatur i grader Celsius?
+  [MO] Pasientens kroppstemperatur er 37,0 °C.
+  [39] 1031ms  Marina: Hva er pasientens bevisstnivå ifølge AVPU-skalaen — er pasienten våken (Alert), reagerer på verbal stimulering (Verbal), reagerer kun på smerte (Pain), eller er ukommunikabel (Unresponsive)?
+  [MO] Pasienten er våken (Alert) ifølge AVPU-skalaen.
+  [40] 1194ms  Marina: Pasientens oksygenmetning er 97 prosent, respirasjonsfrekvens er 18 pust per minutt, puls er 94 slag per minutt, blodtrykk er 204/124 mmHg, kroppstemperatur er 37,0 °C og bevisstnivå er våken (Alert) ifølge AVPU-skalaen. Ønsker du å legge til noe mer om vitaltegnene?
+  [MO] Nei, vitaltegnene er fullstendig beskrevet.
+  [41] 1035ms  Marina: Tok du CRP-test, og hvis ja, hva var resultatet?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] CRP-test ble ikke utført.
+  [42] 711ms  Marina: Er pasienten kjent med diabetes, og i så fall, ble blodsukker målt, og hva var resultatet?
+  [MO] Pasienten er ikke kjent med diabetes, og blodsukker er ikke målt.
+  [43] 743ms  Marina: Ingen undersøkelser ble utført i dette tilfellet. Ønsker du å legge til noe mer om undersøkelser?
+  [MO] Bilateral papilloedema funnet ved fundoskopi.
+  [44] 3058ms  Marina: Ettersom pasienten har akutt, svært sterk hodepine med ondt i øynene, svinn i synsfeltet og ny svakhet og følelsesnedsatthet i høyre arm, må en avansert nevrologisk undersøkelse utføres. Er pasienten orientert i tid, sted og person — vet han sitt navn, hvor han er og hva dato det er?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Pasienten er orientert i tid, sted og person; han kjenner sitt navn, hvor han er og hva dato det er.
+  [45] 1769ms  Marina: Er pasientens tale klar, eller er den sløret?
+  [MO] Pasientens tale er klar, ingen dysarthri.
+  [46] 3297ms  Marina: Kan pasienten navngi et vanlig objekt, som en pen eller lommelykt, når han ser det?
+  [MO] Ja, pasienten kan navngi et vanlig objekt korrekt når han ser det.
+  [47] 898ms  Marina: Er pupillene like store og runde?
+  [MO] Pupillene er like store og runde.
+  [48] 712ms  Marina: Kontraherer pupillene normalt når de utsettes for lys?
+  [MO] Pupillene kontraherer normalt ved lysutsattelse.
+  [49] 1162ms  Marina: Kan pasienten følge en sakte bevegelse med øynene uten rykkende bevegelser, og opplever han dobbeltsyn under øyefølging?
+  [MO] Øyefølging er samsvarande, utan rykkande bevegelser og utan dobbeltsyn.
+  [50] 922ms  Marina: Er ansiktet symmetrisk når pasienten smiler?
+  [MO] Ansiktet er symmetrisk når pasienten smiler.
+  [51] 631ms  Marina: Er ansiktet symmetrisk når pasienten viser tennene?
+  [MO] Ansiktet er symmetrisk når pasienten viser tennene.
+  [52] 917ms  Marina: Er ansiktet symmetrisk når pasienten løfter øyebrynene?
+  [MO] Ansiktet er symmetrisk når pasienten løfter øyebrynene.
+  [53] 915ms  Marina: Kaster pasienten eller kveiler seg når han svelger?
+  [MO] Nei, pasienten kaster seg ikke og kveiler seg ikke når han svelger.
+  [54] 931ms  Marina: Er det synlige sår eller abnormiteter på tungen eller leppene når pasienten åpner munnen?
+  [MO] Ingen synlige sår eller abnormiteter på tungen eller leppene.
+  [55] 741ms  Marina: Er det forskjell i styrke når pasienten løfter skuldrene?
+  [MO] Nei, det er ingen forskjell i styrke når pasienten løfter skuldrene.
+  [56] 802ms  Marina: Er det forskjell i styrke når pasienten trykker hånden din i et håndtrykk?
+  [MO] Nei, det er ingen forskjell i styrke ved håndtrykk.
+  [57] 1125ms  Marina: Er det forskjell i styrke når pasienten løfter ett bein av gangen fra sengen, og motsetter seg trykk fra deg?
+  [MO] Ingen forskjell i styrke ved løft av ett bein av gangen; lik motstand mot ytre trykk bilateralt.
+  [58] 882ms  Marina: Når pasienten holder armene strukket frem og lukker øynene, synker den ene armen?
+  [MO] Ja, den høyre armen senker seg når pasienten holder armene strukket frem og lukker øynene.
+  [59] 945ms  Marina: Kan pasienten stå og gå over gulvet uten støtte?
+  [MO] Pasienten klarer ikke å stå og gå uten støtte på grunn av høygradig hypertensjon og fokale nevrologiske symptomer i høyre arm.
+  [60] 914ms  Marina: Kan pasienten legge haken mot brystet, eller er det stivhet i nakken?
+  [MO] Pasienten kan legge haken mot brystet, ingen nakkestivhet.
+  [61] 2017ms  Marina: Neurologisk undersøkelse viser at pasienten er fullt orientert, har klar tale og normalt objektnavn. Pupiller er like store, runde og reagerer normalt på lys. Øyefølging er normal uten nystagmus eller dobbeltsyn. Ansiktet er symmetrisk ved smil, tennvisning og øyebrynheving. Ingen svelgeproblemer eller munnslimhinnabesvær. Skulderstyrke, håndtrykk og beinløft er symmetriske. Det er armdrift nedover med høyre arm ved øyelukking. Pasienten klarer ikke å stå og gå uten støtte. Ingen nakkestivhet. Ønsker du å legge til noe mer fra undersøkelsen?
+  [MO] Ja, det er høyrearm pares og positiv armfald ved øyelukking, samt umulighet til å stå og gå uten støtte.
+  [62] 1041ms  Marina: Интервью завершено. Отчёт сформирован. Медицинская документация собрана полностью.
+
+  Interview complete after 62 turns.
+
+── Extract ──
+  Calling /ai/extract with 133 messages (filtered from 151)...
+  ✓ Done  (2595ms)
+
+  gender: male
+  chiefComplaint: severe headache, blurred vision, and numbness in the right hand
+  chiefSymptom: severe sudden-onset pulsating and pressing headache, blurred vision especially on the right with partial visual field loss, numbness and weakness in the right arm
+  history: The patient experienced sudden, severe headache described as 'like a thunderclap,' starting three days ago, progressively worsening, and continuous since onset. The pain is pulsating and pressing, located throughout the head, especially in the occipital region, rated 9 out of 10 in intensity. It worsens with bright light and movement. Associated symptoms include blurred vision, particularly on the right side with partial visual field loss, numbness, and weakness in the right arm. Symptoms began abruptly without head trauma. The patient stopped taking antihypertensive medication three days ago due to running out, and previously had stable blood pressure on medication.
+  pastHistory: The patient has a history of hypertension, previously controlled with medication. He denies history of migraine, stroke, brain hemorrhage, diabetes, or other major cardiovascular conditions. No history of smoking.
+  allergies: Patient states they have no known allergies.
+  currentMedications: The patient previously took an unknown antihypertensive medication once daily as prescribed, but has not taken any medication for the past three days due to running out. Patient states they are currently not taking any medications, including over-the-counter drugs, vitamins, or supplements, and did not take any medication for the current headache.
+  circulation_pulse_per_min: 94
+  circulation_systole: 204
+  circulation_diastole: 124
+  breathing_num_breaths_per_min: 18
+  breathing_oxygen_saturation: 97
+  expose_temperature_measured_mouth: 37.0
+  avpu: Alert
+  redFlag: yes
+  redFlagType: neurological symptoms with sudden severe headache and elevated blood pressure
+  problemDescription: 60-year-old male with sudden onset of severe, pulsating, pressure-like headache across the entire head, especially in the occipital region, rated 9 out of 10 in intensity. Headache began abruptly three days ago and has been constant, worsening with bright light and movement. Patient reports blurred vision with loss of part of the visual field on the right side, numbness and weakness in the right arm. No nausea, vomiting, neck stiffness, confusion, speech difficulties, or loss of consciousness. No recent head trauma. History of hypertension previously controlled with medication, but stopped three days ago due to running out of pills. No history of migraine, stroke, or brain hemorrhage. No diabetes. No allergies. No current use of any medications, including pain relievers.
+  performedActions: M-EWS score: 3
+
+Bilateral papilledema found on fundoscopy. Neurological examination shows right arm drift and right arm paresis on finger-to-nose testing with eyes closed. Patient unable to stand or walk without support. Pupils are equal, round, and reactive to light. Eye movements are normal without nystagmus or diplopia. Facial symmetry is intact. No dysarthria or swallowing difficulties. Shoulder, hand grip, and leg strength are symmetric. No neck stiffness.

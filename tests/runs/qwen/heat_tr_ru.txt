@@ -1,0 +1,168 @@
+
+════════════════════════════════════════════════════════════
+  Turkish patient / Russian MO — heat exhaustion
+════════════════════════════════════════════════════════════
+  Symptom: Güverte üzerinde çok sıcak hava altında çalıştım, başım dönüyor ve bulantım var
+
+  ✓ Started  (549ms)
+
+
+── Stage 1: Pathway ──
+  Marina: Nasıl yardımcı olabilirim?
+  [Pt] Aşırı sıcakta denge kaybı ve mide bulantısı yaşıyorum, yardımınıza ihtiyacım var.
+  [1] 537ms  Marina: Lütfen semptomunuzu daha ayrıntılı bir şekilde tarif eder misiniz?
+  [Pt] Çok sıcakta çalışırken başım dönmeye başladı, mide bulantım var ve terliyorum. Başka bir şey hissetmiyorum.
+  [2] 765ms  Marina: Mide bulantısı dışında başka semptomlar olup olmadığını anlamak için sormak istiyorum: baş dönmesi dışında baygınlık veya bilinç kaybı yaşadınız mı?
+  [Pt] Hayır, baygınlık veya bilinç kaybı yaşamadım, sadece baş dönmeleri var.
+  [3] 518ms  Marina: Size göre ana semptomunuz aşırı sıcakta yaşanan baş dönmesi ve mide bulantısı. Doğru mu?
+  [Pt] Evet, doğru. Güneşte uzun süre çalıştığımdan sonra başım döndü ve mide bulantısı yaşadım.
+  [4] 1051ms  Marina: Kaç yaşındasınız?  → stage 2 (History Taking)
+
+── Stage 2: History Taking ──
+  [Pt] 28 yaşındayım.
+  [5] 462ms  Marina: Cinsiyetiniz nedir?
+  [Pt] Erkek.
+  [6] 1669ms  Marina: Sıcak, nemli ve kapalı bir alanda mı çalışıyorsunuz?
+  [Pt] Hayır, güverte açık havada çalışıyorum, yoğun güneş ışığında.
+  [7] 847ms  Marina: Sıcakta çalışırken sıvı alımınızı nasıl değerlendiriyorsunuz? Yeterli mi, az mı?
+  [Pt] Sıvı alımım yetersizdi, yeterli miktarda su içmedim.
+  [8] 538ms  Marina: Sıcakta ne kadar süre boyunca maruz kaldınız?
+  [Pt] Yaklaşık 4 saat boyunca güverte üzerinde çalıştım.
+  [9] 682ms  Marina: Maruziyet öncesinde baş dönmesi, kas krampları, mide bulantısı veya kafa karışıklığı gibi semptomlar yaşadınız mı?
+  [Pt] Hayır, maruziyet öncesinde böyle bir semptom yaşamadım.
+  [10] 519ms  Marina: İlaç kullanıyor musunuz veya alkol aldı mı?
+  [Pt] Hayır, ilaç kullanmıyorum ve alkol almadım.
+  [11] 1873ms  Marina: Toplanan bilgilere göre 28 yaşında erkek hasta, açık havada güneş ışığı altında yaklaşık 4 saat çalışmış. Sıvı alımı yetersiz olmuş. Semptomlar arasında baş dönmesi ve mide bulantısı bulunuyor. Baygınlık, bilinç kaybı, kas krampları veya kafa karışıklığı yaşanmamış. İlaç kullanımı veya alkol alımı bildirilmemiştir. Isı çarpması ya da sıcaklık yorgunluğu açısından değerlendiriliyor. Isıya maruz kalmadan önce herhangi bir semptom yaşanmadığı belirtilmiştir.  
+Size sormak istediğim bu: Öykü alımıyla ilgili eklemek istediğiniz bir şey var mı?
+  [Pt] Evet, son idrar rengi ve miktarı neydi, ayrıca çalışma sırasında terleme durumu nasıl oldu?
+  [12] 1049ms  Marina: Çalışma sırasında terleme durumunuz nasıldı? Fazla mı terlediniz, yoksa terleme az mıydı?
+  [Pt] Çok fazla terledim, vücudum tamamen ıslandı.
+  [13] 742ms  Marina: Son idrarınızın rengi nasıldı? Koyu mu, açık mıydı?
+  [Pt] İdrarım oldukça koyuydu, neredeyse kahverengimsi bir renkteydi.
+  [14] 1208ms  Marina: Toplanan bilgilere göre 28 yaşında erkek hasta, açık havada güneş ışığı altında yaklaşık 4 saat çalışmış. Sıvı alımı yetersiz olmuş. Semptomlar arasında baş dönmesi ve mide bulantısı bulunuyor. Baygınlık, bilinç kaybı, kas krampları veya kafa karışıklığı yaşanmamış. İlaç kullanımı veya alkol alımı bildirilmemiştir. Isıya maruz kalmadan önce herhangi bir semptom yaşanmadığı belirtilmiştir. Çalışma sırasında çok fazla terlemiş. Son idrar rengi koyu, neredeyse kahverengimsi olarak bildirilmiştir.  
+Size sormak istediğim bu: Öykü alımıyla ilgili eklemek istediğiniz bir şey var mı?
+  [Pt] Evet, son idrar yapma zamanı ve miktari, başlangıçtan beri terleme miktarında azalma olup olmadığı, şu anda susuzluk hissi ve ağız kuruluğu olup olmadığı da sorgulanmalı.
+  [15] 545ms  Marina: Son kez idrar yapma zamanınız ne zamandı?
+  [Pt] Son kez idrar yapmam yaklaşık 6 saat oldu.
+  [16] 533ms  Marina: İdrar yapma miktarınız normalden az mıydı?
+  [Pt] Evet, idrar miktarım azaldı ve daha koyu renkliydi.
+  [17] 2175ms  Marina: Terleme miktarında bir azalma fark ettiniz mi?
+  [Pt] Evet, terleme miktarım azaldı, cildim kuru ve sıcak.
+  [18] 447ms  Marina: Şu anda susuzluk hissediyor musunuz?
+  [Pt] Evet, oldukça susuz hissediyorum.
+  [19] 239ms  Marina: Ağız kuruluğu var mı?
+  [Pt] Evet, ağız kuruluğu hissediyorum.
+  [20] 918ms  Marina: Baş ağrısı yaşıyor musunuz?  → stage 3 (Associated Symptoms)
+
+── Stage 3: Associated Symptoms ──
+  [Pt] Hayır, baş ağrısı yok.
+  [21] 1191ms  Marina: Mide bulantısı veya kusma var mı?
+  [Pt] Evet, mide bulantısı var, ama şu ana kadar kusmadım.
+  [22] 637ms  Marina: Kafa karışıklığı, bilinç bulanıklığı veya zihinsel durumda bir değişiklik fark ettiniz mi?
+  [Pt] Hayır, kafa karışıklığı ya da bilinç bulanıklığı yaşamadım. Zihinsel durumum normal.
+  [23] 2177ms  Marina: Bayılma veya bilinç kaybı yaşadınız mı?
+  [Pt] Hayır, bayılmadım veya bilinç kaybı yaşamadım.
+  [24] 412ms  Marina: Kas krampları yaşıyor musunuz?
+  [Pt] Hayır, kas krampları yaşamıyorum.
+  [25] 1177ms  Marina: Toplanan bilgilere göre baş ağrısı yok, mide bulantısı var ama kusma yaşanmadı, kafa karışıklığı veya bilinç bulanıklığı yok, bayılma veya bilinç kaybı yaşanmadı ve kas krampları bildirilmedi.  
+Sizinle paylaştığınız bu semptomlar haricinde eklemek istediğiniz başka bir şey var mı?
+  [Pt] Hayır, başka eklemek istediğim bir şey yok. Sadece mide bulantısı ve baş dönmesi var, daha önce de böyle bir şey yaşamadım.
+  [26] 1150ms  Marina: Kardiyovasküler bir hastalığınız var mı? Örneğin kalp hastalığı, yüksek tansiyon veya kalp ritim bozukluğu gibi.  → stage 4 (Past Medical History)
+
+── Stage 4: Past Medical History ──
+  [Pt] Hayır, kardiyovasküler bir hastalığım yok.
+  [27] 855ms  Marina: İş kaybı veya su atıcı ilaçlar gibi diüretikler veya beta blokerler kullanıyor musunuz?
+  [Pt] Hayır, herhangi bir ilaç kullanmıyorum.
+  [28] 639ms  Marina: Daha önce benzer bir sıcak çarpması veya ısı yorgunluğu yaşadınız mı?
+  [Pt] Hayır, daha önce benzer bir durum yaşamadım.
+  [29] 1165ms  Marina: Toplanan bilgilere göre kardiyovasküler hastalığı olmadığı belirtilmiştir, diüretik veya beta bloker kullanmadığı ifade edilmiştir ve daha önce benzer bir ısı çarpması veya ısı yorgunluğu yaşamadığı bildirilmiştir.  
+Önceden yaşadığınız tıbbi durumlarla ilgili eklemek istediğiniz bir şey var mı?
+  [Pt] Hayır, eklemek başka bir şey yok. Daha önce böyle bir durum yaşamadım.
+  [30] 1015ms  Marina: Düzenli olarak kullanmakta olduğunuz herhangi bir ilaç var mı?  → stage 5 (Medications)
+
+── Stage 5: Medications ──
+  [Pt] Hayır, herhangi bir ilaç kullanmıyorum.
+  [31] 744ms  Marina: Reçetesiz satılan ilaçlar, vitaminler veya takviyeler alıyor musunuz?
+  [Pt] Hayır, reçetesiz hiçbir ilaç, vitamin veya takviye kullanmıyorum.
+  [32] 538ms  Marina: Şu anda yaşadığınız semptomlar için herhangi bir ilaç kullandınız mı?
+  [Pt] Hayır, herhangi bir ilaç kullanmadım.
+  [33] 963ms  Marina: Toplanan bilgilere göre düzenli kullandığınız herhangi bir ilaç olmadığı, reçetesiz ilaç, vitamin ya da takviye kullanmadığınız ve mevcut semptomlar için herhangi bir ilaç almadığınız belirtilmiştir.  
+İlaçlarla ilgili eklemek istediğiniz başka bir şey var mı?
+  [Pt] Hayır, ilaçlarla ilgili eklemek başka bir şeyim yok.
+  [34] 1334ms  Marina: Herhangi bir ilaca, gıdaya veya başka bir şeye karşı alerjiniz var mı?  → stage 6 (Allergies)
+
+── Stage 6: Allergies ──
+  [Pt] Hayır, hiçbir şeye alerjim yok.
+  [35] 945ms  Marina: Toplanan bilgilere göre herhangi bir alerji olmadığı belirtilmiştir.  
+Alerjilerle ilgili eklemek istediğiniz bir şey var mı?
+  [Pt] Hayır, herhangi bir alerjim yok.
+  [36] 1989ms  Marina: Медицинский офицер, каков уровень насыщения крови кислородом у пациента в процентах?  → stage 7 (Vital Signs)
+
+── Stage 7: Vital Signs ──
+  [MO] Уровень насыщения крови кислородом составляет 98%.
+  [37] 1449ms  Marina: Медицинский офицер, какова частота дыхания у пациента в минуту?
+  [MO] Частота дыхания у пациента — 20 в минуту.
+  [38] 536ms  Marina: Медицинский офицер, какова частота пульса у пациента в минуту?
+  [MO] Частота пульса у пациента — 116 ударов в минуту.
+  [39] 807ms  Marina: Медицинский офицер, какое артериальное давление у пациента? Укажите систолическое и диастолическое давление в мм рт. ст.
+  [MO] Артериальное давление 100 мм рт. ст. систолическое и 62 мм рт. ст. диастолическое.
+  [40] 645ms  Marina: Медицинский офицер, какова температура тела пациента в градусах Цельсия?
+  [MO] Температура тела пациента — 39,8 °C.
+  [41] 794ms  Marina: Медицинский офицер, какова оценка сознания пациента по шкале AVPU: бодрствует (A), реагирует на голос (V), реагирует на боль (P) или не реагирует (U)?
+  [MO] Пациент бодрствует (A).
+  [42] 2332ms  Marina: Записаны следующие показатели: насыщение крови кислородом — 98 %, частота дыхания — 20 в минуту, частота пульса — 116 ударов в минуту, артериальное давление — 100/62 мм рт. ст., температура тела — 39,8 °C, сознание по шкале AVPU — бодрствует (A).  
+У вас есть дополнительные данные по жизненно важным показателям?
+  [MO] Дополнительные данные: кожа горячая и сухая, обильное потоотделение, без спутанности сознания.
+  [43] 1256ms  Marina: CRP testi yapıldı mı ve yapıldıysa sonuç nedir?  → stage 8 (Investigations)
+
+── Stage 8: Investigations ──
+  [MO] CRP testi yapılmadı.
+  [44] 776ms  Marina: Toplanan bilgilere göre CRP testi yapılmamıştır.  
+İncelemelerle ilgili eklemek istediğiniz başka bir şey var mı?
+  [MO] По имеющимся данным, исследование СРБ не проводилось.  
+Дополнительных сведений по обследованиям нет.
+  [45] 1153ms  Marina: Пациент может свободно говорить и отвечать ясно?  → stage 9 (Physical Exam)
+
+── Stage 9: Physical Exam ──
+  [MO] Да, пациент говорит свободно и отвечает ясно.
+  [46] 947ms  Marina: У пациента затруднено дыхание? Дышит ли он через рот?
+  [MO] Дыхание не затруднено, рот не использует для дыхания.
+  [47] 700ms  Marina: Выглядит ли пациент более бледным или серым, чем обычно?
+  [MO] Кожа горячая и сухая, явной бледности или сероватого оттенка не отмечено.
+  [48] 822ms  Marina: Кожа влажная или теплая на ощупь?
+  [MO] Кожа горячая и влажная на ощупь.
+  [49] 742ms  Marina: Есть ли признаки травмы, такие как раны или синяки?
+  [MO] Признаков травмы, таких как раны или синяки, нет.
+  [50] 1357ms  Marina: Попросите пациента встать и пройтись несколькими метрами. Может ли он сделать это без посторонней помощи?
+  [MO] Пациент может встать и пройти несколько метров без посторонней помощи.
+  [51] 2279ms  Marina: Пациент говорит свободно и отвечает ясно. Дыхание не затруднено, рот для дыхания не используется. Бледности или сероватого оттенка кожи нет. Кожа горячая и влажная на ощупь. Признаков травмы, таких как раны или синяки, не выявлено. Пациент может встать и пройти несколько метров без посторонней помощи.  
+У вас есть дополнительные данные по физикальному осмотру?
+  [MO] Кожа горячая и влажная, потоотделение обильное, видимых повреждений кожи нет. Пациент самостоятельно передвигается, дыхание не затруднено, цианоза нет.
+  [52] 1665ms  Marina: Mülakat tamamlandı. Rapor oluşturuldu. Tıbbi görevliye mülakatın bittiğini bildiriyorum.
+
+  Interview complete after 52 turns.
+
+── Extract ──
+  Calling /ai/extract with 113 messages (filtered from 131)...
+  ✓ Done  (1806ms)
+
+  gender: male
+  chiefComplaint: dizziness and nausea due to excessive heat exposure
+  chiefSymptom: dizziness and nausea
+  history: The patient, a 28-year-old male, developed dizziness and nausea after working for approximately 4 hours on deck under intense sunlight. He experienced profuse sweating, had inadequate fluid intake, and noticed dark, almost brown-colored urine. His last urination was about 6 hours ago, with decreased volume. He reports feeling thirsty and having dry mouth. Currently, he has dizziness and nausea but no headache, fainting, confusion, muscle cramps, or vomiting. Skin is hot and moist with reduced sweating now.
+  pastHistory: The patient reports no previous medical conditions, including no cardiovascular diseases such as heart disease, hypertension, or arrhythmia. He has no history of heat stroke or heat exhaustion. No prior similar episodes were reported.
+  currentMedications: Patient states they do not take any medications.
+  allergies: Patient states they have no known allergies.
+  circulation_pulse_per_min: 116
+  circulation_systole: 100
+  circulation_diastole: 62
+  breathing_num_breaths_per_min: 20
+  breathing_oxygen_saturation: 98
+  expose_temperature_measured_mouth: 39.8
+  avpu: Alert
+  redFlag: yes
+  redFlagType: high body temperature
+  problemDescription: 28-year-old male patient working on deck under direct sunlight for approximately 4 hours with insufficient fluid intake. Reports dizziness, nausea, excessive sweating, dark and decreased urine output for the last 6 hours, dry mouth, and thirst. Denies headache, vomiting, loss of consciousness, confusion, muscle cramps, or cardiovascular disease. No medication use, allergies, or prior episodes of heat-related illness. Skin is hot and wet with no signs of trauma.
+  performedActions: M-EWS score: 7
+
+Patient is alert and oriented, speaks clearly, and can walk independently. Skin is hot and moist with no cyanosis or visible injuries. Breathing is unlabored without mouth breathing. No pallor or grayish skin tone observed.
