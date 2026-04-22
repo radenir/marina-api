@@ -8,6 +8,7 @@ import { requireVerifiedEmail } from '../middleware/requireVerifiedEmail.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
 import { whisper } from '../lib/whisper.js';
+import { elevenLabsTranscribe } from '../lib/elevenlabs.js';
 import { parallelExtract } from '../lib/medicalExtract.js';
 import type { UserProfile } from '../lib/medicalExtract.js';
 import { fillRmdFormPdftk, checkPdftkAvailable } from '../lib/pdftk.js';
@@ -275,25 +276,40 @@ aiRouter.post(
       ? req.body.language
       : undefined;
 
+    const provider = config.transcriptionProvider;
+
+    if (provider === 'elevenlabs' && !config.elevenlabs.apiKey) {
+      res.status(503).json({ error: 'ElevenLabs not configured' });
+      return;
+    }
+
     let transcription: string;
     try {
-      const file = await toFile(req.file.buffer, req.file.originalname, {
-        type: req.file.mimetype,
-      });
-
-      const result = await whisper.audio.transcriptions.create({
-        model: config.whisper.model,
-        file,
-        ...(language ? { language } : {}),
-      });
-      if (!result.text) {
-        console.error('[ai/transcribe] empty response from Whisper');
-        res.status(502).json({ error: 'Transcription service unavailable' });
-        return;
+      if (provider === 'elevenlabs') {
+        transcription = await elevenLabsTranscribe(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype,
+          language,
+        );
+      } else {
+        const file = await toFile(req.file.buffer, req.file.originalname, {
+          type: req.file.mimetype,
+        });
+        const result = await whisper.audio.transcriptions.create({
+          model: config.whisper.model,
+          file,
+          ...(language ? { language } : {}),
+        });
+        if (!result.text) {
+          console.error('[ai/transcribe] empty response from Whisper');
+          res.status(502).json({ error: 'Transcription service unavailable' });
+          return;
+        }
+        transcription = result.text;
       }
-      transcription = result.text;
     } catch (err) {
-      console.error('[ai/transcribe] Whisper API error:', (err as Error).message);
+      console.error(`[ai/transcribe] ${provider} error:`, (err as Error).message);
       res.status(502).json({ error: 'Transcription service unavailable' });
       return;
     }
@@ -301,6 +317,7 @@ aiRouter.post(
     await auditLog('audio_transcribed', req, req.user!.id, {
       size_bytes: req.file.size,
       language: language ?? 'auto',
+      provider,
     });
 
     res.json({ transcription });

@@ -65,4 +65,11 @@ export const config = {
     baseUrl: require_env('WHISPER_BASE_URL'),
     model:   optional_env('WHISPER_MODEL', 'whisper-1'),
   },
+
+  elevenlabs: {
+    apiKey: optional_env('ELEVENLABS_API_KEY', ''),
+    model:  optional_env('ELEVENLABS_STT_MODEL', 'scribe_v1'),
+  },
+
+  transcriptionProvider: optional_env('TRANSCRIPTION_PROVIDER', 'whisper') as 'whisper' | 'elevenlabs',
 } as const;
