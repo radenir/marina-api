@@ -67,8 +67,9 @@ export const config = {
   },
 
   elevenlabs: {
-    apiKey: optional_env('ELEVENLABS_API_KEY', ''),
-    model:  optional_env('ELEVENLABS_STT_MODEL', 'scribe_v1'),
+    apiKey:   optional_env('ELEVENLABS_API_KEY', ''),
+    model:    optional_env('ELEVENLABS_STT_MODEL', 'scribe_v2'),
+    baseUrl:  optional_env('ELEVENLABS_BASE_URL', 'https://api.eu.residency.elevenlabs.io'),
   },
 
   transcriptionProvider: optional_env('TRANSCRIPTION_PROVIDER', 'whisper') as 'whisper' | 'elevenlabs',
