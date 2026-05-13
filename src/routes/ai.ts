@@ -9,6 +9,7 @@ import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
 import { whisper } from '../lib/whisper.js';
 import { elevenLabsTranscribe } from '../lib/elevenlabs.js';
+import { cortiTranscribe, isCortiConfigured } from '../lib/corti.js';
 import { parallelExtract } from '../lib/medicalExtract.js';
 import type { UserProfile } from '../lib/medicalExtract.js';
 import { fillRmdFormPdftk, checkPdftkAvailable } from '../lib/pdftk.js';
@@ -78,6 +79,13 @@ const summarizeRateLimit = rateLimit({
 
 const transcribeRateLimit = rateLimit({
   prefix: 'ai-transcribe',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
+const medicalSpeechToTextRateLimit = rateLimit({
+  prefix: 'ai-medical-speech-to-text',
   limit: 500,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
@@ -278,12 +286,21 @@ aiRouter.post(
 
     const provider = config.transcriptionProvider;
 
+    console.log('[ai/transcribe] request params:', {
+      provider,
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size_bytes: req.file.size,
+      language: language ?? 'auto',
+    });
+
     if (provider === 'elevenlabs' && !config.elevenlabs.apiKey) {
       res.status(503).json({ error: 'ElevenLabs not configured' });
       return;
     }
 
     let transcription: string;
+    const t0 = Date.now();
     try {
       if (provider === 'elevenlabs') {
         transcription = await elevenLabsTranscribe(
@@ -314,10 +331,81 @@ aiRouter.post(
       return;
     }
 
+    console.log(`[ai/transcribe] response (${Date.now() - t0}ms):`, {
+      chars: transcription.length,
+      preview: transcription.slice(0, 120),
+    });
+
     await auditLog('audio_transcribed', req, req.user!.id, {
       size_bytes: req.file.size,
       language: language ?? 'auto',
       provider,
+    });
+
+    res.json({ transcription });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/medical-speech-to-text
+// Corti-only Danish (and other Corti-supported) medical STT. Async multi-step:
+// create interaction → upload recording → create transcript → poll until done.
+// Middleware order: requireAuth → medicalSpeechToTextRateLimit → requireVerifiedEmail → requireActiveUser → upload.single('audio') → handler
+// ---------------------------------------------------------------------------
+
+aiRouter.post(
+  '/medical-speech-to-text',
+  requireAuth,
+  medicalSpeechToTextRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  upload.single('audio'),
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.file) {
+      res.status(400).json({ error: 'No audio file provided' });
+      return;
+    }
+
+    if (!isCortiConfigured()) {
+      res.status(503).json({ error: 'Corti not configured' });
+      return;
+    }
+
+    const language = typeof req.body.language === 'string' && req.body.language.length === 2
+      ? req.body.language
+      : 'da';
+
+    console.log('[ai/medical-speech-to-text] request params:', {
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size_bytes: req.file.size,
+      language,
+    });
+
+    let transcription: string;
+    const t0 = Date.now();
+    try {
+      transcription = await cortiTranscribe(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        language,
+      );
+    } catch (err) {
+      console.error('[ai/medical-speech-to-text] corti error:', (err as Error).message);
+      res.status(502).json({ error: 'Transcription service unavailable' });
+      return;
+    }
+
+    console.log(`[ai/medical-speech-to-text] response (${Date.now() - t0}ms):`, {
+      chars: transcription.length,
+      preview: transcription.slice(0, 120),
+    });
+
+    await auditLog('audio_transcribed', req, req.user!.id, {
+      size_bytes: req.file.size,
+      language,
+      provider: 'corti',
     });
 
     res.json({ transcription });

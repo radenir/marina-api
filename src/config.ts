@@ -72,5 +72,12 @@ export const config = {
     baseUrl:  optional_env('ELEVENLABS_BASE_URL', 'https://api.eu.residency.elevenlabs.io'),
   },
 
+  corti: {
+    clientId:     optional_env('CORTI_CLIENT_ID', ''),
+    clientSecret: optional_env('CORTI_CLIENT_SECRET', ''),
+    tenant:       optional_env('CORTI_TENANT', 'base'),
+    environment:  optional_env('CORTI_ENVIRONMENT', 'eu') as 'eu' | 'us',
+  },
+
   transcriptionProvider: optional_env('TRANSCRIPTION_PROVIDER', 'whisper') as 'whisper' | 'elevenlabs',
 } as const;
