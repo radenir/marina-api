@@ -22,6 +22,7 @@ interface ConversationSummaryRow {
   message_count: number;
   has_summary: boolean;
   has_state: boolean;
+  mode: 'marina' | 'note_taker';
   created_at: Date;
   updated_at: Date;
   last_message_at: Date;
@@ -58,6 +59,7 @@ conversationsRouter.get('/', requireAuth, async (req: Request, res: Response): P
             jsonb_array_length(messages) AS message_count,
             (extracted_summary IS NOT NULL) AS has_summary,
             (state IS NOT NULL) AS has_state,
+            mode,
             created_at,
             updated_at,
             last_message_at
@@ -90,7 +92,7 @@ conversationsRouter.get('/:id', requireAuth, async (req: Request, res: Response)
     `SELECT id, title, chief_symptom, messages, reference_notifications,
             vital_signs, interview_stage, examination_progress, extracted_summary,
             patient_language, medical_officer_language,
-            state, state_version,
+            state, state_version, mode,
             created_at, updated_at, last_message_at
        FROM conversations
       WHERE id = $1 AND user_id = $2`,

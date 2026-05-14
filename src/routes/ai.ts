@@ -26,6 +26,7 @@ import { executeTool } from '../lib/interviewTools.js';
 import { extractInterviewSummary } from '../lib/interviewExtract.js';
 import {
   createConversation,
+  createNoteTakerConversation,
   updateFromChat,
   updateFromExtract,
 } from '../lib/conversationStore.js';
@@ -200,6 +201,8 @@ const ExtractSchema = z.object({
   }).optional(),
   mewsScore: z.number().nullable().optional(),
   conversationId: z.string().uuid().optional(),
+  patientLanguage: z.string().max(20).optional(),
+  medicalOfficerLanguage: z.string().max(20).optional(),
 });
 
 const SummarizeSchema = z.object({
@@ -527,7 +530,14 @@ aiRouter.post(
       return;
     }
 
-    const { conversation, userProfile, mewsScore, conversationId } = parsed.data;
+    const {
+      conversation,
+      userProfile,
+      mewsScore,
+      conversationId,
+      patientLanguage,
+      medicalOfficerLanguage,
+    } = parsed.data;
 
     let summary: Record<string, string | boolean>;
     try {
@@ -540,21 +550,43 @@ aiRouter.post(
 
     const fieldsPopulated = Object.values(summary).filter(v => v !== '' && v !== false && v !== null && v !== undefined).length;
 
+    // Persistence has two paths:
+    //   - conversationId present  → Marina interview, update the existing row.
+    //   - conversationId missing  → note-taker, mint a new row now.
+    let persistedId = conversationId ?? null;
     if (conversationId) {
       try {
         await updateFromExtract(conversationId, req.user!.id, summary);
       } catch (err) {
         console.error('[ai/extract] conversation persist failed:', (err as Error).message);
       }
+    } else {
+      try {
+        const chiefSymptomRaw =
+          (typeof summary.chiefSymptom === 'string' && summary.chiefSymptom.trim()) ||
+          (typeof summary.chiefComplaint === 'string' && summary.chiefComplaint.trim()) ||
+          conversation.find((m) => m.role === 'user')?.content?.split(/[.!?]/)[0] ||
+          null;
+        persistedId = await createNoteTakerConversation(req.user!.id, {
+          messages: conversation,
+          summary,
+          patientLanguage: patientLanguage ?? 'en',
+          medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
+          chiefSymptom: chiefSymptomRaw ? chiefSymptomRaw.slice(0, 200) : null,
+        });
+      } catch (err) {
+        console.error('[ai/extract] note-taker persist failed:', (err as Error).message);
+      }
     }
 
     await auditLog('medical_record_extracted', req, req.user!.id, {
       message_count: conversation.length,
       fields_populated: fieldsPopulated,
-      conversation_id: conversationId,
+      conversation_id: persistedId,
+      mode: conversationId ? 'marina' : 'note_taker',
     });
 
-    res.json({ summary });
+    res.json({ summary, conversationId: persistedId });
   }
 );
 

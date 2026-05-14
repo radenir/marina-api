@@ -35,8 +35,8 @@ export async function createConversation(
     `INSERT INTO conversations (
        user_id, chief_symptom, messages, vital_signs, examination_progress,
        interview_stage, patient_language, medical_officer_language,
-       state, last_message_at
-     ) VALUES ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6, $7, $8, $9::jsonb, NOW())
+       state, mode, last_message_at
+     ) VALUES ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6, $7, $8, $9::jsonb, 'marina', NOW())
      RETURNING id`,
     [
       userId,
@@ -48,6 +48,37 @@ export async function createConversation(
       p.patient_language,
       p.medical_officer_language,
       fullState,
+    ],
+  );
+  return result.rows[0].id;
+}
+
+export interface NoteTakerInsert {
+  messages: { role: 'user' | 'assistant'; content: string }[];
+  summary: unknown;
+  patientLanguage: string;
+  medicalOfficerLanguage: string;
+  chiefSymptom: string | null;
+}
+
+export async function createNoteTakerConversation(
+  userId: string,
+  input: NoteTakerInsert,
+): Promise<string> {
+  const result = await query<{ id: string }>(
+    `INSERT INTO conversations (
+       user_id, chief_symptom, messages, extracted_summary,
+       patient_language, medical_officer_language,
+       mode, last_message_at
+     ) VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6, 'note_taker', NOW())
+     RETURNING id`,
+    [
+      userId,
+      input.chiefSymptom,
+      JSON.stringify(input.messages),
+      JSON.stringify(input.summary),
+      input.patientLanguage,
+      input.medicalOfficerLanguage,
     ],
   );
   return result.rows[0].id;
