@@ -24,6 +24,11 @@ import { createFreshState } from '../lib/interviewTypes.js';
 import { runAgent, generateGreeting } from '../lib/interviewAgent.js';
 import { executeTool } from '../lib/interviewTools.js';
 import { extractInterviewSummary } from '../lib/interviewExtract.js';
+import {
+  createConversation,
+  updateFromChat,
+  updateFromExtract,
+} from '../lib/conversationStore.js';
 
 export const aiRouter = Router();
 
@@ -194,6 +199,7 @@ const ExtractSchema = z.object({
     nationality:     z.string().optional(),
   }).optional(),
   mewsScore: z.number().nullable().optional(),
+  conversationId: z.string().uuid().optional(),
 });
 
 const SummarizeSchema = z.object({
@@ -521,7 +527,7 @@ aiRouter.post(
       return;
     }
 
-    const { conversation, userProfile, mewsScore } = parsed.data;
+    const { conversation, userProfile, mewsScore, conversationId } = parsed.data;
 
     let summary: Record<string, string | boolean>;
     try {
@@ -534,9 +540,18 @@ aiRouter.post(
 
     const fieldsPopulated = Object.values(summary).filter(v => v !== '' && v !== false && v !== null && v !== undefined).length;
 
+    if (conversationId) {
+      try {
+        await updateFromExtract(conversationId, req.user!.id, summary);
+      } catch (err) {
+        console.error('[ai/extract] conversation persist failed:', (err as Error).message);
+      }
+    }
+
     await auditLog('medical_record_extracted', req, req.user!.id, {
       message_count: conversation.length,
       fields_populated: fieldsPopulated,
+      conversation_id: conversationId,
     });
 
     res.json({ summary });
@@ -699,6 +714,7 @@ const InterviewStateSchema = z.object({
   conversationHistory: z.array(z.record(z.unknown())).max(500),
   variables: InterviewVariablesSchema,
   data: InterviewDataSchema,
+  conversationId: z.string().uuid().optional(),
 });
 
 const InterviewChatSchema = z.object({
@@ -816,9 +832,24 @@ aiRouter.post(
       return;
     }
 
+    // Persist conversation to DB so reports.marinahealth.eu can read it.
+    // Failures here must never break the chat response — log and continue.
+    let conversationId = state?.conversationId;
+    try {
+      if (!conversationId) {
+        conversationId = await createConversation(req.user!.id, newState);
+      } else {
+        await updateFromChat(conversationId, req.user!.id, newState);
+      }
+      (newState as typeof newState & { conversationId: string }).conversationId = conversationId;
+    } catch (err) {
+      console.error('[ai/interview/chat] conversation persist failed:', (err as Error).message);
+    }
+
     await auditLog('interview_message_sent', req, req.user!.id, {
       stage: newState.stage,
       done: newState.done,
+      conversation_id: conversationId,
     });
 
     res.json({
@@ -839,6 +870,7 @@ aiRouter.post(
 
 const InterviewExtractSchema = z.object({
   conversationHistory: z.array(z.record(z.unknown())).min(1).max(500),
+  conversationId: z.string().uuid().optional(),
 });
 
 aiRouter.post(
@@ -854,7 +886,7 @@ aiRouter.post(
       return;
     }
 
-    const { conversationHistory } = parsed.data;
+    const { conversationHistory, conversationId } = parsed.data;
 
     let summary;
     try {
@@ -867,8 +899,17 @@ aiRouter.post(
       return;
     }
 
+    if (conversationId) {
+      try {
+        await updateFromExtract(conversationId, req.user!.id, summary);
+      } catch (err) {
+        console.error('[ai/interview/extract] conversation persist failed:', (err as Error).message);
+      }
+    }
+
     await auditLog('medical_record_extracted', req, req.user!.id, {
       message_count: conversationHistory.length,
+      conversation_id: conversationId,
     });
 
     res.json({ summary });
