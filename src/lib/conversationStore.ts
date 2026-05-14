@@ -30,11 +30,13 @@ export async function createConversation(
   state: InterviewState,
 ): Promise<string> {
   const p = projectFromState(state);
+  const fullState = JSON.stringify(state);
   const result = await query<{ id: string }>(
     `INSERT INTO conversations (
        user_id, chief_symptom, messages, vital_signs, examination_progress,
-       interview_stage, patient_language, medical_officer_language, last_message_at
-     ) VALUES ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6, $7, $8, NOW())
+       interview_stage, patient_language, medical_officer_language,
+       state, last_message_at
+     ) VALUES ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6, $7, $8, $9::jsonb, NOW())
      RETURNING id`,
     [
       userId,
@@ -45,6 +47,7 @@ export async function createConversation(
       p.interview_stage,
       p.patient_language,
       p.medical_officer_language,
+      fullState,
     ],
   );
   return result.rows[0].id;
@@ -56,6 +59,7 @@ export async function updateFromChat(
   state: InterviewState,
 ): Promise<void> {
   const p = projectFromState(state);
+  const fullState = JSON.stringify(state);
   await query(
     `UPDATE conversations
         SET messages              = $1::jsonb,
@@ -65,8 +69,9 @@ export async function updateFromChat(
             chief_symptom         = COALESCE($5, chief_symptom),
             patient_language      = $6,
             medical_officer_language = $7,
+            state                 = $8::jsonb,
             last_message_at       = NOW()
-      WHERE id = $8 AND user_id = $9`,
+      WHERE id = $9 AND user_id = $10`,
     [
       p.messages,
       p.vital_signs,
@@ -75,6 +80,7 @@ export async function updateFromChat(
       p.chief_symptom,
       p.patient_language,
       p.medical_officer_language,
+      fullState,
       conversationId,
       userId,
     ],
