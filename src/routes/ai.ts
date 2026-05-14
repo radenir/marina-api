@@ -27,6 +27,7 @@ import { extractInterviewSummary } from '../lib/interviewExtract.js';
 import {
   createConversation,
   createNoteTakerConversation,
+  saveNoteTaker,
   updateFromChat,
   updateFromExtract,
 } from '../lib/conversationStore.js';
@@ -135,6 +136,13 @@ const interviewRateLimit = rateLimit({
 const interviewExtractRateLimit = rateLimit({
   prefix: 'ai-interview-extract',
   limit: 1000,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
+const noteTakerSaveRateLimit = rateLimit({
+  prefix: 'ai-note-taker-save',
+  limit: 20000,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
 });
@@ -588,6 +596,58 @@ aiRouter.post(
 
     res.json({ summary, conversationId: persistedId });
   }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/note-taker/save
+// Persists note-taker transcripts incrementally so a session can be resumed
+// or recovered without an extract. Creates the row on first call, updates it
+// thereafter. Does not touch extracted_summary.
+// Middleware order: requireAuth → noteTakerSaveRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// ---------------------------------------------------------------------------
+
+const NoteTakerSaveSchema = z.object({
+  conversationId: z.string().uuid().optional(),
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant']),
+      content: z.string().min(1).max(10000),
+    }),
+  ).min(1).max(500),
+  patientLanguage: z.string().max(20).optional(),
+  medicalOfficerLanguage: z.string().max(20).optional(),
+});
+
+aiRouter.post(
+  '/note-taker/save',
+  requireAuth,
+  noteTakerSaveRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = NoteTakerSaveSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { conversationId, messages, patientLanguage, medicalOfficerLanguage } = parsed.data;
+
+    let persistedId: string;
+    try {
+      persistedId = await saveNoteTaker(req.user!.id, conversationId ?? null, {
+        messages,
+        patientLanguage: patientLanguage ?? 'en',
+        medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
+      });
+    } catch (err) {
+      console.error('[ai/note-taker/save] persist failed:', (err as Error).message);
+      res.status(500).json({ error: 'Failed to save note-taker conversation' });
+      return;
+    }
+
+    res.json({ conversationId: persistedId });
+  },
 );
 
 // ---------------------------------------------------------------------------

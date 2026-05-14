@@ -84,6 +84,72 @@ export async function createNoteTakerConversation(
   return result.rows[0].id;
 }
 
+export interface NoteTakerSaveInput {
+  messages: { role: 'user' | 'assistant'; content: string }[];
+  patientLanguage: string;
+  medicalOfficerLanguage: string;
+}
+
+function deriveNoteTakerChiefSymptom(
+  messages: { role: string; content: string }[],
+): string | null {
+  const firstPatient = messages.find((m) => m.role === 'user');
+  if (!firstPatient?.content) return null;
+  return firstPatient.content.split(/[.!?]/)[0].slice(0, 200);
+}
+
+/**
+ * Upsert the messages array on a note-taker conversation. Creates the row on
+ * first call (no conversationId); updates it thereafter. Preserves the
+ * existing extracted_summary so saves don't clobber a generated report.
+ */
+export async function saveNoteTaker(
+  userId: string,
+  conversationId: string | null,
+  input: NoteTakerSaveInput,
+): Promise<string> {
+  const messagesJson = JSON.stringify(input.messages);
+  const chiefSymptom = deriveNoteTakerChiefSymptom(input.messages);
+
+  if (!conversationId) {
+    const result = await query<{ id: string }>(
+      `INSERT INTO conversations (
+         user_id, chief_symptom, messages,
+         patient_language, medical_officer_language,
+         mode, last_message_at
+       ) VALUES ($1, $2, $3::jsonb, $4, $5, 'note_taker', NOW())
+       RETURNING id`,
+      [
+        userId,
+        chiefSymptom,
+        messagesJson,
+        input.patientLanguage,
+        input.medicalOfficerLanguage,
+      ],
+    );
+    return result.rows[0].id;
+  }
+
+  await query(
+    `UPDATE conversations
+        SET messages              = $1::jsonb,
+            chief_symptom         = COALESCE(chief_symptom, $2),
+            patient_language      = $3,
+            medical_officer_language = $4,
+            last_message_at       = NOW()
+      WHERE id = $5 AND user_id = $6 AND mode = 'note_taker'`,
+    [
+      messagesJson,
+      chiefSymptom,
+      input.patientLanguage,
+      input.medicalOfficerLanguage,
+      conversationId,
+      userId,
+    ],
+  );
+  return conversationId;
+}
+
 export async function updateFromChat(
   conversationId: string,
   userId: string,
