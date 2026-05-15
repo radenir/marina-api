@@ -5,6 +5,9 @@ import { toFile } from 'openai';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireActiveUser } from '../middleware/requireActiveUser.js';
 import { requireVerifiedEmail } from '../middleware/requireVerifiedEmail.js';
+import { authenticate } from '../middleware/authenticate.js';
+import { requireScope } from '../middleware/requireScope.js';
+import { requireVerifiedActiveUser } from '../middleware/requireVerifiedActiveUser.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
 import { whisper } from '../lib/whisper.js';
@@ -54,19 +57,49 @@ function getIp(req: Request): string {
   return req.socket.remoteAddress ?? 'unknown';
 }
 
+interface Attribution {
+  userId?: string | null;
+  partnerId?: string | null;
+  apiClientId?: string | null;
+}
+
+function attributionFromPrincipal(req: Request): Attribution {
+  const p = req.principal;
+  if (!p) return {};
+  if (p.type === 'user') return { userId: p.userId };
+  return { partnerId: p.partnerId, apiClientId: p.apiClientId };
+}
+
+/** Rate-limit key that works for both user and partner principals. */
+function principalRateLimitKey(req: Request): string {
+  const p = req.principal;
+  if (!p) return getIp(req);
+  if (p.type === 'user') return `u:${p.userId}`;
+  if (p.partnerUserRef) return `p:${p.apiClientId}:${p.partnerUserRef}`;
+  return `p:${p.apiClientId}`;
+}
+
 async function auditLog(
   event_type: AuditEventType,
   req: Request,
-  user_id: string,
+  attribution: Attribution,
   metadata: Record<string, unknown> = {}
 ) {
   const ip = getIp(req);
   const ua = req.headers['user-agent'] ?? '';
   try {
     await query(
-      `INSERT INTO audit_logs (user_id, event_type, ip_address_hash, user_agent_hash, metadata)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [user_id, event_type, sha256hex(ip), sha256hex(ua), JSON.stringify(metadata)]
+      `INSERT INTO audit_logs (user_id, partner_id, api_client_id, event_type, ip_address_hash, user_agent_hash, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        attribution.userId ?? null,
+        attribution.partnerId ?? null,
+        attribution.apiClientId ?? null,
+        event_type,
+        sha256hex(ip),
+        sha256hex(ua),
+        JSON.stringify(metadata),
+      ]
     );
   } catch (err) {
     console.error('[audit] failed to write log:', (err as Error).message);
@@ -88,7 +121,7 @@ const transcribeRateLimit = rateLimit({
   prefix: 'ai-transcribe',
   limit: 500,
   windowSeconds: 60 * 60,
-  keyFn: (req) => req.user!.id,
+  keyFn: principalRateLimitKey,
 });
 
 const medicalSpeechToTextRateLimit = rateLimit({
@@ -109,7 +142,7 @@ const extractRateLimit = rateLimit({
   prefix: 'ai-extract',
   limit: 50,
   windowSeconds: 60 * 60,
-  keyFn: (req) => req.user!.id,
+  keyFn: principalRateLimitKey,
 });
 
 const pdfRateLimit = rateLimit({
@@ -271,7 +304,7 @@ aiRouter.post(
       return;
     }
 
-    await auditLog('conversation_summarized', req, req.user!.id, {
+    await auditLog('conversation_summarized', req, attributionFromPrincipal(req), {
       message_count: conversation.length,
     });
 
@@ -281,15 +314,18 @@ aiRouter.post(
 
 // ---------------------------------------------------------------------------
 // POST /ai/transcribe
-// Middleware order: requireAuth → transcribeRateLimit → requireVerifiedEmail → requireActiveUser → upload.single('audio') → handler
+// Accepts user JWT *or* partner API key (mk_live_...). Partners need the
+// `transcribe:write` scope; their requests skip the email-verified/active-user
+// checks because those are user-only concepts.
+// Middleware order: authenticate → requireScope → transcribeRateLimit → requireVerifiedActiveUser → upload.single('audio') → handler
 // ---------------------------------------------------------------------------
 
 aiRouter.post(
   '/transcribe',
-  requireAuth,
+  authenticate,
+  requireScope('transcribe:write'),
   transcribeRateLimit,
-  requireVerifiedEmail,
-  requireActiveUser,
+  requireVerifiedActiveUser,
   upload.single('audio'),
   async (req: Request, res: Response): Promise<void> => {
     if (!req.file) {
@@ -353,7 +389,7 @@ aiRouter.post(
       preview: transcription.slice(0, 120),
     });
 
-    await auditLog('audio_transcribed', req, req.user!.id, {
+    await auditLog('audio_transcribed', req, attributionFromPrincipal(req), {
       size_bytes: req.file.size,
       language: language ?? 'auto',
       provider,
@@ -419,7 +455,7 @@ aiRouter.post(
       preview: transcription.slice(0, 120),
     });
 
-    await auditLog('audio_transcribed', req, req.user!.id, {
+    await auditLog('audio_transcribed', req, attributionFromPrincipal(req), {
       size_bytes: req.file.size,
       language,
       provider: 'corti',
@@ -510,7 +546,7 @@ aiRouter.post(
       return;
     }
 
-    await auditLog('text_translated', req, req.user!.id, {
+    await auditLog('text_translated', req, attributionFromPrincipal(req), {
       from_lang: fromLang,
       to_lang: toLang,
       char_count: text.length,
@@ -522,15 +558,18 @@ aiRouter.post(
 
 // ---------------------------------------------------------------------------
 // POST /ai/extract
-// Middleware order: requireAuth → extractRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// Accepts user JWT *or* partner API key. Partners need `extract:write` scope.
+// Partner traffic always creates a fresh note-taker conversation (no resume
+// of marina interviews via partner key).
+// Middleware order: authenticate → requireScope → extractRateLimit → requireVerifiedActiveUser → handler
 // ---------------------------------------------------------------------------
 
 aiRouter.post(
   '/extract',
-  requireAuth,
+  authenticate,
+  requireScope('extract:write'),
   extractRateLimit,
-  requireVerifiedEmail,
-  requireActiveUser,
+  requireVerifiedActiveUser,
   async (req: Request, res: Response): Promise<void> => {
     const parsed = ExtractSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -547,6 +586,16 @@ aiRouter.post(
       medicalOfficerLanguage,
     } = parsed.data;
 
+    const principal = req.principal!;
+    const isPartner = principal.type === 'partner';
+
+    // Partners can't update existing marina-interview rows (those belong to
+    // Marina users). They get a clean error rather than a silent miss.
+    if (isPartner && conversationId) {
+      res.status(400).json({ error: 'conversationId is not supported for partner authentication' });
+      return;
+    }
+
     let summary: Record<string, string | boolean>;
     try {
       summary = await parallelExtract(conversation, userProfile as UserProfile | undefined, mewsScore ?? null);
@@ -560,11 +609,12 @@ aiRouter.post(
 
     // Persistence has two paths:
     //   - conversationId present  → Marina interview, update the existing row.
-    //   - conversationId missing  → note-taker, mint a new row now.
+    //   - conversationId missing  → note-taker, mint a new row now (owner is
+    //                                either the calling user or the partner).
     let persistedId = conversationId ?? null;
-    if (conversationId) {
+    if (conversationId && principal.type === 'user') {
       try {
-        await updateFromExtract(conversationId, req.user!.id, summary);
+        await updateFromExtract(conversationId, principal.userId, summary);
       } catch (err) {
         console.error('[ai/extract] conversation persist failed:', (err as Error).message);
       }
@@ -575,7 +625,10 @@ aiRouter.post(
           (typeof summary.chiefComplaint === 'string' && summary.chiefComplaint.trim()) ||
           conversation.find((m) => m.role === 'user')?.content?.split(/[.!?]/)[0] ||
           null;
-        persistedId = await createNoteTakerConversation(req.user!.id, {
+        const owner = principal.type === 'partner'
+          ? { partnerId: principal.partnerId, partnerUserRef: principal.partnerUserRef ?? null }
+          : { userId: principal.userId };
+        persistedId = await createNoteTakerConversation(owner, {
           messages: conversation,
           summary,
           patientLanguage: patientLanguage ?? 'en',
@@ -587,7 +640,7 @@ aiRouter.post(
       }
     }
 
-    await auditLog('medical_record_extracted', req, req.user!.id, {
+    await auditLog('medical_record_extracted', req, attributionFromPrincipal(req), {
       message_count: conversation.length,
       fields_populated: fieldsPopulated,
       conversation_id: persistedId,
@@ -701,7 +754,7 @@ aiRouter.post(
       v => v !== '' && v !== false && v !== null && v !== undefined
     ).length;
 
-    await auditLog('pdf_generated', req, req.user!.id, {
+    await auditLog('pdf_generated', req, attributionFromPrincipal(req), {
       fields_populated: fieldsPopulated,
       file_size_bytes: pdfBuffer.length,
     });
@@ -754,7 +807,7 @@ aiRouter.post(
       v => v !== '' && v !== false && v !== null && v !== undefined
     ).length;
 
-    await auditLog('pdf_emailed', req, req.user!.id, { fields_populated: fieldsPopulated });
+    await auditLog('pdf_emailed', req, attributionFromPrincipal(req), { fields_populated: fieldsPopulated });
 
     res.json({ message: 'Your report is being sent to your email address' });
   }
@@ -938,7 +991,7 @@ aiRouter.post(
       console.error('[ai/interview/chat] conversation persist failed:', (err as Error).message);
     }
 
-    await auditLog('interview_message_sent', req, req.user!.id, {
+    await auditLog('interview_message_sent', req, attributionFromPrincipal(req), {
       stage: newState.stage,
       done: newState.done,
       conversation_id: conversationId,
@@ -999,7 +1052,7 @@ aiRouter.post(
       }
     }
 
-    await auditLog('medical_record_extracted', req, req.user!.id, {
+    await auditLog('medical_record_extracted', req, attributionFromPrincipal(req), {
       message_count: conversationHistory.length,
       conversation_id: conversationId,
     });

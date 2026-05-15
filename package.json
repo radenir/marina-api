@@ -9,7 +9,10 @@
     "start": "node dist/index.js",
     "migrate": "tsx migrations/run.ts",
     "generate-keys": "tsx scripts/generate-keys.ts",
-    "migrate-legacy-users": "tsx scripts/migrate-legacy-users.ts"
+    "migrate-legacy-users": "tsx scripts/migrate-legacy-users.ts",
+    "provision-partner-key": "tsx scripts/provision-partner-key.ts",
+    "rotate-partner-key": "tsx scripts/rotate-partner-key.ts",
+    "revoke-partner-key": "tsx scripts/revoke-partner-key.ts"
   },
   "dependencies": {
     "argon2": "^0.31.2",

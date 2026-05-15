@@ -17,9 +17,11 @@ export async function requireAuth(
 
   try {
     const payload = await verifyAccessToken(token);
+    const role = payload.roles[0] ?? 'user';
     // email is intentionally not stored in the JWT — fetch from DB if needed
-    req.user = { id: payload.sub, role: payload.roles[0] ?? 'user' };
+    req.user = { id: payload.sub, role };
     req.jti = payload.jti;
+    req.principal = { type: 'user', userId: payload.sub, role };
     next();
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Invalid token';

@@ -61,19 +61,34 @@ export interface NoteTakerInsert {
   chiefSymptom: string | null;
 }
 
+/**
+ * Owner of a note-taker conversation — either a Marina user or a partner
+ * organization (B2B integration). At least one of `userId` or `partnerId`
+ * must be set; the DB check constraint `conversations_owner_chk` enforces
+ * this.
+ */
+export interface ConversationOwner {
+  userId?: string | null;
+  partnerId?: string | null;
+  partnerUserRef?: string | null;
+}
+
 export async function createNoteTakerConversation(
-  userId: string,
+  owner: ConversationOwner,
   input: NoteTakerInsert,
 ): Promise<string> {
   const result = await query<{ id: string }>(
     `INSERT INTO conversations (
-       user_id, chief_symptom, messages, extracted_summary,
+       user_id, partner_id, partner_user_ref,
+       chief_symptom, messages, extracted_summary,
        patient_language, medical_officer_language,
        mode, last_message_at
-     ) VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6, 'note_taker', NOW())
+     ) VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, 'note_taker', NOW())
      RETURNING id`,
     [
-      userId,
+      owner.userId ?? null,
+      owner.partnerId ?? null,
+      owner.partnerUserRef ?? null,
       input.chiefSymptom,
       JSON.stringify(input.messages),
       JSON.stringify(input.summary),

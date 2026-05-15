@@ -76,6 +76,7 @@ declare global {
     interface Request {
       user?: Pick<User, 'id' | 'role'>;
       jti?: string;
+      principal?: import('./principal').Principal;
     }
   }
 }
