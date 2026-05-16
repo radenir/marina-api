@@ -108,6 +108,10 @@ const RegisterSchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(8).max(128),
   name: z.string().min(1).max(255),
+  ship_name: z.string().max(255).optional(),
+  imo_number: z.string().regex(/^\d{7}$/, 'IMO number must be exactly 7 digits').optional(),
+  company: z.string().max(255).optional(),
+  language: z.string().min(2).max(8).optional(),
 });
 
 const LoginSchema = z.object({
@@ -175,7 +179,7 @@ authRouter.post('/register', registerRateLimit, async (req: Request, res: Respon
     return;
   }
 
-  const { email, password, name } = parsed.data;
+  const { email, password, name, ship_name, imo_number, company, language } = parsed.data;
   const normalizedEmail = email.toLowerCase();
 
   // Check if email already exists (constant-time path)
@@ -193,10 +197,10 @@ authRouter.post('/register', registerRateLimit, async (req: Request, res: Respon
   const passwordHash = await hashPassword(password);
 
   const result = await query<{ id: string }>(
-    `INSERT INTO users (email, password, name, email_verified, password_hash_algo)
-     VALUES ($1, $2, $3, FALSE, 'argon2id')
+    `INSERT INTO users (email, password, name, ship_name, imo_number, company, language, email_verified, password_hash_algo)
+     VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, 'en'), FALSE, 'argon2id')
      RETURNING id`,
-    [normalizedEmail, passwordHash, name]
+    [normalizedEmail, passwordHash, name, ship_name ?? null, imo_number ?? null, company ?? null, language ?? null]
   );
 
   const userId = result.rows[0].id;
