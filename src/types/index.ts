@@ -6,6 +6,7 @@ export interface User {
   ship_name: string | null;
   imo_number: string | null;
   company: string | null;
+  language: string | null;
   email_verified: boolean;
   mfa_enabled: boolean;
   reset_token_version: number;

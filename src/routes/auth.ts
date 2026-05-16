@@ -137,6 +137,9 @@ const UpdateProfileSchema = z.object({
   ship_name: z.string().max(255).optional(),
   imo_number: z.string().regex(/^\d{7}$/, 'IMO number must be exactly 7 digits').optional(),
   company: z.string().max(255).optional(),
+  // ISO 639-1 (or short locale) — kept loose; the frontend's tutorial-i18n
+  // table is the source of truth, and unknown codes just fall back to English.
+  language: z.string().min(2).max(8).nullable().optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -587,7 +590,7 @@ authRouter.post('/verify-email/resend', resendVerifyRateLimit, async (req: Reque
 
 authRouter.get('/me', requireAuth, async (req: Request, res: Response): Promise<void> => {
   const result = await query<Omit<User, 'password'>>(
-    `SELECT id, email, name, role, ship_name, imo_number, company,
+    `SELECT id, email, name, role, ship_name, imo_number, company, language,
             email_verified, mfa_enabled, created_at, updated_at
      FROM users WHERE id = $1`,
     [req.user!.id]
@@ -617,7 +620,7 @@ authRouter.put('/me', requireAuth, async (req: Request, res: Response): Promise<
 
   // Explicit allowlist prevents prototype pollution or unexpected field names
   // from reaching the SQL string, even if Zod behaviour changes.
-  const ALLOWED_FIELDS = ['name', 'ship_name', 'imo_number', 'company'] as const;
+  const ALLOWED_FIELDS = ['name', 'ship_name', 'imo_number', 'company', 'language'] as const;
   type AllowedField = typeof ALLOWED_FIELDS[number];
   const fields = ALLOWED_FIELDS.filter((f) => f in updates && updates[f] !== undefined);
 
@@ -637,7 +640,7 @@ authRouter.put('/me', requireAuth, async (req: Request, res: Response): Promise<
   await auditLog('profile_updated', req, req.user!.id, { fields });
 
   const result = await query<Omit<User, 'password'>>(
-    `SELECT id, email, name, role, ship_name, imo_number, company,
+    `SELECT id, email, name, role, ship_name, imo_number, company, language,
             email_verified, mfa_enabled, created_at, updated_at
      FROM users WHERE id = $1`,
     [req.user!.id]
