@@ -212,6 +212,9 @@ const LANG_MAP: Record<string, string> = {
   ur: 'Urdu',    fa: 'Farsi',      ar: 'Arabic',      tr: 'Turkish',
   nl: 'Dutch',   sv: 'Swedish',    no: 'Norwegian',   fi: 'Finnish',
   ko: 'Korean',  vi: 'Vietnamese', th: 'Thai',        id: 'Indonesian',
+  uk: 'Ukrainian', el: 'Greek',    bg: 'Bulgarian',   hr: 'Croatian',
+  cs: 'Czech',   sk: 'Slovak',     ro: 'Romanian',    hu: 'Hungarian',
+  ms: 'Malay',   ta: 'Tamil',      tl: 'Filipino',
 };
 const LANG_CODES = Object.keys(LANG_MAP) as [string, ...string[]];
 
