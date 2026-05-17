@@ -13,6 +13,7 @@ export interface FollowupsInput {
   conversation: ConversationMessage[];
   summary: Record<string, unknown>;
   medicalOfficerLanguage: string;
+  patientLanguage: string;
   symptom?: string;
   protocol?: FollowupProtocol;
   mode: 'marina' | 'note_taker';
@@ -20,11 +21,11 @@ export interface FollowupsInput {
 
 export interface FollowupQuestion {
   question: string;
+  questionPatient: string;
   sectionLabel: string;
 }
 
 export interface FollowupsResult {
-  narrative: string;
   followUps: FollowupQuestion[];
 }
 
@@ -78,23 +79,21 @@ ${protocolBlock}
 
 YOUR OUTPUT — STRICT REQUIREMENTS:
 
-1. Write a narrative of EXACTLY three sentences in ${input.medicalOfficerLanguage}. Describe in plain clinical language what the report covers well and what gaps remain. Do not use numbers, percentages, grades, or any kind of scoring language.
-
-2. Suggest EXACTLY three follow-up questions. Each question MUST:
+1. Suggest EXACTLY three follow-up questions. Each question MUST:
    - Be answerable by the PATIENT (history, symptoms, allergies, current medications, past medical history, character/onset/duration of the complaint, etc.).
    - NOT ask the officer to take a measurement, perform an examination, or run an investigation — those are officer actions, not patient questions. Do not ask about vital signs, physical findings, or test results.
    - Target a specific gap visible in the summary or transcript.
-   - Be phrased naturally, conversationally, and medically appropriately in ${input.medicalOfficerLanguage}.
+   - Be phrased naturally, conversationally, and medically appropriately.
+   - Be provided in BOTH ${input.medicalOfficerLanguage} (field "question", for the officer) AND ${input.patientLanguage} (field "questionPatient", for the patient — natural, conversational, faithful translation, not a literal word-for-word rendering).
    - Carry a short ${input.medicalOfficerLanguage} sectionLabel (1-3 words) naming the part of the report it would improve (e.g. allergies, current medications, past medical history, history of presenting complaint, associated symptoms, problem description).
 
-3. Output ONLY a single JSON object with this exact shape, no markdown, no commentary:
+2. Output ONLY a single JSON object with this exact shape, no markdown, no commentary:
 
 {
-  "narrative": "<three sentences in ${input.medicalOfficerLanguage}>",
   "followUps": [
-    { "question": "<patient-facing question in ${input.medicalOfficerLanguage}>", "sectionLabel": "<short tag in ${input.medicalOfficerLanguage}>" },
-    { "question": "...", "sectionLabel": "..." },
-    { "question": "...", "sectionLabel": "..." }
+    { "question": "<question in ${input.medicalOfficerLanguage}>", "questionPatient": "<same question in ${input.patientLanguage}>", "sectionLabel": "<short tag in ${input.medicalOfficerLanguage}>" },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "..." },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "..." }
   ]
 }`;
 }
@@ -129,20 +128,22 @@ export async function generateFollowups(input: FollowupsInput): Promise<Followup
   raw = raw.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
 
   const parsed = JSON.parse(raw) as Partial<FollowupsResult>;
-  const narrative = typeof parsed.narrative === 'string' ? parsed.narrative : '';
   const followUps = Array.isArray(parsed.followUps)
     ? parsed.followUps
         .filter(
           (q): q is FollowupQuestion =>
-            !!q && typeof (q as FollowupQuestion).question === 'string' && typeof (q as FollowupQuestion).sectionLabel === 'string',
+            !!q &&
+            typeof (q as FollowupQuestion).question === 'string' &&
+            typeof (q as FollowupQuestion).questionPatient === 'string' &&
+            typeof (q as FollowupQuestion).sectionLabel === 'string',
         )
         .slice(0, 3)
     : [];
 
-  if (!narrative || followUps.length !== 3) {
-    throw new Error(`Followups response malformed: narrative=${!!narrative} followUps=${followUps.length}`);
+  if (followUps.length !== 3) {
+    throw new Error(`Followups response malformed: followUps=${followUps.length}`);
   }
 
   console.log(`[ai/report/followups] duration=${Date.now() - start}ms mode=${input.mode}`);
-  return { narrative, followUps };
+  return { followUps };
 }

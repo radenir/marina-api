@@ -1074,10 +1074,11 @@ aiRouter.post(
 
 // ---------------------------------------------------------------------------
 // POST /ai/report/followups
-// Returns a 3-sentence narrative about the report's completeness and exactly
-// 3 patient-facing follow-up questions the officer can ask to improve it.
-// All output is in the officer's language; translation is the UI's job via
-// the dedicated /ai/translate endpoint.
+// Returns exactly 3 patient-facing follow-up questions the officer can ask
+// to improve the report before sending it. Each question is returned in
+// both the officer's language (question) and the patient's language
+// (questionPatient) so the UI can flip between the two without an extra
+// translation round-trip. Section labels stay in the officer's language.
 // Accepts user JWT or partner API key (requires extract:write scope).
 // ---------------------------------------------------------------------------
 
@@ -1088,6 +1089,7 @@ const ReportFollowupsSchema = z.object({
   })).min(1).max(500),
   summary: z.record(z.unknown()),
   medicalOfficerLanguage: z.string().min(2).max(20),
+  patientLanguage: z.string().min(2).max(20),
   symptom: z.string().max(200).optional(),
   protocol: z.object({
     historyTaking: z.string().optional(),
