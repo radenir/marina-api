@@ -27,6 +27,7 @@ import { createFreshState } from '../lib/interviewTypes.js';
 import { runAgent, generateGreeting } from '../lib/interviewAgent.js';
 import { executeTool } from '../lib/interviewTools.js';
 import { extractInterviewSummary } from '../lib/interviewExtract.js';
+import { generateFollowups } from '../lib/reportFollowups.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -178,6 +179,13 @@ const noteTakerSaveRateLimit = rateLimit({
   limit: 20000,
   windowSeconds: 60 * 60,
   keyFn: (req) => req.user!.id,
+});
+
+const reportFollowupsRateLimit = rateLimit({
+  prefix: 'ai-report-followups',
+  limit: 200,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
 });
 
 // ---------------------------------------------------------------------------
@@ -1061,6 +1069,68 @@ aiRouter.post(
     });
 
     res.json({ summary });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/followups
+// Returns a 3-sentence narrative about the report's completeness and exactly
+// 3 patient-facing follow-up questions the officer can ask to improve it.
+// All output is in the officer's language; translation is the UI's job via
+// the dedicated /ai/translate endpoint.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const ReportFollowupsSchema = z.object({
+  conversation: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string(),
+  })).min(1).max(500),
+  summary: z.record(z.unknown()),
+  medicalOfficerLanguage: z.string().min(2).max(20),
+  symptom: z.string().max(200).optional(),
+  protocol: z.object({
+    historyTaking: z.string().optional(),
+    investigations: z.string().optional(),
+    examinationInstructions: z.string().optional(),
+  }).optional(),
+  mode: z.enum(['marina', 'note_taker']),
+  conversationId: z.string().uuid().optional(),
+});
+
+aiRouter.post(
+  '/report/followups',
+  authenticate,
+  requireScope('extract:write'),
+  reportFollowupsRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ReportFollowupsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    if (req.principal?.type === 'partner' && parsed.data.conversationId) {
+      res.status(400).json({ error: 'conversationId is not supported for partner authentication' });
+      return;
+    }
+
+    let result;
+    try {
+      result = await generateFollowups(parsed.data);
+    } catch (err) {
+      console.error('[ai/report/followups] generation error:', (err as Error).message);
+      res.status(502).json({ error: 'Followups service unavailable' });
+      return;
+    }
+
+    await auditLog('report_followups_generated', req, attributionFromPrincipal(req), {
+      conversation_id: parsed.data.conversationId ?? null,
+      mode: parsed.data.mode,
+    });
+
+    res.json(result);
   }
 );
 

@@ -54,6 +54,7 @@ export type AuditEventType =
   | 'audio_transcribed'
   | 'text_translated'
   | 'medical_record_extracted'
+  | 'report_followups_generated'
   | 'pdf_generated'
   | 'pdf_emailed'
   | 'interview_message_sent';
