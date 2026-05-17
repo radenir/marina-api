@@ -1075,10 +1075,11 @@ aiRouter.post(
 // ---------------------------------------------------------------------------
 // POST /ai/report/followups
 // Returns exactly 3 patient-facing follow-up questions the officer can ask
-// to improve the report before sending it. Each question is returned in
-// both the officer's language (question) and the patient's language
-// (questionPatient) so the UI can flip between the two without an extra
-// translation round-trip. Section labels stay in the officer's language.
+// to improve the report before sending it. Each question and its section
+// label are returned in both the officer's language (question /
+// sectionLabel) and the patient's language (questionPatient /
+// sectionLabelPatient) so the UI can flip between the two without an
+// extra translation round-trip.
 // Accepts user JWT or partner API key (requires extract:write scope).
 // ---------------------------------------------------------------------------
 

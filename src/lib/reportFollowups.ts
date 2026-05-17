@@ -23,6 +23,7 @@ export interface FollowupQuestion {
   question: string;
   questionPatient: string;
   sectionLabel: string;
+  sectionLabelPatient: string;
 }
 
 export interface FollowupsResult {
@@ -85,15 +86,15 @@ YOUR OUTPUT — STRICT REQUIREMENTS:
    - Target a specific gap visible in the summary or transcript.
    - Be phrased naturally, conversationally, and medically appropriately.
    - Be provided in BOTH ${input.medicalOfficerLanguage} (field "question", for the officer) AND ${input.patientLanguage} (field "questionPatient", for the patient — natural, conversational, faithful translation, not a literal word-for-word rendering).
-   - Carry a short ${input.medicalOfficerLanguage} sectionLabel (1-3 words) naming the part of the report it would improve (e.g. allergies, current medications, past medical history, history of presenting complaint, associated symptoms, problem description).
+   - Carry a short sectionLabel (1-3 words) naming the part of the report it would improve (e.g. allergies, current medications, past medical history, history of presenting complaint, associated symptoms, problem description), provided in BOTH ${input.medicalOfficerLanguage} (field "sectionLabel") AND ${input.patientLanguage} (field "sectionLabelPatient").
 
 2. Output ONLY a single JSON object with this exact shape, no markdown, no commentary:
 
 {
   "followUps": [
-    { "question": "<question in ${input.medicalOfficerLanguage}>", "questionPatient": "<same question in ${input.patientLanguage}>", "sectionLabel": "<short tag in ${input.medicalOfficerLanguage}>" },
-    { "question": "...", "questionPatient": "...", "sectionLabel": "..." },
-    { "question": "...", "questionPatient": "...", "sectionLabel": "..." }
+    { "question": "<question in ${input.medicalOfficerLanguage}>", "questionPatient": "<same question in ${input.patientLanguage}>", "sectionLabel": "<short tag in ${input.medicalOfficerLanguage}>", "sectionLabelPatient": "<same short tag in ${input.patientLanguage}>" },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..." },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..." }
   ]
 }`;
 }
@@ -135,7 +136,8 @@ export async function generateFollowups(input: FollowupsInput): Promise<Followup
             !!q &&
             typeof (q as FollowupQuestion).question === 'string' &&
             typeof (q as FollowupQuestion).questionPatient === 'string' &&
-            typeof (q as FollowupQuestion).sectionLabel === 'string',
+            typeof (q as FollowupQuestion).sectionLabel === 'string' &&
+            typeof (q as FollowupQuestion).sectionLabelPatient === 'string',
         )
         .slice(0, 3)
     : [];
