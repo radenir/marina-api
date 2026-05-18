@@ -716,7 +716,8 @@ aiRouter.post(
 
 // ---------------------------------------------------------------------------
 // POST /ai/generate-pdf
-// Middleware order: requireAuth → pdfRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// Accepts user JWT *or* partner API key. Partners need the `pdf:write` scope.
+// Middleware order: authenticate → requireScope → pdfRateLimit → requireVerifiedActiveUser → handler
 // ---------------------------------------------------------------------------
 
 const GeneratePdfSchema = z.object({
@@ -725,10 +726,10 @@ const GeneratePdfSchema = z.object({
 
 aiRouter.post(
   '/generate-pdf',
-  requireAuth,
+  authenticate,
+  requireScope('pdf:write'),
   pdfRateLimit,
-  requireVerifiedEmail,
-  requireActiveUser,
+  requireVerifiedActiveUser,
   async (req: Request, res: Response): Promise<void> => {
     const parsed = GeneratePdfSchema.safeParse(req.body);
     if (!parsed.success) {
