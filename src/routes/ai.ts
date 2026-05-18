@@ -157,7 +157,7 @@ const pdfEmailRateLimit = rateLimit({
   prefix: 'ai-pdf-email',
   limit: 10,
   windowSeconds: 60 * 60,
-  keyFn: (req) => req.user!.id,
+  keyFn: principalRateLimitKey,
 });
 
 const interviewRateLimit = rateLimit({
@@ -782,17 +782,24 @@ aiRouter.post(
 
 // ---------------------------------------------------------------------------
 // POST /ai/email-pdf
-// Middleware order: requireAuth → pdfEmailRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// Accepts user JWT *or* partner API key. Partners need the `pdf:email` scope
+// and MUST include `recipientEmail` in the body — there is no user record to
+// fall back to. Users continue to receive the report at their own address.
+// Middleware order: authenticate → requireScope → pdfEmailRateLimit → requireVerifiedActiveUser → handler
 // ---------------------------------------------------------------------------
+
+const EmailPdfSchema = GeneratePdfSchema.extend({
+  recipientEmail: z.string().email().optional(),
+});
 
 aiRouter.post(
   '/email-pdf',
-  requireAuth,
+  authenticate,
+  requireScope('pdf:email'),
   pdfEmailRateLimit,
-  requireVerifiedEmail,
-  requireActiveUser,
+  requireVerifiedActiveUser,
   async (req: Request, res: Response): Promise<void> => {
-    const parsed = GeneratePdfSchema.safeParse(req.body);
+    const parsed = EmailPdfSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
       return;
@@ -804,24 +811,41 @@ aiRouter.post(
       return;
     }
 
-    const { rows } = await query('SELECT email FROM users WHERE id = $1', [req.user!.id]);
-    if (!rows[0]?.email) {
-      res.status(500).json({ error: 'Could not retrieve user email' });
-      return;
+    const principal = req.principal!;
+    let recipient: string;
+    if (principal.type === 'user') {
+      const { rows } = await query('SELECT email FROM users WHERE id = $1', [principal.userId]);
+      if (!rows[0]?.email) {
+        res.status(500).json({ error: 'Could not retrieve user email' });
+        return;
+      }
+      recipient = rows[0].email;
+    } else {
+      if (!parsed.data.recipientEmail) {
+        res.status(400).json({ error: 'recipientEmail is required when calling with a partner API key' });
+        return;
+      }
+      recipient = parsed.data.recipientEmail;
     }
-    const userEmail: string = rows[0].email;
 
     const { summary } = parsed.data;
 
-    await enqueuePdfEmail(userEmail, summary);
+    await enqueuePdfEmail(recipient, summary);
 
     const fieldsPopulated = Object.values(summary).filter(
       v => v !== '' && v !== false && v !== null && v !== undefined
     ).length;
 
-    await auditLog('pdf_emailed', req, attributionFromPrincipal(req), { fields_populated: fieldsPopulated });
+    await auditLog('pdf_emailed', req, attributionFromPrincipal(req), {
+      fields_populated: fieldsPopulated,
+      recipient_email: recipient,
+    });
 
-    res.json({ message: 'Your report is being sent to your email address' });
+    res.json({
+      message: principal.type === 'partner'
+        ? `Report queued for delivery to ${recipient}`
+        : 'Your report is being sent to your email address',
+    });
   }
 );
 
