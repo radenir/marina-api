@@ -150,7 +150,7 @@ const pdfRateLimit = rateLimit({
   prefix: 'ai-pdf',
   limit: 50,
   windowSeconds: 60 * 60,
-  keyFn: (req) => req.user!.id,
+  keyFn: principalRateLimitKey,
 });
 
 const pdfEmailRateLimit = rateLimit({
