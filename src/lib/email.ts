@@ -1,4 +1,5 @@
 import { config } from '../config';
+import { MARINA_LOGO_DATA_URI } from './emailLogo.js';
 
 export interface EmailAttachment {
   filename: string;
@@ -65,7 +66,7 @@ export async function sendEmail(opts: SendOptions): Promise<void> {
 // Shared layout
 // ---------------------------------------------------------------------------
 
-const LOGO_URL = 'https://eu.marinahealth.eu/marina-logo.svg';
+const LOGO_URL = MARINA_LOGO_DATA_URI;
 
 function layout(headerContent: string, bodyContent: string): string {
   return `<!DOCTYPE html>
