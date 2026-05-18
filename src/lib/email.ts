@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { MARINA_LOGO_DATA_URI } from './emailLogo.js';
+import { MARINA_LOGO_PNG_BASE64, MARINA_LOGO_CID } from './emailLogo.js';
 
 export interface EmailAttachment {
   filename: string;
@@ -38,6 +38,18 @@ export async function sendEmail(opts: SendOptions): Promise<void> {
     }));
   }
 
+  // Logo is rendered via <img src="cid:marina-logo"> in every template's
+  // shared layout. Always inline it so the image survives Gmail (which
+  // strips data: URIs) and clients that block remote images by default.
+  message.InlinedAttachments = [
+    {
+      ContentType: 'image/png',
+      Filename: 'marina-logo.png',
+      ContentID: MARINA_LOGO_CID,
+      Base64Content: MARINA_LOGO_PNG_BASE64,
+    },
+  ];
+
   const response = await fetch('https://api.mailjet.com/v3.1/send', {
     method: 'POST',
     headers: {
@@ -66,7 +78,7 @@ export async function sendEmail(opts: SendOptions): Promise<void> {
 // Shared layout
 // ---------------------------------------------------------------------------
 
-const LOGO_URL = MARINA_LOGO_DATA_URI;
+const LOGO_URL = `cid:${MARINA_LOGO_CID}`;
 
 function layout(headerContent: string, bodyContent: string): string {
   return `<!DOCTYPE html>
