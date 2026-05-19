@@ -2,9 +2,11 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  first_name: string | null;
+  last_name: string | null;
   role: string;
   ship_name: string | null;
-  imo_number: string | null;
+  call_sign: string | null;
   company: string | null;
   language: string | null;
   email_verified: boolean;
