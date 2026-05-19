@@ -8,6 +8,7 @@ export interface User {
   call_sign: string | null;
   satellite_phone: string | null;
   medicine_chest: string | null;
+  cruise_speed_knots: number | null;
   company: string | null;
   language: string | null;
   email_verified: boolean;
