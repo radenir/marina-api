@@ -30,6 +30,9 @@ export interface FollowupsResult {
   followUps: FollowupQuestion[];
 }
 
+const DECLINED_PREFIX = '[Officer note] Patient declined to answer: ';
+const UNAVAILABLE_PREFIX = '[Officer note] Patient unavailable for question: ';
+
 function conversationText(history: ConversationMessage[]): string {
   return history
     .filter(
@@ -40,6 +43,23 @@ function conversationText(history: ConversationMessage[]): string {
     )
     .map(m => `${m.role === 'assistant' ? 'MARINA' : 'USER'}: ${String(m.content)}`)
     .join('\n\n');
+}
+
+// Pull every question the officer has already shown to the patient and marked declined
+// or unavailable. These are CLOSED topics: the model must not re-ask them, even rephrased.
+function extractClosedQuestions(history: ConversationMessage[]): string[] {
+  const closed: string[] = [];
+  for (const m of history) {
+    if (typeof m.content !== 'string') continue;
+    const text = (m.content as string).trim();
+    if (text.startsWith(DECLINED_PREFIX)) {
+      closed.push(text.slice(DECLINED_PREFIX.length).trim());
+    } else if (text.startsWith(UNAVAILABLE_PREFIX)) {
+      closed.push(text.slice(UNAVAILABLE_PREFIX.length).trim());
+    }
+  }
+  // De-duplicate while preserving order so the prompt is shorter and clearer.
+  return Array.from(new Set(closed));
 }
 
 function buildSystemPrompt(input: FollowupsInput): string {
@@ -66,6 +86,26 @@ function buildSystemPrompt(input: FollowupsInput): string {
       ? 'This report was produced by a structured Marina interview. Use the protocol coverage below to judge which patient-facing topics were skipped or under-explored.'
       : 'This report was produced from a free-form note-taker transcript. Reason against general clinical completeness for the chief complaint inferred from the summary.';
 
+  const closedQuestions = extractClosedQuestions(input.conversation);
+  const closedBlock = closedQuestions.length
+    ? `🚫 CLOSED TOPICS — DO NOT ASK ABOUT THESE, EVEN PARAPHRASED 🚫
+
+The officer has already attempted to ask the patient the following questions. The patient declined or was unavailable. These topics are PERMANENTLY CLOSED for this report.
+
+ABSOLUTE RULES for closed topics:
+- DO NOT repeat any of these questions verbatim.
+- DO NOT rephrase, paraphrase, or split them into sub-questions.
+- DO NOT ask about the same underlying topic from a different angle. Example: if "Can you describe the headache?" is closed, then "Where exactly is the pain?", "How severe is the headache?", "Is the pain constant or coming and going?" are ALL closed (same topic = headache character / location / onset).
+- DO NOT treat the resulting gap in the summary as something to fill. Accept that the gap exists and move on.
+
+Already-declined questions (each one closes its entire topic):
+${closedQuestions.map(q => `- "${q}"`).join('\n')}
+
+If closed topics cover the obvious gaps, pivot to questions about OTHER aspects of the patient's care that have NOT yet been asked: e.g. red-flag symptoms in unrelated body systems, allergies, current medications, recent travel or exposures, occupational history, mental-health context, social context, family history, recent injuries, recent infections, vaccination status, alcohol or drug use. Pick three DIFFERENT topics, not three angles on the same closed topic.
+
+If the patient has declined virtually every meaningful patient-facing question, still propose three questions on the most clinically valuable UNASKED topics — but acknowledge in your sectionLabel that they cover a new area, not the closed ones.`
+    : '';
+
   return `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel has just drafted a medical report on a sick crew member and is about to send it to a shore-based doctor. Your job is to read the draft and suggest three patient-facing follow-up questions that would meaningfully improve the report before it is sent.
 
 ${modeNote}
@@ -78,12 +118,15 @@ ${symptomLine}
 
 ${protocolBlock}
 
+${closedBlock}
+
 YOUR OUTPUT — STRICT REQUIREMENTS:
 
 1. Suggest EXACTLY three follow-up questions. Each question MUST:
    - Be answerable by the PATIENT (history, symptoms, allergies, current medications, past medical history, character/onset/duration of the complaint, etc.).
    - NOT ask the officer to take a measurement, perform an examination, or run an investigation — those are officer actions, not patient questions. Do not ask about vital signs, physical findings, or test results.
-   - Target a specific gap visible in the summary or transcript.
+   - Target a specific gap visible in the summary or transcript that is NOT a closed topic (see above).
+   - NEVER repeat or paraphrase a closed topic. If you find yourself drafting a question that touches a closed topic, discard it and choose a different topic.
    - Be phrased naturally, conversationally, and medically appropriately.
    - Be provided in BOTH ${input.medicalOfficerLanguage} (field "question", for the officer) AND ${input.patientLanguage} (field "questionPatient", for the patient — natural, conversational, faithful translation, not a literal word-for-word rendering).
    - Carry a short sectionLabel (1-3 words) naming the part of the report it would improve (e.g. allergies, current medications, past medical history, history of presenting complaint, associated symptoms, problem description), provided in BOTH ${input.medicalOfficerLanguage} (field "sectionLabel") AND ${input.patientLanguage} (field "sectionLabelPatient").
