@@ -111,6 +111,8 @@ const RegisterSchema = z.object({
   last_name: z.string().min(1).max(100),
   ship_name: z.string().max(255).optional(),
   call_sign: z.string().max(20).optional(),
+  satellite_phone: z.string().max(50).optional(),
+  medicine_chest: z.string().max(50).optional(),
   company: z.string().max(255).optional(),
   language: z.string().min(2).max(8).optional(),
 });
@@ -142,6 +144,8 @@ const UpdateProfileSchema = z.object({
   last_name: z.string().max(100).optional(),
   ship_name: z.string().max(255).optional(),
   call_sign: z.string().max(20).optional(),
+  satellite_phone: z.string().max(50).optional(),
+  medicine_chest: z.string().max(50).optional(),
   company: z.string().max(255).optional(),
   // ISO 639-1 (or short locale) — kept loose; the frontend's tutorial-i18n
   // table is the source of truth, and unknown codes just fall back to English.
@@ -181,7 +185,7 @@ authRouter.post('/register', registerRateLimit, async (req: Request, res: Respon
     return;
   }
 
-  const { email, password, first_name, last_name, ship_name, call_sign, company, language } = parsed.data;
+  const { email, password, first_name, last_name, ship_name, call_sign, satellite_phone, medicine_chest, company, language } = parsed.data;
   const normalizedEmail = email.toLowerCase();
 
   // Check if email already exists (constant-time path)
@@ -199,10 +203,10 @@ authRouter.post('/register', registerRateLimit, async (req: Request, res: Respon
   const passwordHash = await hashPassword(password);
 
   const result = await query<{ id: string }>(
-    `INSERT INTO users (email, password, first_name, last_name, ship_name, call_sign, company, language, email_verified, password_hash_algo)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, 'en'), FALSE, 'argon2id')
+    `INSERT INTO users (email, password, first_name, last_name, ship_name, call_sign, satellite_phone, medicine_chest, company, language, email_verified, password_hash_algo)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10, 'en'), FALSE, 'argon2id')
      RETURNING id`,
-    [normalizedEmail, passwordHash, first_name, last_name, ship_name ?? null, call_sign ?? null, company ?? null, language ?? null]
+    [normalizedEmail, passwordHash, first_name, last_name, ship_name ?? null, call_sign ?? null, satellite_phone ?? null, medicine_chest ?? null, company ?? null, language ?? null]
   );
 
   const userId = result.rows[0].id;
@@ -596,7 +600,7 @@ authRouter.post('/verify-email/resend', resendVerifyRateLimit, async (req: Reque
 
 authRouter.get('/me', requireAuth, async (req: Request, res: Response): Promise<void> => {
   const result = await query<Omit<User, 'password'>>(
-    `SELECT id, email, first_name, last_name, role, ship_name, call_sign, company, language,
+    `SELECT id, email, first_name, last_name, role, ship_name, call_sign, satellite_phone, medicine_chest, company, language,
             email_verified, mfa_enabled, created_at, updated_at
      FROM users WHERE id = $1`,
     [req.user!.id]
@@ -626,7 +630,7 @@ authRouter.put('/me', requireAuth, async (req: Request, res: Response): Promise<
 
   // Explicit allowlist prevents prototype pollution or unexpected field names
   // from reaching the SQL string, even if Zod behaviour changes.
-  const ALLOWED_FIELDS = ['first_name', 'last_name', 'ship_name', 'call_sign', 'company', 'language'] as const;
+  const ALLOWED_FIELDS = ['first_name', 'last_name', 'ship_name', 'call_sign', 'satellite_phone', 'medicine_chest', 'company', 'language'] as const;
   type AllowedField = typeof ALLOWED_FIELDS[number];
   const fields = ALLOWED_FIELDS.filter((f) => f in updates && updates[f] !== undefined);
 
@@ -646,7 +650,7 @@ authRouter.put('/me', requireAuth, async (req: Request, res: Response): Promise<
   await auditLog('profile_updated', req, req.user!.id, { fields });
 
   const result = await query<Omit<User, 'password'>>(
-    `SELECT id, email, first_name, last_name, role, ship_name, call_sign, company, language,
+    `SELECT id, email, first_name, last_name, role, ship_name, call_sign, satellite_phone, medicine_chest, company, language,
             email_verified, mfa_enabled, created_at, updated_at
      FROM users WHERE id = $1`,
     [req.user!.id]

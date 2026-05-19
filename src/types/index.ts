@@ -6,6 +6,8 @@ export interface User {
   role: string;
   ship_name: string | null;
   call_sign: string | null;
+  satellite_phone: string | null;
+  medicine_chest: string | null;
   company: string | null;
   language: string | null;
   email_verified: boolean;
