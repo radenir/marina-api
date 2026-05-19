@@ -194,7 +194,6 @@ Only patient answers questions from this subagent. Please speak patient's langua
 Collect medication information by asking ONE question at a time:
 - Are you taking any medications regularly?
 - For each medication: name, dosage, and frequency
-- Any over-the-counter drugs, vitamins, or supplements?
 - Any medications taken specifically for the current symptom?
 
 ## MANDATORY COVERAGE
