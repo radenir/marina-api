@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/requireAuth';
-import { findNearestPorts, portCount } from '../lib/portIndex';
+import { findNearestPorts, portCount, searchPorts } from '../lib/portIndex';
 
 export const maritimeRouter = Router();
 
@@ -28,5 +28,25 @@ maritimeRouter.get(
     const { lat, lon, limit, max_km } = parsed.data;
     const ports = findNearestPorts(lat, lon, limit, max_km);
     res.json({ ports, total_indexed: portCount() });
+  },
+);
+
+const SearchPortsQuerySchema = z.object({
+  q: z.string().min(1).max(100),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(10),
+});
+
+// GET /maritime/search-ports?q=copen&limit=10
+maritimeRouter.get(
+  '/search-ports',
+  requireAuth,
+  (req: Request, res: Response): void => {
+    const parsed = SearchPortsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+    const ports = searchPorts(parsed.data.q, parsed.data.limit);
+    res.json({ ports });
   },
 );

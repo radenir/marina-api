@@ -74,3 +74,30 @@ export function findNearestPorts(
 export function portCount(): number {
   return load().length;
 }
+
+/**
+ * Substring/code search across the port index. Returns top matches sorted by
+ * a simple relevance score: exact LOCODE > LOCODE prefix > name starts-with >
+ * name substring. Case-insensitive. Empty query returns [].
+ */
+export function searchPorts(query: string, limit = 10): Port[] {
+  const ports = load();
+  const q = query.trim().toUpperCase();
+  if (!q) return [];
+
+  const scored: { port: Port; score: number }[] = [];
+  for (const p of ports) {
+    const code = (p.unlocode || '').toUpperCase();
+    const name = p.name.toUpperCase();
+    let score = 0;
+    if (code === q) score = 100;
+    else if (code.startsWith(q)) score = 80;
+    else if (name === q) score = 70;
+    else if (name.startsWith(q)) score = 60;
+    else if (name.includes(q)) score = 40;
+    else if (code.includes(q)) score = 30;
+    if (score > 0) scored.push({ port: p, score });
+  }
+  scored.sort((a, b) => b.score - a.score || a.port.name.localeCompare(b.port.name));
+  return scored.slice(0, limit).map(s => s.port);
+}
