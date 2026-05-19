@@ -27,12 +27,16 @@ function parseCsv(text) {
   return rows;
 }
 
-const csv = readFileSync('/tmp/wpi.csv', 'utf8').replace(/^﻿/, '');
+const inputPath = process.argv[2] || '/tmp/wpi.csv';
+const outputPath = process.argv[3] || 'public/data/world-ports.json';
+
+const csv = readFileSync(inputPath, 'utf8').replace(/^﻿/, '');
 const rows = parseCsv(csv);
 const header = rows[0].map(h => h.trim());
 const idx = (k) => header.indexOf(k);
 
 const cName = idx('Main Port Name');
+const cAltName = idx('Alternate Port Name');
 const cCountry = idx('Country Code');
 const cLocode = idx('UN/LOCODE');
 const cId = idx('World Port Index Number');
@@ -49,9 +53,11 @@ for (let i = 1; i < rows.length; i++) {
   if (lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
   const name = (r[cName] || '').trim();
   if (!name) continue;
+  const altName = (r[cAltName] || '').trim();
   slim.push({
     id: Number(r[cId]) || 0,
     name,
+    alt_name: altName && altName !== name ? altName : null,
     country: (r[cCountry] || '').trim() || null,
     unlocode: ((r[cLocode] || '').trim().replace(/\s+/g, '')) || null,
     lat,
@@ -60,7 +66,7 @@ for (let i = 1; i < rows.length; i++) {
 }
 
 const json = JSON.stringify(slim);
-writeFileSync('/tmp/world-ports.json', json);
+writeFileSync(outputPath, json);
 console.log(`CSV rows (incl. header): ${rows.length}`);
 console.log(`Valid ports parsed: ${slim.length}`);
 console.log(`JSON size: ${(Buffer.byteLength(json) / 1024).toFixed(1)} KB`);

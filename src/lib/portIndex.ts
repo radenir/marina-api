@@ -17,6 +17,8 @@ import { join } from 'path';
 export interface Port {
   id: number;
   name: string;
+  /** English / common alias when the primary `name` is in a local language (e.g. "Copenhagen" for "Kobenhavn"). */
+  alt_name: string | null;
   country: string | null;
   unlocode: string | null;
   lat: number;
@@ -89,12 +91,13 @@ export function searchPorts(query: string, limit = 10): Port[] {
   for (const p of ports) {
     const code = (p.unlocode || '').toUpperCase();
     const name = p.name.toUpperCase();
+    const alt = (p.alt_name || '').toUpperCase();
     let score = 0;
     if (code === q) score = 100;
     else if (code.startsWith(q)) score = 80;
-    else if (name === q) score = 70;
-    else if (name.startsWith(q)) score = 60;
-    else if (name.includes(q)) score = 40;
+    else if (name === q || alt === q) score = 70;
+    else if (name.startsWith(q) || alt.startsWith(q)) score = 60;
+    else if (name.includes(q) || alt.includes(q)) score = 40;
     else if (code.includes(q)) score = 30;
     if (score > 0) scored.push({ port: p, score });
   }
