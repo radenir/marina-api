@@ -8,6 +8,7 @@ import { config } from './config';
 import { authRouter } from './routes/auth';
 import { aiRouter } from './routes/ai';
 import { conversationsRouter } from './routes/conversations';
+import { maritimeRouter } from './routes/maritime';
 import { pool } from './lib/db';
 import { redis } from './lib/redis';
 import { createEmailWorker } from './lib/emailQueue';
@@ -96,6 +97,7 @@ app.get('/5623acf06b367e73e7acd16fd111529a.txt', (_req, res) => {
 app.use('/auth', authRouter);
 app.use('/ai', aiRouter);
 app.use('/conversations', conversationsRouter);
+app.use('/maritime', maritimeRouter);
 
 // ---------------------------------------------------------------------------
 // 404
