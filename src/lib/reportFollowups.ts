@@ -17,6 +17,7 @@ export interface FollowupsInput {
   symptom?: string;
   protocol?: FollowupProtocol;
   mode: 'marina' | 'note_taker';
+  closedQuestions?: string[];
 }
 
 export interface FollowupQuestion {
@@ -30,9 +31,6 @@ export interface FollowupsResult {
   followUps: FollowupQuestion[];
 }
 
-const DECLINED_PREFIX = '[Officer note] Patient declined to answer: ';
-const UNAVAILABLE_PREFIX = '[Officer note] Patient unavailable for question: ';
-
 function conversationText(history: ConversationMessage[]): string {
   return history
     .filter(
@@ -43,23 +41,6 @@ function conversationText(history: ConversationMessage[]): string {
     )
     .map(m => `${m.role === 'assistant' ? 'MARINA' : 'USER'}: ${String(m.content)}`)
     .join('\n\n');
-}
-
-// Pull every question the officer has already shown to the patient and marked declined
-// or unavailable. These are CLOSED topics: the model must not re-ask them, even rephrased.
-function extractClosedQuestions(history: ConversationMessage[]): string[] {
-  const closed: string[] = [];
-  for (const m of history) {
-    if (typeof m.content !== 'string') continue;
-    const text = (m.content as string).trim();
-    if (text.startsWith(DECLINED_PREFIX)) {
-      closed.push(text.slice(DECLINED_PREFIX.length).trim());
-    } else if (text.startsWith(UNAVAILABLE_PREFIX)) {
-      closed.push(text.slice(UNAVAILABLE_PREFIX.length).trim());
-    }
-  }
-  // De-duplicate while preserving order so the prompt is shorter and clearer.
-  return Array.from(new Set(closed));
 }
 
 // Resolve a BCP-47 language code (e.g. "tl", "my") to its English name
@@ -103,7 +84,7 @@ function buildSystemPrompt(input: FollowupsInput): string {
       ? 'This report was produced by a structured Marina interview. Use the protocol coverage below to judge which patient-facing topics were skipped or under-explored.'
       : 'This report was produced from a free-form note-taker transcript. Reason against general clinical completeness for the chief complaint inferred from the summary.';
 
-  const closedQuestions = extractClosedQuestions(input.conversation);
+  const closedQuestions = Array.from(new Set(input.closedQuestions ?? []));
   const closedBlock = closedQuestions.length
     ? `🚫 CLOSED TOPICS — DO NOT ASK ABOUT THESE, EVEN PARAPHRASED 🚫
 

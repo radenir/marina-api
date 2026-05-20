@@ -1124,6 +1124,7 @@ const ReportFollowupsSchema = z.object({
   }).optional(),
   mode: z.enum(['marina', 'note_taker']),
   conversationId: z.string().uuid().optional(),
+  closedQuestions: z.array(z.string().max(500)).max(50).optional(),
 });
 
 aiRouter.post(
