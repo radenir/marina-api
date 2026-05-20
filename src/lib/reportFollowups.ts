@@ -62,7 +62,24 @@ function extractClosedQuestions(history: ConversationMessage[]): string[] {
   return Array.from(new Set(closed));
 }
 
+// Resolve a BCP-47 language code (e.g. "tl", "my") to its English name
+// ("Filipino", "Burmese"). The followups prompt previously interpolated raw
+// codes; bare "my" was misread by the model as the English possessive
+// pronoun, scrambling the dual-language output slots.
+function resolveLanguageName(input: string): string {
+  try {
+    const name = new Intl.DisplayNames(['en'], { type: 'language' }).of(input);
+    if (name && name.toLowerCase() !== input.toLowerCase()) return name;
+  } catch {
+    // ignore — fall through to passthrough
+  }
+  return input;
+}
+
 function buildSystemPrompt(input: FollowupsInput): string {
+  const officerLang = resolveLanguageName(input.medicalOfficerLanguage);
+  const patientLang = resolveLanguageName(input.patientLanguage);
+
   const protocolBlock = input.protocol
     ? [
         input.protocol.historyTaking
@@ -108,6 +125,11 @@ If the patient has declined virtually every meaningful patient-facing question, 
 
   return `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel has just drafted a medical report on a sick crew member and is about to send it to a shore-based doctor. Your job is to read the draft and suggest three patient-facing follow-up questions that would meaningfully improve the report before it is sent.
 
+LANGUAGES FOR THIS RESPONSE — REMEMBER THESE EXACTLY:
+- OFFICER LANGUAGE: ${officerLang}. Fields "question" and "sectionLabel" MUST be written in ${officerLang}.
+- PATIENT LANGUAGE: ${patientLang}. Fields "questionPatient" and "sectionLabelPatient" MUST be written in ${patientLang}.
+Never default to English unless ${officerLang} or ${patientLang} is English.
+
 ${modeNote}
 
 INPUTS YOU WILL RECEIVE:
@@ -128,14 +150,14 @@ YOUR OUTPUT — STRICT REQUIREMENTS:
    - Target a specific gap visible in the summary or transcript that is NOT a closed topic (see above).
    - NEVER repeat or paraphrase a closed topic. If you find yourself drafting a question that touches a closed topic, discard it and choose a different topic.
    - Be phrased naturally, conversationally, and medically appropriately.
-   - Be provided in BOTH ${input.medicalOfficerLanguage} (field "question", for the officer) AND ${input.patientLanguage} (field "questionPatient", for the patient — natural, conversational, faithful translation, not a literal word-for-word rendering).
-   - Carry a short sectionLabel (1-3 words) naming the part of the report it would improve (e.g. allergies, current medications, past medical history, history of presenting complaint, associated symptoms, problem description), provided in BOTH ${input.medicalOfficerLanguage} (field "sectionLabel") AND ${input.patientLanguage} (field "sectionLabelPatient").
+   - Be provided in BOTH ${officerLang} (field "question", for the officer) AND ${patientLang} (field "questionPatient", for the patient — natural, conversational, faithful translation, not a literal word-for-word rendering).
+   - Carry a short sectionLabel (1-3 words) naming the part of the report it would improve (e.g. allergies, current medications, past medical history, history of presenting complaint, associated symptoms, problem description), provided in BOTH ${officerLang} (field "sectionLabel") AND ${patientLang} (field "sectionLabelPatient").
 
 2. Output ONLY a single JSON object with this exact shape, no markdown, no commentary:
 
 {
   "followUps": [
-    { "question": "<question in ${input.medicalOfficerLanguage}>", "questionPatient": "<same question in ${input.patientLanguage}>", "sectionLabel": "<short tag in ${input.medicalOfficerLanguage}>", "sectionLabelPatient": "<same short tag in ${input.patientLanguage}>" },
+    { "question": "<question in ${officerLang}>", "questionPatient": "<same question in ${patientLang}>", "sectionLabel": "<short tag in ${officerLang}>", "sectionLabelPatient": "<same short tag in ${patientLang}>" },
     { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..." },
     { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..." }
   ]
