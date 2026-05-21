@@ -22,7 +22,7 @@ interface ConversationSummaryRow {
   message_count: number;
   has_summary: boolean;
   has_state: boolean;
-  mode: 'marina' | 'note_taker';
+  mode: 'marina' | 'note_taker' | 'translator';
   created_at: Date;
   updated_at: Date;
   last_message_at: Date;

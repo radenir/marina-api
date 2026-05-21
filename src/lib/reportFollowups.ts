@@ -16,7 +16,7 @@ export interface FollowupsInput {
   patientLanguage: string;
   symptom?: string;
   protocol?: FollowupProtocol;
-  mode: 'marina' | 'note_taker';
+  mode: 'marina' | 'note_taker' | 'translator';
   closedQuestions?: string[];
 }
 

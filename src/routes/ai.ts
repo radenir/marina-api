@@ -680,6 +680,7 @@ const NoteTakerSaveSchema = z.object({
   ).min(1).max(500),
   patientLanguage: z.string().max(20).optional(),
   medicalOfficerLanguage: z.string().max(20).optional(),
+  mode: z.enum(['note_taker', 'translator']).optional(),
 });
 
 aiRouter.post(
@@ -695,7 +696,7 @@ aiRouter.post(
       return;
     }
 
-    const { conversationId, messages, patientLanguage, medicalOfficerLanguage } = parsed.data;
+    const { conversationId, messages, patientLanguage, medicalOfficerLanguage, mode } = parsed.data;
 
     let persistedId: string;
     try {
@@ -703,6 +704,7 @@ aiRouter.post(
         messages,
         patientLanguage: patientLanguage ?? 'en',
         medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
+        mode,
       });
     } catch (err) {
       console.error('[ai/note-taker/save] persist failed:', (err as Error).message);
@@ -1122,7 +1124,7 @@ const ReportFollowupsSchema = z.object({
     investigations: z.string().optional(),
     examinationInstructions: z.string().optional(),
   }).optional(),
-  mode: z.enum(['marina', 'note_taker']),
+  mode: z.enum(['marina', 'note_taker', 'translator']),
   conversationId: z.string().uuid().optional(),
   closedQuestions: z.array(z.string().max(500)).max(50).optional(),
 });

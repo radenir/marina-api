@@ -99,10 +99,13 @@ export async function createNoteTakerConversation(
   return result.rows[0].id;
 }
 
+export type TranscriptionMode = 'note_taker' | 'translator';
+
 export interface NoteTakerSaveInput {
   messages: { role: 'user' | 'assistant'; content: string }[];
   patientLanguage: string;
   medicalOfficerLanguage: string;
+  mode?: TranscriptionMode;
 }
 
 function deriveNoteTakerChiefSymptom(
@@ -125,6 +128,7 @@ export async function saveNoteTaker(
 ): Promise<string> {
   const messagesJson = JSON.stringify(input.messages);
   const chiefSymptom = deriveNoteTakerChiefSymptom(input.messages);
+  const mode: TranscriptionMode = input.mode ?? 'note_taker';
 
   if (!conversationId) {
     const result = await query<{ id: string }>(
@@ -132,7 +136,7 @@ export async function saveNoteTaker(
          user_id, chief_symptom, messages,
          patient_language, medical_officer_language,
          mode, last_message_at
-       ) VALUES ($1, $2, $3::jsonb, $4, $5, 'note_taker', NOW())
+       ) VALUES ($1, $2, $3::jsonb, $4, $5, $6, NOW())
        RETURNING id`,
       [
         userId,
@@ -140,6 +144,7 @@ export async function saveNoteTaker(
         messagesJson,
         input.patientLanguage,
         input.medicalOfficerLanguage,
+        mode,
       ],
     );
     return result.rows[0].id;
@@ -152,7 +157,7 @@ export async function saveNoteTaker(
             patient_language      = $3,
             medical_officer_language = $4,
             last_message_at       = NOW()
-      WHERE id = $5 AND user_id = $6 AND mode = 'note_taker'`,
+      WHERE id = $5 AND user_id = $6 AND mode = $7`,
     [
       messagesJson,
       chiefSymptom,
@@ -160,6 +165,7 @@ export async function saveNoteTaker(
       input.medicalOfficerLanguage,
       conversationId,
       userId,
+      mode,
     ],
   );
   return conversationId;
