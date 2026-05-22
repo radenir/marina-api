@@ -26,15 +26,15 @@ export const PATIENT_FOLLOWUP_SECTIONS: readonly PatientFollowupSection[] = [
 
 const SECTION_DESCRIPTIONS: Record<PatientFollowupSection, string> = {
   history_taking:
-    'history of the primary complaint — onset, duration, location, character, severity, timing, triggers and relievers, recent travel or exposures, recent meals or activities.',
+    'how the PRIMARY complaint itself behaves — its onset, duration, location, quality (sharp/dull/throbbing), severity (1-10), timing (constant/intermittent), what makes it WORSE or BETTER (triggers, aggravating and relieving factors, position, activity, food), recent travel or exposures relevant to the case. ANY question about the primary symptom\'s own character or context belongs here.',
   associated_symptoms:
-    'other symptoms the patient is experiencing alongside the chief complaint (e.g. fever with abdominal pain, nausea with headache).',
+    'OTHER, DIFFERENT symptoms the patient is currently experiencing ALONGSIDE the chief complaint (e.g. nausea WITH a headache, dyspnea WITH chest pain, photophobia WITH a headache, diaphoresis WITH chest pain, fever WITH abdominal pain). Only concurrent, distinct symptoms — NEVER triggers or aggravating factors of the primary symptom (those are history_taking) and NEVER prior episodes of the same symptom (those are past_medical_history).',
   past_medical_history:
-    'prior medical conditions, prior surgeries, prior hospitalizations, pregnancy status — anything from the patient\'s past that is relevant to this case.',
+    'the patient\'s medical PAST — prior diagnosed conditions, prior surgeries, prior hospitalizations, pregnancy status, prior episodes of the same or similar complaint, family history. Anything that happened BEFORE the current illness episode. A question like "have you had this before?" belongs here, NOT in associated_symptoms.',
   medications:
-    'current medications the patient is taking (name, dose, frequency) including over-the-counter drugs.',
+    'current medications the patient is taking (name, dose, frequency) including over-the-counter drugs, supplements, and recent changes. NOT allergies.',
   allergies:
-    'known allergies (medications, foods, environmental substances) and the type of reaction.',
+    'known allergies (medications, foods, environmental substances) and the type of reaction. NOT current medications.',
 };
 
 export interface FollowupsInput {
@@ -126,9 +126,18 @@ This filter takes PRECEDENCE over every other guidance in this prompt. You MAY s
 ALLOWED SECTIONS — pick only from these:
 ${sections.map(s => `- ${s}: ${SECTION_DESCRIPTIONS[s]}`).join('\n')}
 
-Every suggestion MUST include a machine-readable "section" field whose value is the EXACT identifier from the list above (one of: ${sections.map(s => `"${s}"`).join(', ')}). The "sectionLabel" and "sectionLabelPatient" are human-readable labels in the respective languages — translate them naturally.
+CLASSIFY BY CONTENT, NOT BY LABEL.
+The "section" field describes what the question is actually about — not what label is convenient. Before emitting a question, ask yourself: "If I had to file this question under exactly one of the six SYBRA sections (history_taking, associated_symptoms, past_medical_history, medications, allergies, vital_signs), which would it be?" If the honest answer is NOT one of the allowed sections above, DO NOT emit the question — pick a different topic instead. Do not relabel an out-of-section question to slip it past the filter.
 
-If you cannot find three meaningful patient-facing questions within the allowed sections, return fewer than three. NEVER propose a question outside the allowed sections to pad the response.`
+COMMON MISCLASSIFICATIONS to avoid:
+- "What makes the headache worse?" / "Does X aggravate the pain?" / "Does anything relieve it?" → history_taking, NOT associated_symptoms. (Triggers/aggravating factors describe the primary symptom itself.)
+- "Have you had this headache before?" / "Has this happened previously?" / "Have you ever been diagnosed with migraine?" → past_medical_history, NOT associated_symptoms and NOT history_taking. (Prior episodes/diagnoses live in the past.)
+- "Does the pain radiate anywhere?" / "How severe is the pain?" / "When did it start?" → history_taking. (Character/location/timing of the primary complaint.)
+- "Do you also have nausea/fever/dyspnea/photophobia?" → associated_symptoms (DIFFERENT, concurrent symptoms only).
+
+Every suggestion MUST include a machine-readable "section" field whose value is the EXACT identifier from the allowed list (one of: ${sections.map(s => `"${s}"`).join(', ')}). The "sectionLabel" and "sectionLabelPatient" are human-readable labels in the respective languages — translate them naturally.
+
+If you cannot find three meaningful patient-facing questions whose ACTUAL content fits the allowed sections, return fewer than three. NEVER propose a question outside the allowed sections to pad the response, and NEVER relabel one to fit.`
     : '';
 
   const closedQuestions = Array.from(new Set(input.closedQuestions ?? []));
