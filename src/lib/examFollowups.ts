@@ -25,12 +25,19 @@ export interface ExamFollowupsInput {
 }
 
 export interface ExamFollowupQuestion {
+  /** Canonical English exam name from the SYBRA library — also the lookup key the frontend uses for video assignment. */
   examName: string;
+  /** Exam name translated into the medical officer's language (for display only). */
+  examNameOfficer: string;
+  /** Exam name translated into the patient's language (for display only). */
+  examNamePatient: string;
   examMarker: string;
   questionNumber: number;
   totalQuestions: number;
-  /** Question text translated into the medical officer's language. */
+  /** Question text translated into the medical officer's language (officer-facing instruction). */
   question: string;
+  /** Question rephrased and translated into the patient's language (what the officer would say aloud to the patient). */
+  questionPatient: string;
   /** Original English question text from the SYBRA library. */
   questionOriginal: string;
 }
@@ -192,7 +199,7 @@ ${transcript || '(transcript is empty)'}`;
   }
 }
 
-function buildRankerSystemPrompt(officerLang: string): string {
+function buildRankerSystemPrompt(officerLang: string, patientLang: string): string {
   return `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel is drafting a medical report and needs to know which physical-examination questions would most improve the report.
 
 You will receive:
@@ -204,17 +211,33 @@ You will receive:
 YOUR TASK:
 Select the THREE candidates that would most meaningfully improve the report given what is already known. If fewer than three candidates are provided, return all of them.
 
+LANGUAGES FOR THIS RESPONSE — REMEMBER EXACTLY:
+- OFFICER LANGUAGE: ${officerLang}. The fields "question" and "examNameOfficer" MUST be written in ${officerLang}.
+- PATIENT LANGUAGE: ${patientLang}. The fields "questionPatient" and "examNamePatient" MUST be written in ${patientLang}.
+Never default to English unless ${officerLang} or ${patientLang} is English.
+
 STRICT RULES:
 - You MUST pick items from the CANDIDATE POOL only. Do NOT invent questions, do NOT modify the examName or questionNumber, do NOT merge candidates.
-- Return each pick by its exact examName and questionNumber from the pool.
-- Translate the candidate's "text" into ${officerLang} as the "question" field — a natural, faithful rendering, not literal word-for-word. The "questionOriginal" field is the candidate's English text, unchanged.
-- The "question" must be written for the OFFICER (who performs the examination). Never address the patient.
-- Bracketed clinical notes in the original (e.g. "[Facial asymmetry]", "[only perform if…]") are guidance for the officer — preserve their intent in the translation but you may omit the brackets if they read awkwardly.
+- Return each pick by its exact examName (unchanged English) and questionNumber from the pool.
+- "question": translate the candidate's "text" into ${officerLang} as a clear OFFICER-facing instruction. Preserve the clinical intent — the officer needs to know what to do and what to look for. A natural rendering, not literal word-for-word.
+- "questionPatient": render in ${patientLang} as the part the officer would say aloud to the patient. For "Ask the patient to smile" use "Please smile" (in ${patientLang}). For pure observation steps with no spoken patient interaction, use the full instruction translated for the patient's benefit.
+- "examNameOfficer": the canonical exam name from the pool, translated into ${officerLang} for display.
+- "examNamePatient": the same exam name, translated into ${patientLang}.
+- "questionOriginal": the candidate's English text, exactly as supplied — unchanged.
+- Bracketed clinical notes in the original (e.g. "[Facial asymmetry]", "[only perform if…]") are guidance for the officer — preserve their intent in the officer-facing field but you may omit the brackets if they read awkwardly. Do NOT include those notes in the patient-facing field.
 - Output ONLY a single JSON object, no markdown, no commentary:
 
 {
   "picks": [
-    { "examName": "<exact name from pool>", "questionNumber": <int>, "question": "<translated to ${officerLang}>", "questionOriginal": "<exact English text from pool>" }
+    {
+      "examName": "<exact English name from pool>",
+      "questionNumber": <int>,
+      "question": "<officer-facing instruction in ${officerLang}>",
+      "questionPatient": "<patient-facing wording in ${patientLang}>",
+      "examNameOfficer": "<exam name in ${officerLang}>",
+      "examNamePatient": "<exam name in ${patientLang}>",
+      "questionOriginal": "<exact English text from pool>"
+    }
   ]
 }`;
 }
@@ -246,6 +269,9 @@ interface RankerPick {
   examName: string;
   questionNumber: number;
   question: string;
+  questionPatient: string;
+  examNameOfficer: string;
+  examNamePatient: string;
   questionOriginal: string;
 }
 
@@ -277,6 +303,7 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
 
   // 3. LLM ranking pass — translates and picks the top 3
   const officerLang = resolveLanguageName(input.medicalOfficerLanguage);
+  const patientLang = resolveLanguageName(input.patientLanguage);
   const start = Date.now();
 
   let picks: RankerPick[] = [];
@@ -284,10 +311,10 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
     const completion = await nebius.chat.completions.create({
       model: config.nebius.model,
       temperature: 0.3,
-      max_tokens: 1800,
+      max_tokens: 2400,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: buildRankerSystemPrompt(officerLang) },
+        { role: 'system', content: buildRankerSystemPrompt(officerLang, patientLang) },
         { role: 'user', content: buildRankerUserPrompt(symptom, input.conversation, input.summary, candidates) },
       ],
     });
@@ -313,14 +340,27 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
     const key = `${p.examName}::${p.questionNumber}`;
     const source = candidateIndex.get(key);
     if (!source) continue;
+    const officerQ = typeof p.question === 'string' && p.question.trim().length > 0
+      ? p.question.trim()
+      : source.text;
+    const patientQ = typeof p.questionPatient === 'string' && p.questionPatient.trim().length > 0
+      ? p.questionPatient.trim()
+      : officerQ;
+    const examOfficer = typeof p.examNameOfficer === 'string' && p.examNameOfficer.trim().length > 0
+      ? p.examNameOfficer.trim()
+      : source.examName;
+    const examPatient = typeof p.examNamePatient === 'string' && p.examNamePatient.trim().length > 0
+      ? p.examNamePatient.trim()
+      : examOfficer;
     examFollowUps.push({
       examName: source.examName,
+      examNameOfficer: examOfficer,
+      examNamePatient: examPatient,
       examMarker: getPhysicalExaminationMarker(source.examId),
       questionNumber: source.questionNumber,
       totalQuestions: source.totalQuestions,
-      question: typeof p.question === 'string' && p.question.trim().length > 0
-        ? p.question.trim()
-        : source.text,
+      question: officerQ,
+      questionPatient: patientQ,
       questionOriginal: source.text,
     });
     if (examFollowUps.length >= 3) break;
