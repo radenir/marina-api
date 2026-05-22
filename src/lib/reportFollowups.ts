@@ -9,6 +9,34 @@ export interface FollowupProtocol {
   examinationInstructions?: string;
 }
 
+export type PatientFollowupSection =
+  | 'history_taking'
+  | 'associated_symptoms'
+  | 'past_medical_history'
+  | 'medications'
+  | 'allergies';
+
+export const PATIENT_FOLLOWUP_SECTIONS: readonly PatientFollowupSection[] = [
+  'history_taking',
+  'associated_symptoms',
+  'past_medical_history',
+  'medications',
+  'allergies',
+] as const;
+
+const SECTION_DESCRIPTIONS: Record<PatientFollowupSection, string> = {
+  history_taking:
+    'history of the primary complaint — onset, duration, location, character, severity, timing, triggers and relievers, recent travel or exposures, recent meals or activities.',
+  associated_symptoms:
+    'other symptoms the patient is experiencing alongside the chief complaint (e.g. fever with abdominal pain, nausea with headache).',
+  past_medical_history:
+    'prior medical conditions, prior surgeries, prior hospitalizations, pregnancy status — anything from the patient\'s past that is relevant to this case.',
+  medications:
+    'current medications the patient is taking (name, dose, frequency) including over-the-counter drugs.',
+  allergies:
+    'known allergies (medications, foods, environmental substances) and the type of reaction.',
+};
+
 export interface FollowupsInput {
   conversation: ConversationMessage[];
   summary: Record<string, unknown>;
@@ -18,6 +46,8 @@ export interface FollowupsInput {
   protocol?: FollowupProtocol;
   mode: 'marina' | 'note_taker' | 'translator';
   closedQuestions?: string[];
+  /** When provided and non-empty, restrict suggestions to ONLY these sections. */
+  sections?: PatientFollowupSection[];
 }
 
 export interface FollowupQuestion {
@@ -84,6 +114,20 @@ function buildSystemPrompt(input: FollowupsInput): string {
       ? 'This report was produced by a structured Marina interview. Use the protocol coverage below to judge which patient-facing topics were skipped or under-explored.'
       : 'This report was produced from a free-form note-taker transcript. Reason against general clinical completeness for the chief complaint inferred from the summary.';
 
+  const sections = Array.from(new Set(input.sections ?? [])).filter(
+    (s): s is PatientFollowupSection => (PATIENT_FOLLOWUP_SECTIONS as readonly string[]).includes(s),
+  );
+  const sectionsBlock = sections.length
+    ? `🔒 SECTION FILTER — STRICT 🔒
+
+The officer has asked for follow-up questions ONLY from the sections listed below. Every one of your three suggestions MUST clearly belong to one of these sections. Do NOT suggest questions from other sections, even if you spot gaps there.
+
+Allowed sections:
+${sections.map(s => `- ${s}: ${SECTION_DESCRIPTIONS[s]}`).join('\n')}
+
+Set the sectionLabel of each question to the short, lowercased section name (e.g. "allergies", "medications", "history taking") in ${officerLang}, and sectionLabelPatient in ${patientLang}.`
+    : '';
+
   const closedQuestions = Array.from(new Set(input.closedQuestions ?? []));
   const closedBlock = closedQuestions.length
     ? `🚫 CLOSED TOPICS — DO NOT ASK ABOUT THESE, EVEN PARAPHRASED 🚫
@@ -120,6 +164,8 @@ INPUTS YOU WILL RECEIVE:
 ${symptomLine}
 
 ${protocolBlock}
+
+${sectionsBlock}
 
 ${closedBlock}
 
