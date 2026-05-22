@@ -117,15 +117,18 @@ function buildSystemPrompt(input: FollowupsInput): string {
   const sections = Array.from(new Set(input.sections ?? [])).filter(
     (s): s is PatientFollowupSection => (PATIENT_FOLLOWUP_SECTIONS as readonly string[]).includes(s),
   );
-  const sectionsBlock = sections.length
-    ? `🔒 SECTION FILTER — STRICT 🔒
+  const hasSectionFilter = sections.length > 0;
+  const sectionsBlock = hasSectionFilter
+    ? `🔒 SECTION FILTER — ABSOLUTE OVERRIDE 🔒
 
-The officer has asked for follow-up questions ONLY from the sections listed below. Every one of your three suggestions MUST clearly belong to one of these sections. Do NOT suggest questions from other sections, even if you spot gaps there.
+This filter takes PRECEDENCE over every other guidance in this prompt. You MAY suggest questions ONLY from the sections listed below. You MUST NOT suggest from any other section — even if the protocol coverage, the closed-topics block, or your own clinical judgement points to gaps elsewhere. Questions outside the allowed sections will be discarded by the system.
 
-Allowed sections:
+ALLOWED SECTIONS — pick only from these:
 ${sections.map(s => `- ${s}: ${SECTION_DESCRIPTIONS[s]}`).join('\n')}
 
-Set the sectionLabel of each question to the short, lowercased section name (e.g. "allergies", "medications", "history taking") in ${officerLang}, and sectionLabelPatient in ${patientLang}.`
+Every suggestion MUST include a machine-readable "section" field whose value is the EXACT identifier from the list above (one of: ${sections.map(s => `"${s}"`).join(', ')}). The "sectionLabel" and "sectionLabelPatient" are human-readable labels in the respective languages — translate them naturally.
+
+If you cannot find three meaningful patient-facing questions within the allowed sections, return fewer than three. NEVER propose a question outside the allowed sections to pad the response.`
     : '';
 
   const closedQuestions = Array.from(new Set(input.closedQuestions ?? []));
@@ -143,12 +146,18 @@ ABSOLUTE RULES for closed topics:
 Already-declined questions (each one closes its entire topic):
 ${closedQuestions.map(q => `- "${q}"`).join('\n')}
 
-If closed topics cover the obvious gaps, pivot to questions about OTHER aspects of the patient's care that have NOT yet been asked: e.g. red-flag symptoms in unrelated body systems, allergies, current medications, recent travel or exposures, occupational history, mental-health context, social context, family history, recent injuries, recent infections, vaccination status, alcohol or drug use. Pick three DIFFERENT topics, not three angles on the same closed topic.
+${hasSectionFilter
+  ? 'If closed topics cover the obvious gaps WITHIN the allowed sections, still propose questions on the most clinically valuable UNASKED topics within those sections. NEVER step outside the allowed sections — that constraint overrides everything in this block.'
+  : 'If closed topics cover the obvious gaps, pivot to questions about OTHER aspects of the patient\'s care that have NOT yet been asked: e.g. red-flag symptoms in unrelated body systems, allergies, current medications, recent travel or exposures, occupational history, mental-health context, social context, family history, recent injuries, recent infections, vaccination status, alcohol or drug use. Pick three DIFFERENT topics, not three angles on the same closed topic.\n\nIf the patient has declined virtually every meaningful patient-facing question, still propose three questions on the most clinically valuable UNASKED topics — but acknowledge in your sectionLabel that they cover a new area, not the closed ones.'}`
+    : '';
 
-If the patient has declined virtually every meaningful patient-facing question, still propose three questions on the most clinically valuable UNASKED topics — but acknowledge in your sectionLabel that they cover a new area, not the closed ones.`
+  const sectionField = hasSectionFilter
+    ? `, "section": "<one of: ${sections.join(', ')}>"`
     : '';
 
   return `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel has just drafted a medical report on a sick crew member and is about to send it to a shore-based doctor. Your job is to read the draft and suggest three patient-facing follow-up questions that would meaningfully improve the report before it is sent.
+
+${sectionsBlock}
 
 LANGUAGES FOR THIS RESPONSE — REMEMBER THESE EXACTLY:
 - OFFICER LANGUAGE: ${officerLang}. Fields "question" and "sectionLabel" MUST be written in ${officerLang}.
@@ -165,17 +174,16 @@ ${symptomLine}
 
 ${protocolBlock}
 
-${sectionsBlock}
-
 ${closedBlock}
 
 YOUR OUTPUT — STRICT REQUIREMENTS:
 
-1. Suggest EXACTLY three follow-up questions. Each question MUST:
+1. Suggest ${hasSectionFilter ? 'UP TO three' : 'EXACTLY three'} follow-up questions. Each question MUST:
    - Be answerable by the PATIENT (history, symptoms, allergies, current medications, past medical history, character/onset/duration of the complaint, etc.).
    - NOT ask the officer to take a measurement, perform an examination, or run an investigation — those are officer actions, not patient questions. Do not ask about vital signs, physical findings, or test results.
    - Target a specific gap visible in the summary or transcript that is NOT a closed topic (see above).
    - NEVER repeat or paraphrase a closed topic. If you find yourself drafting a question that touches a closed topic, discard it and choose a different topic.
+   ${hasSectionFilter ? '- ABSOLUTELY belong to one of the ALLOWED SECTIONS above. The system will discard any question whose "section" field is not in that list.' : ''}
    - Be phrased naturally, conversationally, and medically appropriately.
    - Be provided in BOTH ${officerLang} (field "question", for the officer) AND ${patientLang} (field "questionPatient", for the patient — natural, conversational, faithful translation, not a literal word-for-word rendering).
    - Carry a short sectionLabel (1-3 words) naming the part of the report it would improve (e.g. allergies, current medications, past medical history, history of presenting complaint, associated symptoms, problem description), provided in BOTH ${officerLang} (field "sectionLabel") AND ${patientLang} (field "sectionLabelPatient").
@@ -184,9 +192,9 @@ YOUR OUTPUT — STRICT REQUIREMENTS:
 
 {
   "followUps": [
-    { "question": "<question in ${officerLang}>", "questionPatient": "<same question in ${patientLang}>", "sectionLabel": "<short tag in ${officerLang}>", "sectionLabelPatient": "<same short tag in ${patientLang}>" },
-    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..." },
-    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..." }
+    { "question": "<question in ${officerLang}>", "questionPatient": "<same question in ${patientLang}>", "sectionLabel": "<short tag in ${officerLang}>", "sectionLabelPatient": "<same short tag in ${patientLang}>"${sectionField} },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..."${sectionField} },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..."${sectionField} }
   ]
 }`;
 }
@@ -204,6 +212,12 @@ ${transcript || '(transcript is empty)'}`;
 export async function generateFollowups(input: FollowupsInput): Promise<FollowupsResult> {
   const systemPrompt = buildSystemPrompt(input);
   const userPrompt = buildUserPrompt(input);
+  const activeSections = new Set(
+    Array.from(new Set(input.sections ?? [])).filter(
+      (s): s is PatientFollowupSection => (PATIENT_FOLLOWUP_SECTIONS as readonly string[]).includes(s),
+    ),
+  );
+  const hasSectionFilter = activeSections.size > 0;
 
   const start = Date.now();
   const completion = await nebius.chat.completions.create({
@@ -220,24 +234,47 @@ export async function generateFollowups(input: FollowupsInput): Promise<Followup
   let raw = completion.choices[0]?.message?.content?.trim() ?? '{}';
   raw = raw.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
 
-  const parsed = JSON.parse(raw) as Partial<FollowupsResult>;
-  const followUps = Array.isArray(parsed.followUps)
+  type LooseFollowup = FollowupQuestion & { section?: unknown };
+  const parsed = JSON.parse(raw) as { followUps?: LooseFollowup[] };
+  let followUps: FollowupQuestion[] = Array.isArray(parsed.followUps)
     ? parsed.followUps
         .filter(
-          (q): q is FollowupQuestion =>
+          (q): q is LooseFollowup =>
             !!q &&
             typeof (q as FollowupQuestion).question === 'string' &&
             typeof (q as FollowupQuestion).questionPatient === 'string' &&
             typeof (q as FollowupQuestion).sectionLabel === 'string' &&
             typeof (q as FollowupQuestion).sectionLabelPatient === 'string',
         )
+        .map(q => ({
+          question: q.question,
+          questionPatient: q.questionPatient,
+          sectionLabel: q.sectionLabel,
+          sectionLabelPatient: q.sectionLabelPatient,
+          _section: typeof (q as { section?: unknown }).section === 'string' ? (q as { section: string }).section : undefined,
+        }))
+        // Hard guard: when the officer narrowed the filter, drop anything
+        // the LLM emitted outside the allowed sections. The "section" field
+        // is required by the prompt; if missing, the question is dropped.
+        .filter((q) => {
+          if (!hasSectionFilter) return true;
+          const sec = (q as unknown as { _section?: string })._section;
+          return !!sec && activeSections.has(sec as PatientFollowupSection);
+        })
+        .map(({ _section, ...rest }) => {
+          void _section;
+          return rest as FollowupQuestion;
+        })
         .slice(0, 3)
     : [];
 
-  if (followUps.length !== 3) {
-    throw new Error(`Followups response malformed: followUps=${followUps.length}`);
+  const minRequired = hasSectionFilter ? 1 : 3;
+  if (followUps.length < minRequired) {
+    throw new Error(`Followups response malformed: followUps=${followUps.length} (hasFilter=${hasSectionFilter})`);
   }
 
-  console.log(`[ai/report/followups] duration=${Date.now() - start}ms mode=${input.mode}`);
+  console.log(
+    `[ai/report/followups] duration=${Date.now() - start}ms mode=${input.mode} hasFilter=${hasSectionFilter} kept=${followUps.length}`,
+  );
   return { followUps };
 }
