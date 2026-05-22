@@ -137,7 +137,7 @@ COMMON MISCLASSIFICATIONS to avoid:
 
 Every suggestion MUST include a machine-readable "section" field whose value is the EXACT identifier from the allowed list (one of: ${sections.map(s => `"${s}"`).join(', ')}). The "sectionLabel" and "sectionLabelPatient" are human-readable labels in the respective languages — translate them naturally.
 
-If you cannot find three meaningful patient-facing questions whose ACTUAL content fits the allowed sections, return fewer than three. NEVER propose a question outside the allowed sections to pad the response, and NEVER relabel one to fit.`
+You MUST return EXACTLY three questions, all within the allowed sections. If the obvious chief-complaint-specific gaps within the allowed sections appear exhausted, keep going — pivot to other clinically useful UNASKED topics that still belong to those sections (e.g. red-flag screening, baseline confirmation, character/onset/duration/severity refinement, prior episodes, family history within scope, recent exposures, lifestyle factors, adherence/dosage details for medications, cross-reactive allergens). There is essentially always something useful to ask within any allowed section — find it. NEVER propose a question outside the allowed sections to pad the response, and NEVER relabel one to fit.`
     : '';
 
   const closedQuestions = Array.from(new Set(input.closedQuestions ?? []));
@@ -187,7 +187,7 @@ ${closedBlock}
 
 YOUR OUTPUT — STRICT REQUIREMENTS:
 
-1. Suggest ${hasSectionFilter ? 'UP TO three' : 'EXACTLY three'} follow-up questions. Each question MUST:
+1. Suggest EXACTLY three follow-up questions. Each question MUST:
    - Be answerable by the PATIENT (history, symptoms, allergies, current medications, past medical history, character/onset/duration of the complaint, etc.).
    - NOT ask the officer to take a measurement, perform an examination, or run an investigation — those are officer actions, not patient questions. Do not ask about vital signs, physical findings, or test results.
    - Target a specific gap visible in the summary or transcript that is NOT a closed topic (see above).
@@ -277,8 +277,7 @@ export async function generateFollowups(input: FollowupsInput): Promise<Followup
         .slice(0, 3)
     : [];
 
-  const minRequired = hasSectionFilter ? 1 : 3;
-  if (followUps.length < minRequired) {
+  if (followUps.length < 3) {
     throw new Error(`Followups response malformed: followUps=${followUps.length} (hasFilter=${hasSectionFilter})`);
   }
 
