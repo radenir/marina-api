@@ -137,7 +137,7 @@ COMMON MISCLASSIFICATIONS to avoid:
 
 Every suggestion MUST include a machine-readable "section" field whose value is the EXACT identifier from the allowed list (one of: ${sections.map(s => `"${s}"`).join(', ')}). The "sectionLabel" and "sectionLabelPatient" are human-readable labels in the respective languages — translate them naturally.
 
-You MUST return EXACTLY three questions, all within the allowed sections. If the obvious chief-complaint-specific gaps within the allowed sections appear exhausted, keep going — pivot to other clinically useful UNASKED topics that still belong to those sections (e.g. red-flag screening, baseline confirmation, character/onset/duration/severity refinement, prior episodes, family history within scope, recent exposures, lifestyle factors, adherence/dosage details for medications, cross-reactive allergens). There is essentially always something useful to ask within any allowed section — find it. NEVER propose a question outside the allowed sections to pad the response, and NEVER relabel one to fit.`
+You MUST return EXACTLY six questions, all within the allowed sections. If the obvious chief-complaint-specific gaps within the allowed sections appear exhausted, keep going — pivot to other clinically useful UNASKED topics that still belong to those sections (e.g. red-flag screening, baseline confirmation, character/onset/duration/severity refinement, prior episodes, family history within scope, recent exposures, lifestyle factors, adherence/dosage details for medications, cross-reactive allergens). There is essentially always something useful to ask within any allowed section — find it. NEVER propose a question outside the allowed sections to pad the response, and NEVER relabel one to fit. All six questions MUST be DISTINCT — no two questions may share the same underlying topic or be paraphrases of each other.`
     : '';
 
   const closedQuestions = Array.from(new Set(input.closedQuestions ?? []));
@@ -164,7 +164,7 @@ ${hasSectionFilter
     ? `, "section": "<one of: ${sections.join(', ')}>"`
     : '';
 
-  return `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel has just drafted a medical report on a sick crew member and is about to send it to a shore-based doctor. Your job is to read the draft and suggest three patient-facing follow-up questions that would meaningfully improve the report before it is sent.
+  return `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel has just drafted a medical report on a sick crew member and is about to send it to a shore-based doctor. Your job is to read the draft and suggest six patient-facing follow-up questions that would meaningfully improve the report before it is sent. The six MUST be DISTINCT topics, not paraphrases of each other.
 
 ${sectionsBlock}
 
@@ -186,11 +186,11 @@ ${protocolBlock}
 ${closedBlock}
 
 FRESH INTAKE FALLBACK:
-If the summary and transcript contain essentially no clinical content yet (the officer is just opening a brand-new report), treat this as the start of an intake and suggest three baseline triage questions: (1) chief complaint / what is wrong today, (2) current medications the patient is taking, (3) known allergies. If even a single symptom word is present (in the summary, the symptom hint, or the transcript), anchor those three questions to that complaint instead of asking in the abstract. The "always three" rule applies to fresh intakes too — never return fewer because "there is nothing to ask about yet."
+If the summary and transcript contain essentially no clinical content yet (the officer is just opening a brand-new report), treat this as the start of an intake and suggest six baseline triage questions covering: chief complaint / what is wrong today, onset and timeline, severity / character, current medications, known allergies, and recent relevant exposures or pre-existing conditions. If even a single symptom word is present (in the summary, the symptom hint, or the transcript), anchor the six to that complaint instead of asking in the abstract. The "always six" rule applies to fresh intakes too — never return fewer because "there is nothing to ask about yet."
 
 YOUR OUTPUT — STRICT REQUIREMENTS:
 
-1. Suggest EXACTLY three follow-up questions. Each question MUST:
+1. Suggest EXACTLY six follow-up questions. Each question MUST:
    - Be answerable by the PATIENT (history, symptoms, allergies, current medications, past medical history, character/onset/duration of the complaint, etc.).
    - NOT ask the officer to take a measurement, perform an examination, or run an investigation — those are officer actions, not patient questions. Do not ask about vital signs, physical findings, or test results.
    - Target a specific gap visible in the summary or transcript that is NOT a closed topic (see above).
@@ -205,6 +205,9 @@ YOUR OUTPUT — STRICT REQUIREMENTS:
 {
   "followUps": [
     { "question": "<question in ${officerLang}>", "questionPatient": "<same question in ${patientLang}>", "sectionLabel": "<short tag in ${officerLang}>", "sectionLabelPatient": "<same short tag in ${patientLang}>"${sectionField} },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..."${sectionField} },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..."${sectionField} },
+    { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..."${sectionField} },
     { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..."${sectionField} },
     { "question": "...", "questionPatient": "...", "sectionLabel": "...", "sectionLabelPatient": "..."${sectionField} }
   ]
@@ -235,7 +238,7 @@ export async function generateFollowups(input: FollowupsInput): Promise<Followup
   const completion = await nebius.chat.completions.create({
     model: config.nebius.model,
     temperature: 0.3,
-    max_tokens: 1500,
+    max_tokens: 3000,
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: systemPrompt },
@@ -277,10 +280,10 @@ export async function generateFollowups(input: FollowupsInput): Promise<Followup
           void _section;
           return rest as FollowupQuestion;
         })
-        .slice(0, 3)
+        .slice(0, 6)
     : [];
 
-  if (followUps.length < 3) {
+  if (followUps.length < 6) {
     throw new Error(`Followups response malformed: followUps=${followUps.length} (hasFilter=${hasSectionFilter})`);
   }
 

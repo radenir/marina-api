@@ -214,14 +214,14 @@ ${transcript || '(transcript is empty)'}`;
 
 function buildRankerSystemPrompt(officerLang: string, patientLang: string, baseline: boolean): string {
   const intro = baseline
-    ? `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel is opening a brand-new medical report — no chief complaint has been identified yet. You need to suggest the three most universally useful baseline physical-examination questions so the officer can start gathering objective data right away.
+    ? `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel is opening a brand-new medical report — no chief complaint has been identified yet. You need to suggest the six most universally useful baseline physical-examination questions so the officer can start gathering objective data right away.
 
 You will receive:
 - The conversation transcript (likely empty or very brief) and the extracted report summary (likely empty).
 - A CANDIDATE POOL of baseline physical-examination questions (vital signs, general appearance) that have NOT yet been asked. These come from a fixed maritime medical protocol (SYBRA).
 
 YOUR TASK:
-Select the THREE candidates that are most universally useful for any maritime intake — prioritise items that detect acute deterioration (vital signs) and give the officer a quick clinical impression (general appearance). If fewer than three candidates are provided, return all of them.`
+Select the SIX candidates that are most universally useful for any maritime intake — prioritise items that detect acute deterioration (vital signs) and give the officer a quick clinical impression (general appearance). If fewer than six candidates are provided, return all of them.`
     : `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel is drafting a medical report and needs to know which physical-examination questions would most improve the report.
 
 You will receive:
@@ -231,7 +231,7 @@ You will receive:
 - A CANDIDATE POOL of physical-examination questions for this chief complaint that have NOT yet been asked. These come from a fixed maritime medical protocol (SYBRA).
 
 YOUR TASK:
-Select the THREE candidates that would most meaningfully improve the report given what is already known. If fewer than three candidates are provided, return all of them.`;
+Select the SIX candidates that would most meaningfully improve the report given what is already known. If fewer than six candidates are provided, return all of them.`;
   return `${intro}
 
 LANGUAGES FOR THIS RESPONSE — REMEMBER EXACTLY:
@@ -337,7 +337,7 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
     const completion = await nebius.chat.completions.create({
       model: config.nebius.model,
       temperature: 0.3,
-      max_tokens: 2400,
+      max_tokens: 4800,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: buildRankerSystemPrompt(officerLang, patientLang, baseline) },
@@ -389,7 +389,7 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
       questionPatient: patientQ,
       questionOriginal: source.text,
     });
-    if (examFollowUps.length >= 3) break;
+    if (examFollowUps.length >= 6) break;
   }
 
   console.log(
