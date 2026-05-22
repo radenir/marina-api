@@ -185,6 +185,9 @@ ${protocolBlock}
 
 ${closedBlock}
 
+FRESH INTAKE FALLBACK:
+If the summary and transcript contain essentially no clinical content yet (the officer is just opening a brand-new report), treat this as the start of an intake and suggest three baseline triage questions: (1) chief complaint / what is wrong today, (2) current medications the patient is taking, (3) known allergies. If even a single symptom word is present (in the summary, the symptom hint, or the transcript), anchor those three questions to that complaint instead of asking in the abstract. The "always three" rule applies to fresh intakes too — never return fewer because "there is nothing to ask about yet."
+
 YOUR OUTPUT — STRICT REQUIREMENTS:
 
 1. Suggest EXACTLY three follow-up questions. Each question MUST:

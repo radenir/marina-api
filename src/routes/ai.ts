@@ -1122,7 +1122,7 @@ const ReportFollowupsSchema = z.object({
   conversation: z.array(z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string(),
-  })).min(1).max(500),
+  })).min(0).max(500),
   summary: z.record(z.unknown()),
   medicalOfficerLanguage: z.string().min(2).max(20),
   patientLanguage: z.string().min(2).max(20),
