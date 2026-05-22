@@ -28,6 +28,7 @@ import { runAgent, generateGreeting } from '../lib/interviewAgent.js';
 import { executeTool } from '../lib/interviewTools.js';
 import { extractInterviewSummary } from '../lib/interviewExtract.js';
 import { generateFollowups } from '../lib/reportFollowups.js';
+import { generateExamFollowups } from '../lib/examFollowups.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -183,6 +184,13 @@ const noteTakerSaveRateLimit = rateLimit({
 
 const reportFollowupsRateLimit = rateLimit({
   prefix: 'ai-report-followups',
+  limit: 200,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const examFollowupsRateLimit = rateLimit({
+  prefix: 'ai-exam-followups',
   limit: 200,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
@@ -1159,6 +1167,72 @@ aiRouter.post(
     await auditLog('report_followups_generated', req, attributionFromPrincipal(req), {
       conversation_id: parsed.data.conversationId ?? null,
       mode: parsed.data.mode,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/exam-followups
+// Returns up to 3 officer-facing physical-examination questions for the
+// chief complaint that have not been asked yet. The candidate set is
+// deterministic (parsed from examinationInstructions and filtered by the
+// caller's askedExamQuestions); an LLM pass then picks the most clinically
+// useful and translates them into the medical officer's language. Each pick
+// returns examName + questionNumber so the frontend can attach a video.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const ExamFollowupsSchema = z.object({
+  conversation: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string(),
+  })).min(0).max(500),
+  summary: z.record(z.unknown()),
+  medicalOfficerLanguage: z.string().min(2).max(20),
+  patientLanguage: z.string().min(2).max(20),
+  symptom: z.string().max(200).optional(),
+  mode: z.enum(['marina', 'note_taker', 'translator']),
+  conversationId: z.string().uuid().optional(),
+  askedExamQuestions: z.array(z.object({
+    examName: z.string().max(200),
+    questionNumber: z.number().int().min(1).max(100),
+  })).max(200).optional(),
+});
+
+aiRouter.post(
+  '/report/exam-followups',
+  authenticate,
+  requireScope('extract:write'),
+  examFollowupsRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ExamFollowupsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    if (req.principal?.type === 'partner' && parsed.data.conversationId) {
+      res.status(400).json({ error: 'conversationId is not supported for partner authentication' });
+      return;
+    }
+
+    let result;
+    try {
+      result = await generateExamFollowups(parsed.data);
+    } catch (err) {
+      console.error('[ai/report/exam-followups] generation error:', (err as Error).message);
+      res.status(502).json({ error: 'Exam followups service unavailable' });
+      return;
+    }
+
+    await auditLog('exam_followups_generated', req, attributionFromPrincipal(req), {
+      conversation_id: parsed.data.conversationId ?? null,
+      mode: parsed.data.mode,
+      symptom: result.symptom,
+      picks: result.examFollowUps.length,
     });
 
     res.json(result);
