@@ -2,6 +2,7 @@ import { nebius } from './nebius.js';
 import { config } from '../config.js';
 import {
   examinationDisplayNames,
+  examinationIds,
   getPhysicalExaminationMarker,
   symptomGuidelines as _symptomGuidelines,
 } from './symptomGuidelines.js';
@@ -112,14 +113,26 @@ function parseExamScript(examId: number, raw: string): ParsedExamQuestion[] {
 function buildPoolForSymptom(symptom: string): ParsedExamQuestion[] {
   const guideline = symptomGuidelines[symptom];
   if (!guideline) return [];
-  const ids = guideline.Examinations ?? [];
+  return buildPoolForIds(guideline.Examinations ?? []);
+}
+
+// Fallback pool used when the case has no identified chief complaint yet
+// (fresh intake). Universally useful baseline assessments.
+const BASELINE_EXAM_IDS = [
+  examinationIds.GENERAL_APPEARANCE,
+  examinationIds.VITAL_SIGNS,
+];
+
+function buildBaselinePool(): ParsedExamQuestion[] {
+  return buildPoolForIds(BASELINE_EXAM_IDS);
+}
+
+function buildPoolForIds(ids: number[]): ParsedExamQuestion[] {
   const pool: ParsedExamQuestion[] = [];
   for (const id of ids) {
     const script = examinationInstructions[id];
     if (!script) continue;
     const parsed = parseExamScript(id, script);
-    // Override examName with the canonical display name to guarantee the
-    // (examName, questionNumber) key matches what the frontend expects.
     const canonical = examinationDisplayNames[id];
     for (const q of parsed) {
       if (canonical) q.examName = canonical;
@@ -199,8 +212,17 @@ ${transcript || '(transcript is empty)'}`;
   }
 }
 
-function buildRankerSystemPrompt(officerLang: string, patientLang: string): string {
-  return `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel is drafting a medical report and needs to know which physical-examination questions would most improve the report.
+function buildRankerSystemPrompt(officerLang: string, patientLang: string, baseline: boolean): string {
+  const intro = baseline
+    ? `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel is opening a brand-new medical report — no chief complaint has been identified yet. You need to suggest the three most universally useful baseline physical-examination questions so the officer can start gathering objective data right away.
+
+You will receive:
+- The conversation transcript (likely empty or very brief) and the extracted report summary (likely empty).
+- A CANDIDATE POOL of baseline physical-examination questions (vital signs, general appearance) that have NOT yet been asked. These come from a fixed maritime medical protocol (SYBRA).
+
+YOUR TASK:
+Select the THREE candidates that are most universally useful for any maritime intake — prioritise items that detect acute deterioration (vital signs) and give the officer a quick clinical impression (general appearance). If fewer than three candidates are provided, return all of them.`
+    : `You are an experienced maritime medical reviewer. A non-medical officer aboard a vessel is drafting a medical report and needs to know which physical-examination questions would most improve the report.
 
 You will receive:
 - The chief complaint.
@@ -209,7 +231,8 @@ You will receive:
 - A CANDIDATE POOL of physical-examination questions for this chief complaint that have NOT yet been asked. These come from a fixed maritime medical protocol (SYBRA).
 
 YOUR TASK:
-Select the THREE candidates that would most meaningfully improve the report given what is already known. If fewer than three candidates are provided, return all of them.
+Select the THREE candidates that would most meaningfully improve the report given what is already known. If fewer than three candidates are provided, return all of them.`;
+  return `${intro}
 
 LANGUAGES FOR THIS RESPONSE — REMEMBER EXACTLY:
 - OFFICER LANGUAGE: ${officerLang}. The fields "question" and "examNameOfficer" MUST be written in ${officerLang}.
@@ -243,7 +266,7 @@ STRICT RULES:
 }
 
 function buildRankerUserPrompt(
-  symptom: string,
+  symptom: string | null,
   conversation: ConversationMessage[],
   summary: Record<string, unknown>,
   pool: ParsedExamQuestion[],
@@ -253,7 +276,10 @@ function buildRankerUserPrompt(
   const poolText = pool
     .map(q => `- examName: "${q.examName}", questionNumber: ${q.questionNumber}, totalQuestions: ${q.totalQuestions}\n  text: "${q.text.replace(/\n/g, ' ')}"`)
     .join('\n');
-  return `CHIEF COMPLAINT: ${symptom}
+  const complaintLine = symptom
+    ? `CHIEF COMPLAINT: ${symptom}`
+    : `CHIEF COMPLAINT: (none yet — fresh intake, treat as baseline assessment)`;
+  return `${complaintLine}
 
 EXTRACTED REPORT SUMMARY:
 ${summaryJson}
@@ -286,12 +312,12 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
     symptom = await classifySymptom(input.conversation, input.summary);
   }
 
-  if (!symptom) {
-    return { symptom: null, examFollowUps: [] };
-  }
-
-  // 2. Build candidate pool, minus already-asked
-  const fullPool = buildPoolForSymptom(symptom);
+  // 2. Build candidate pool, minus already-asked. When no chief complaint has
+  //    been identified yet (fresh intake), fall back to a universally useful
+  //    baseline pool (general appearance + vital signs) so the Exam tab is
+  //    never empty on first open.
+  const baseline = symptom === null;
+  const fullPool = symptom ? buildPoolForSymptom(symptom) : buildBaselinePool();
   const asked = new Set(
     (input.askedExamQuestions ?? []).map(a => `${a.examName}::${a.questionNumber}`),
   );
@@ -314,7 +340,7 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
       max_tokens: 2400,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: buildRankerSystemPrompt(officerLang, patientLang) },
+        { role: 'system', content: buildRankerSystemPrompt(officerLang, patientLang, baseline) },
         { role: 'user', content: buildRankerUserPrompt(symptom, input.conversation, input.summary, candidates) },
       ],
     });
@@ -367,7 +393,7 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
   }
 
   console.log(
-    `[ai/report/exam-followups] duration=${Date.now() - start}ms mode=${input.mode} symptom="${symptom}" pool=${candidates.length} picks=${examFollowUps.length}`,
+    `[ai/report/exam-followups] duration=${Date.now() - start}ms mode=${input.mode} symptom="${symptom ?? '(baseline)'}" pool=${candidates.length} picks=${examFollowUps.length}`,
   );
 
   return { symptom, examFollowUps };
