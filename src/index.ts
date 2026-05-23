@@ -107,8 +107,6 @@ app.use(
   },
   express.static(path.join(process.cwd(), 'public', 'videos'), {
     maxAge: '7d',
-    immutable: false,
-    fallthrough: false,
   }),
 );
 
