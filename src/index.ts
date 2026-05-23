@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import path from 'path';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -93,6 +94,23 @@ app.get('/88f0890a3f0963ee1584b36186bf8382.txt', (_req, res) => {
 app.get('/5623acf06b367e73e7acd16fd111529a.txt', (_req, res) => {
   res.set('Content-Type', 'text/plain').send('');
 });
+
+// Demo videos for examination suggestions. Served cross-origin so the
+// eu.marinahealth.eu frontend can embed them via <video src="…">. Helmet's
+// default Cross-Origin-Resource-Policy is "same-origin" which would block
+// that, so we override CORP on this route only.
+app.use(
+  '/videos',
+  (_req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(path.join(process.cwd(), 'public', 'videos'), {
+    maxAge: '7d',
+    immutable: false,
+    fallthrough: false,
+  }),
+);
 
 app.use('/auth', authRouter);
 app.use('/ai', aiRouter);

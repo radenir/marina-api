@@ -7,6 +7,7 @@ import {
   symptomGuidelines as _symptomGuidelines,
 } from './symptomGuidelines.js';
 import { examinationInstructions as _examinationInstructions } from './examinationInstructions.js';
+import { getExamVideoUrl } from './examVideos.js';
 
 export type ConversationMessage = { role: string; content: unknown };
 
@@ -41,6 +42,13 @@ export interface ExamFollowupQuestion {
   questionPatient: string;
   /** Original English question text from the SYBRA library. */
   questionOriginal: string;
+  /**
+   * Absolute URL to a demo video for this question, when one exists
+   * (e.g. https://api.marinahealth.eu/videos/video-7.mp4). The API serves
+   * these files itself; mapping lives in examVideos.ts. Many questions
+   * have no video and the field is omitted.
+   */
+  videoUrl?: string;
 }
 
 export interface ExamFollowupsResult {
@@ -388,6 +396,7 @@ export async function generateExamFollowups(input: ExamFollowupsInput): Promise<
       question: officerQ,
       questionPatient: patientQ,
       questionOriginal: source.text,
+      videoUrl: getExamVideoUrl(source.examName, source.questionNumber),
     });
     if (examFollowUps.length >= 6) break;
   }

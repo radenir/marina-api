@@ -1,0 +1,26 @@
+Video No.	Final Downloadable Link						Title						Examination			Step	Question
+Video 1		https://vimeo.com/1171298631?share=copy&fl=sv&fe=ci		SpO2 Measurement				Vital signs			Q5/6	If available, measure the patient's oxygen saturation (SpO2) using a pulse oximeter. What is the SpO2 percentage?
+Video 2		https://vimeo.com/1171721739?share=copy&fl=sv&fe=ci		Respiration Rate Measurement			Vital signs			Q2/6	Count the patient's respiratory rate for 30 seconds and multiply by 2. How many breaths per minute?
+Video 3		https://vimeo.com/1171735524?share=copy&fl=sv&fe=ci		Blood Pressure Measurement			Vital signs			Q4/6	Measure the patient's blood pressure using a blood pressure monitor. What is the systolic and diastolic reading?
+Video 4		https://vimeo.com/1171739702?share=copy&fl=sv&fe=ci		Heart Rate Measurement				Vital signs			Q3/6	Check the patient's pulse for 30 seconds and multiply by 2. How many beats per minute? Is the rhythm regular or irregular?
+Video 5		https://vimeo.com/1171673076?share=copy&fl=sv&fe=ci		Temperature Measurement				Vital signs			Q1/6	Measure the patient's body temperature using a thermometer. What is the reading in Celsius or Fahrenheit?
+Video 6		https://vimeo.com/1171814910?share=copy&fl=sv&fe=ci		Capillary Response				Capillary Refill test		Q1/1	How many seconds did it take for color to return after pressing on the fingernail? [Normal: ≤3s adults, ≤2s children]
+Video 7		https://vimeo.com/1172184327?share=copy&fl=sv&fe=ci		Stomach Quadrants				Abdomen examination		Q4/5	Now press gently on all four quadrants of the abdomen. Is there pain in any specific area or quadrant?
+Video 8		https://vimeo.com/1172199854?share=copy&fl=sv&fe=ci		Pupil reaction					Eye examination			Q7/9	Do the pupils shrink when you shine light into one eye?
+Video 9		https://vimeo.com/1173241988?share=copy&fl=sv&fe=ci		Face symmetry					Simple neurologic check		Q1/6	Ask the patient to smile. Does the face look symmetrical and normal? [Facial asymmetry]
+Video 10	https://vimeo.com/1175464269?share=copy&fl=sv&fe=ci		Arms stength					Simple neurologic check		Q4/6	Ask the patient to lift both arms, is there normal strength on both sides? [Motor strength]
+Video 11	https://vimeo.com/1176128877?share=copy&fl=sv&fe=ci		Leg strength					Simple neurologic check		Q5/6	Ask the patient to lift one leg after the other, is there normal strength on both sides? [Motor strength]
+Video 12	https://vimeo.com/1174454252?share=copy&fl=sv&fe=ci		Throat Examination				Throat check			Q1/6	Use a flashlight. Push the tongue down with a tongue depressor or spoon.
+Video 13	https://vimeo.com/1180747647?share=copy&fl=sv&fe=ci		Tonsillitis Check				Throat check			Q2/6	Are the tonsils swollen or can you see white or yellowish patches?
+Video 14	https://vimeo.com/1180747691?share=copy&fl=sv&fe=ci		Mouth Opening Test				Throat check			Q6/6	Can the patient open their mouth normally? How many fingers can you stack between their upper and lower teeth? [Trismus is suspected if the patient can only open their mouth ≤2 fingers vertically between upper and lower front teeth]
+Video 15	https://vimeo.com/1184715949?share=copy&fl=sv&fe=ci		Dehydration Check				Dehydration check		Q1-2/2	Pull the skin up on the back of the patient´s hand. Does the skin quickly return to its original form? [Skin turgor] / Are the tongue, lips or mouth rather dry?
+Video 16	https://vimeo.com/1184792074?share=copy&fl=sv&fe=ci		Pulse Check					Pulse check			Q1-3/3	Use your index and middle fingers and place them on the wrist on the thumb side, or on the neck beside the windpipe. / Press gently until you feel the pulse beat. Is it regular?
+Video 17	https://vimeo.com/1184791868?share=copy&fl=sv&fe=ci		Applying Pressure Whe Bleeding			C-ABCDE assessment		Q1/6	Is the patient bleeding heavily? If yes, apply pressure. If pressure alone does not reduce the bleeding considerably, apply a tourniquet now. [C - Catastrophic bleeding]
+Video 18	https://vimeo.com/1184109682?share=copy&fl=sv&fe=ci		Applying a Tourniquet				C-ABCDE assessment		Q1/6	Is the patient bleeding heavily? If yes, apply pressure. If pressure alone does not reduce the bleeding considerably, apply a tourniquet now. [C - Catastrophic bleeding]
+Video 19	https://vimeo.com/1186317668?share=copy&fl=sv&fe=ci		Recovery Position
+Video 20	https://vimeo.com/1190047604?share=copy&fl=sv&fe=ci		Edema Test					Thrombosis and edema check	Q5/5	Press your thumb above the ankle, then release. Does a dent or dipped area remain in the skin? [pitting edema]
+Video 21	https://vimeo.com/1191250529?share=copy&fl=sv&fe=ci		RICE Principle
+Video 22	https://vimeo.com/1192294812?share=copy&fl=sv&fe=ci		Checking for eye redness (Eyes uveitis)		Eye examination			Q1/9	Is there redness around the iris, which is the colored part of the eye?
+Video 23	https://vimeo.com/1193191531?share=copy&fl=sv&fe=ci		Checking for which type of eye redness		Eye examination			Q1-2/9	Is there redness around the iris, which is the colored part of the eye? / Is there redness around the white part?
+Video 24	https://vimeo.com/1193261088?share=copy&fl=sv&fe=ci		Counting Fingers				Eye examination			Q8/9	Can the person correctly count fingers at a 1 meter distance?
+Video 25	https://vimeo.com/1193957140?share=copy&fl=sv&fe=ci		Check Symmetry					Breathing check			Q5/8	Are both sides of the chest moving symmetrically?
