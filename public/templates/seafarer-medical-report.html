@@ -143,6 +143,14 @@
     color: var(--muted);
     margin-bottom: 2px;
   }
+  /* lowercase format hint appended to a label, e.g. "dd/mm/yyyy" */
+  .field label .fmt {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--muted);
+    opacity: 0.75;
+  }
   .box {
     border: 1px solid var(--border);
     background: var(--field);
@@ -284,21 +292,30 @@
         <div class="field span-2"><label>Ship e-mail</label><div class="box" data-field="ship_email" data-type="text"></div></div>
         <div class="field"><label>Type of vessel</label><div class="box" data-field="vessel_type" data-type="text"></div></div>
         <div class="field"><label>Satellite call no.</label><div class="box" data-field="satellite_phone" data-type="text"></div></div>
-        <div class="field span-2"><label>Medicine chest (type / inventory ref)</label><div class="box" data-field="medicine_chest" data-type="text"></div></div>
+        <div class="field span-2">
+          <label>Medicine chest</label>
+          <div class="checks" style="margin-top:5px">
+            <span class="check"><span class="tick" data-field="medicine_chest" data-type="radio" data-value="A"></span> A</span>
+            <span class="check"><span class="tick" data-field="medicine_chest" data-type="radio" data-value="B"></span> B</span>
+            <span class="check"><span class="tick" data-field="medicine_chest" data-type="radio" data-value="C"></span> C</span>
+          </div>
+        </div>
 
         <div class="subhead">Voyage &amp; Position</div>
-        <div class="field span-2"><label>Current position (lat / long)</label><div class="box" data-field="position" data-type="text"></div></div>
-        <div class="field span-2"><label>Nearest port &amp; ETA</label><div class="box" data-field="nearest_port" data-type="text"></div></div>
+        <div class="field"><label>Latitude <span class="fmt">dd°mm.m′ N/S</span></label><div class="box" data-field="latitude" data-type="text"></div></div>
+        <div class="field"><label>Longitude <span class="fmt">ddd°mm.m′ E/W</span></label><div class="box" data-field="longitude" data-type="text"></div></div>
+        <div class="field"><label>Nearest port</label><div class="box" data-field="nearest_port" data-type="text"></div></div>
+        <div class="field"><label>ETA — nearest port <span class="fmt">2d 6h 30m</span></label><div class="box" data-field="nearest_eta" data-type="text"></div></div>
         <div class="field"><label>Departure port</label><div class="box" data-field="departure_port" data-type="text"></div></div>
-        <div class="field"><label>Departure date</label><div class="box" data-field="departure_date" data-type="text"></div></div>
-        <div class="field"><label>Destination / ETA port</label><div class="box" data-field="arrival_port" data-type="text"></div></div>
-        <div class="field"><label>Destination / ETA date</label><div class="box" data-field="arrival_date" data-type="text"></div></div>
+        <div class="field"><label>Departure date <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="departure_date" data-type="text"></div></div>
+        <div class="field"><label>Destination port</label><div class="box" data-field="arrival_port" data-type="text"></div></div>
+        <div class="field"><label>ETA — destination port <span class="fmt">2d 6h 30m</span></label><div class="box" data-field="arrival_eta" data-type="text"></div></div>
 
         <div class="subhead">Report</div>
         <div class="field"><label>Medical officer name</label><div class="box" data-field="medical_officer" data-type="text"></div></div>
-        <div class="field"><label>Report date</label><div class="box" data-field="report_date" data-type="text"></div></div>
-        <div class="field"><label>Time</label><div class="box" data-field="report_time" data-type="text"></div></div>
-        <div class="field"><label>UTC</label><div class="box" data-field="report_utc" data-type="text"></div></div>
+        <div class="field"><label>Report date <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="report_date" data-type="text"></div></div>
+        <div class="field"><label>Time <span class="fmt">hh:mm</span></label><div class="box" data-field="report_time" data-type="text"></div></div>
+        <div class="field"><label>UTC <span class="fmt">±hh:mm</span></label><div class="box" data-field="report_utc" data-type="text"></div></div>
       </div>
     </div>
   </section>
@@ -309,9 +326,15 @@
     <div class="section-body">
       <div class="grid cols-4">
         <div class="field span-2"><label>Surname, first name</label><div class="box" data-field="patient_name" data-type="text"></div></div>
-        <div class="field"><label>Date of birth</label><div class="box" data-field="dob" data-type="text"></div></div>
+        <div class="field"><label>Date of birth <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="dob" data-type="text"></div></div>
         <div class="field"><label>Age</label><div class="box" data-field="age" data-type="text"></div></div>
-        <div class="field"><label>Sex</label><div class="box" data-field="sex" data-type="text"></div></div>
+        <div class="field">
+          <label>Sex</label>
+          <div class="checks" style="margin-top:5px">
+            <span class="check"><span class="tick" data-field="sex" data-type="radio" data-value="male"></span> Male</span>
+            <span class="check"><span class="tick" data-field="sex" data-type="radio" data-value="female"></span> Female</span>
+          </div>
+        </div>
         <div class="field"><label>Nationality</label><div class="box" data-field="nationality" data-type="text"></div></div>
         <div class="field"><label>Rank</label><div class="box" data-field="rank" data-type="text"></div></div>
         <div class="field"><label>Native language</label><div class="box" data-field="language" data-type="text"></div></div>
