@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "build-seafarer-form": "tsx scripts/build-seafarer-form.ts",
     "start": "node dist/src/index.js",
     "migrate": "tsx migrations/run.ts",
     "generate-keys": "tsx scripts/generate-keys.ts",
@@ -42,6 +43,8 @@
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^6.4.15",
     "@types/pg": "^8.11.6",
+    "pdf-lib": "^1.17.1",
+    "playwright-core": "^1.61.0",
     "tsx": "^4.15.7",
     "typescript": "^5.5.3"
   }

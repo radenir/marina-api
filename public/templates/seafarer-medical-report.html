@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Marina Health — Seafarer Medical Report</title>
+<style>
+  :root {
+    --navy: #0a4b78;
+    --navy-700: #08395d;
+    --accent: #1d6fa5;
+    --tint: #eef4f9;
+    --tint-line: #d6e3ee;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --border: #d8e0ea;
+    --field: #f7fafc;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #eaeef3;
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 10px;
+    line-height: 1.35;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* A4 page — fixed height so each .page maps to exactly one printed sheet */
+  .page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 210mm;
+    height: 297mm;
+    margin: 8mm auto;
+    background: #fff;
+    padding: 14mm 14mm 12mm;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.12);
+    page-break-after: always;
+    overflow: hidden;
+  }
+  /* sections keep their natural height; never compress in the flex column */
+  header, .section { flex: none; }
+  .page:last-child { page-break-after: auto; }
+
+  /* ---------- Header ---------- */
+  header {
+    text-align: center;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--navy);
+    margin-bottom: 16px;
+  }
+  .logo { width: 56px; height: 56px; margin: 0 auto 6px; display: block; }
+  .brand {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--navy);
+    margin: 0;
+  }
+  .brand span { font-weight: 600; color: var(--navy); }
+  .doc-title {
+    margin: 4px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .doc-sub { margin: 2px 0 0; font-size: 9px; color: var(--muted); }
+
+  /* ---------- Section card ---------- */
+  .section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .section > h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 7px 12px;
+    background: var(--tint);
+    border-bottom: 1px solid var(--tint-line);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--navy);
+  }
+  .section > h2 .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .section-body { padding: 8px 12px; }
+
+  /* ---------- Field grid ---------- */
+  .grid { display: grid; gap: 4px 12px; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+  .span-all { grid-column: 1 / -1; }
+
+  /* sub-group divider inside a section */
+  .subhead {
+    grid-column: 1 / -1;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 6px 0 0;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--tint-line);
+  }
+  .subhead:first-child { margin-top: 0; }
+
+  .field label {
+    display: block;
+    font-size: 7.5px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .box {
+    border: 1px solid var(--border);
+    background: var(--field);
+    border-radius: 6px;
+    height: 17px;
+  }
+  .box.lg { height: 38px; }
+  .box.xl { height: 64px; }
+  .box.xxl { height: 150px; }
+  .box.dd { background: transparent; border: none; }
+  .box.mini { width: 34px; height: 16px; display: inline-block; vertical-align: middle; }
+
+  /* checkbox rows */
+  .checks { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  .check { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; }
+  .check .tick {
+    width: 13px; height: 13px;
+    background: transparent;   /* the AcroForm widget draws the visible box */
+    flex: none;
+  }
+
+  /* vitals strip */
+  .vitals { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+  .vital {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 8px;
+    background: var(--field);
+  }
+  .vital .v-label {
+    font-size: 7.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; color: var(--muted);
+  }
+  .vital .v-input {
+    height: 18px; border-bottom: 1px solid var(--tint-line); margin-top: 4px;
+  }
+  .vital .v-unit { font-size: 7px; color: var(--muted); }
+
+  /* scale row 0-10 */
+  .scale { display: flex; gap: 4px; margin-top: 4px; }
+  .scale .pip {
+    flex: 1; text-align: center; font-size: 8px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 4px; padding: 2px 0;
+  }
+
+  .hint { font-size: 7.5px; color: var(--muted); font-style: italic; }
+  .mews-note { font-size: 8px; color: var(--accent); font-style: italic; padding-top: 3px; }
+
+  /* signature */
+  .sign-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; align-items: end; }
+  .sign-line { border-bottom: 1px solid var(--navy); height: 30px; }
+  .sign-cap { font-size: 7.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
+
+  /* body map */
+  .bodymap-grid { display: grid; grid-template-columns: auto auto 1fr; gap: 16px; align-items: start; }
+  .bodymap { text-align: center; }
+  .bodymap-cap {
+    font-size: 8px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--navy); margin-bottom: 5px;
+  }
+  /* the silhouette wrapper is measured by the build to map pin coordinates */
+  .silhouette {
+    position: relative;
+    height: 210px; width: 92px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--field);
+    padding: 6px 4px;
+  }
+  .silhouette svg { height: 100%; width: auto; display: block; margin: 0 auto; }
+  .sil { fill: #fff; stroke: var(--navy); stroke-width: 3; stroke-linejoin: round; }
+  .bodymap-legend label {
+    display: block; font-size: 7.5px; font-weight: 600; letter-spacing: 0.4px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 3px;
+  }
+  .bodymap-hint { font-size: 7.5px; color: var(--muted); font-style: italic; margin-bottom: 6px; }
+
+  footer {
+    flex: none;
+    margin-top: auto;      /* pin to the bottom, after the content */
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.5px;
+    color: var(--muted);
+  }
+
+  @media print {
+    html, body { background: #fff; font-size: 10px; }
+    .page { margin: 0; box-shadow: none; }
+    @page { size: A4; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== PAGE 1 ===================== -->
+<div class="page">
+
+  <header>
+    <svg class="logo" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" aria-label="Marina Health">
+      <circle cx="200" cy="200" r="160" fill="none" stroke="#0a4b78" stroke-width="15" />
+      <circle cx="200" cy="200" r="40" fill="#0a4b78" />
+      <circle cx="200" cy="200" r="30" fill="#f8f9fa" />
+      <circle cx="200" cy="200" r="20" fill="#0a4b78" />
+      <g stroke="#0a4b78" stroke-width="14" stroke-linecap="round">
+        <line x1="200" y1="60" x2="200" y2="140" />
+        <line x1="200" y1="260" x2="200" y2="340" />
+        <line x1="60" y1="200" x2="140" y2="200" />
+        <line x1="260" y1="200" x2="340" y2="200" />
+        <line x1="106" y1="106" x2="162" y2="162" />
+        <line x1="238" y1="238" x2="294" y2="294" />
+        <line x1="294" y1="106" x2="238" y2="162" />
+        <line x1="162" y1="238" x2="106" y2="294" />
+      </g>
+      <g fill="#0a4b78">
+        <circle cx="200" cy="40" r="12" /><circle cx="200" cy="360" r="12" />
+        <circle cx="40" cy="200" r="12" /><circle cx="360" cy="200" r="12" />
+        <circle cx="95" cy="95" r="12" /><circle cx="305" cy="305" r="12" />
+        <circle cx="305" cy="95" r="12" /><circle cx="95" cy="305" r="12" />
+      </g>
+    </svg>
+    <h1 class="brand">Marina <span>Health</span></h1>
+    <p class="doc-title">Seafarer Medical Report</p>
+    <p class="doc-sub">Medical data sheet — for the attending physician</p>
+  </header>
+
+  <!-- 1. VESSEL -->
+  <section class="section">
+    <h2><span class="num">1</span> Vessel &amp; Call Details</h2>
+    <div class="section-body">
+      <div class="grid cols-4">
+        <div class="subhead">Vessel</div>
+        <div class="field span-2"><label>Vessel name</label><div class="box" data-field="vessel_name" data-type="text"></div></div>
+        <div class="field"><label>Call sign</label><div class="box" data-field="call_sign" data-type="text"></div></div>
+        <div class="field"><label>Flag state</label><div class="box" data-field="flag_state" data-type="text"></div></div>
+        <div class="field span-2"><label>Shipping company</label><div class="box" data-field="shipping_company" data-type="text"></div></div>
+        <div class="field span-2"><label>Ship e-mail</label><div class="box" data-field="ship_email" data-type="text"></div></div>
+        <div class="field"><label>Type of vessel</label><div class="box" data-field="vessel_type" data-type="text"></div></div>
+        <div class="field"><label>Satellite call no.</label><div class="box" data-field="satellite_phone" data-type="text"></div></div>
+        <div class="field span-2"><label>Medicine chest (type / inventory ref)</label><div class="box" data-field="medicine_chest" data-type="text"></div></div>
+
+        <div class="subhead">Voyage &amp; Position</div>
+        <div class="field span-2"><label>Current position (lat / long)</label><div class="box" data-field="position" data-type="text"></div></div>
+        <div class="field span-2"><label>Nearest port &amp; ETA</label><div class="box" data-field="nearest_port" data-type="text"></div></div>
+        <div class="field"><label>Departure port</label><div class="box" data-field="departure_port" data-type="text"></div></div>
+        <div class="field"><label>Departure date</label><div class="box" data-field="departure_date" data-type="text"></div></div>
+        <div class="field"><label>Destination / ETA port</label><div class="box" data-field="arrival_port" data-type="text"></div></div>
+        <div class="field"><label>Destination / ETA date</label><div class="box" data-field="arrival_date" data-type="text"></div></div>
+
+        <div class="subhead">Report</div>
+        <div class="field"><label>Medical officer name</label><div class="box" data-field="medical_officer" data-type="text"></div></div>
+        <div class="field"><label>Report date</label><div class="box" data-field="report_date" data-type="text"></div></div>
+        <div class="field"><label>Time</label><div class="box" data-field="report_time" data-type="text"></div></div>
+        <div class="field"><label>UTC</label><div class="box" data-field="report_utc" data-type="text"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. PATIENT -->
+  <section class="section">
+    <h2><span class="num">2</span> Patient</h2>
+    <div class="section-body">
+      <div class="grid cols-4">
+        <div class="field span-2"><label>Surname, first name</label><div class="box" data-field="patient_name" data-type="text"></div></div>
+        <div class="field"><label>Date of birth</label><div class="box" data-field="dob" data-type="text"></div></div>
+        <div class="field"><label>Age</label><div class="box" data-field="age" data-type="text"></div></div>
+        <div class="field"><label>Sex</label><div class="box" data-field="sex" data-type="text"></div></div>
+        <div class="field"><label>Nationality</label><div class="box" data-field="nationality" data-type="text"></div></div>
+        <div class="field"><label>Rank</label><div class="box" data-field="rank" data-type="text"></div></div>
+        <div class="field"><label>Native language</label><div class="box" data-field="language" data-type="text"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. PRESENTING PROBLEM -->
+  <section class="section">
+    <h2><span class="num">3</span> Presenting Medical Problem</h2>
+    <div class="section-body">
+      <div class="field"><label>Problem description</label><div class="box" style="height:199px" data-field="problem_description" data-type="multiline"></div></div>
+    </div>
+  </section>
+
+  <!-- 4. VITALS -->
+  <section class="section">
+    <h2><span class="num">4</span> Vital Signs &amp; Observations</h2>
+    <div class="section-body">
+      <div class="vitals">
+        <div class="vital"><div class="v-label">Temp</div><div class="v-input" data-field="temperature" data-type="text"></div><div class="v-unit">°C</div></div>
+        <div class="vital"><div class="v-label">HR</div><div class="v-input" data-field="heart_rate" data-type="text"></div><div class="v-unit">bpm</div></div>
+        <div class="vital"><div class="v-label">BP</div><div class="v-input" data-field="blood_pressure" data-type="text"></div><div class="v-unit">mmHg</div></div>
+        <div class="vital"><div class="v-label">Resp</div><div class="v-input" data-field="resp_rate" data-type="text"></div><div class="v-unit">/min</div></div>
+        <div class="vital"><div class="v-label">Glucose</div><div class="v-input" data-field="blood_sugar" data-type="text"></div><div class="v-unit">mmol/L</div></div>
+        <div class="vital"><div class="v-label">SpO₂</div><div class="v-input" data-field="spo2" data-type="text"></div><div class="v-unit">%</div></div>
+        <div class="vital"><div class="v-label">Height</div><div class="v-input" data-field="height" data-type="text"></div><div class="v-unit">cm</div></div>
+        <div class="vital"><div class="v-label">Weight</div><div class="v-input" data-field="weight" data-type="text"></div><div class="v-unit">kg</div></div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 2.5fr 1fr 1fr 1fr; margin-top:10px; align-items:start;">
+        <div class="field">
+          <label>Consciousness (AVPU)</label>
+          <div class="checks" style="margin-top:5px">
+            <span class="check"><span class="tick" data-field="consciousness" data-type="radio" data-value="alert"></span> Alert</span>
+            <span class="check"><span class="tick" data-field="consciousness" data-type="radio" data-value="voice"></span> Voice</span>
+            <span class="check"><span class="tick" data-field="consciousness" data-type="radio" data-value="pain"></span> Pain</span>
+            <span class="check"><span class="tick" data-field="consciousness" data-type="radio" data-value="unresponsive"></span> Unresponsive</span>
+          </div>
+        </div>
+        <div class="field"><label>GCS total (/ 15)</label><div class="box" data-field="gcs_total" data-type="text"></div></div>
+        <div class="field"><label>M-EWS score</label><div class="box" data-field="mews_score" data-type="text"></div></div>
+        <div class="field"><label>Pain scale (0–10)</label><div class="box" data-field="pain_scale" data-type="text"></div></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===================== PAGE 2 ===================== -->
+<div class="page">
+
+  <!-- 5. BODY MAP -->
+  <section class="section">
+    <h2><span class="num">5</span> Body Map — Affected Areas</h2>
+    <div class="section-body">
+      <div class="bodymap-grid">
+        <div class="bodymap">
+          <div class="bodymap-cap">Front</div>
+          <div class="silhouette" data-bodymap="front">
+            <svg viewBox="0 0 200 480" xmlns="http://www.w3.org/2000/svg" aria-label="Front body silhouette">
+              <path class="sil" d="M100,8 C121,8 136,24 136,45 C136,62 127,73 117,79 C115,85 115,89 118,95 C129,99 144,104 154,114 C164,123 170,134 174,156 C179,186 181,214 182,252 C183,272 182,300 178,322 C177,332 170,335 165,328 C161,320 161,300 159,280 C157,250 155,212 150,182 C148,170 144,162 138,152 C139,182 141,212 139,242 C138,257 137,272 137,300 C136,338 135,378 133,418 C132,432 131,440 131,447 L146,457 C149,461 148,464 143,464 L119,464 C115,463 114,457 114,448 C112,400 109,340 106,286 L100,273 L94,286 C91,340 88,400 86,448 C86,457 85,463 81,464 L57,464 C52,464 51,461 54,457 L69,447 C69,440 68,432 67,418 C65,378 64,338 63,300 C63,272 62,257 61,242 C59,212 61,182 62,152 C56,162 52,170 50,182 C45,212 43,250 41,280 C39,300 39,320 35,328 C30,335 23,332 22,322 C18,300 17,272 18,252 C19,214 21,186 26,156 C30,134 36,123 46,114 C56,104 71,99 82,95 C85,89 85,85 83,79 C73,73 64,62 64,45 C64,24 79,8 100,8 Z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="bodymap">
+          <div class="bodymap-cap">Back</div>
+          <div class="silhouette" data-bodymap="back">
+            <svg viewBox="0 0 200 480" xmlns="http://www.w3.org/2000/svg" aria-label="Back body silhouette">
+              <path class="sil" d="M100,8 C121,8 136,24 136,45 C136,62 127,73 117,79 C115,85 115,89 118,95 C129,99 144,104 154,114 C164,123 170,134 174,156 C179,186 181,214 182,252 C183,272 182,300 178,322 C177,332 170,335 165,328 C161,320 161,300 159,280 C157,250 155,212 150,182 C148,170 144,162 138,152 C139,182 141,212 139,242 C138,257 137,272 137,300 C136,338 135,378 133,418 C132,432 131,440 131,447 L146,457 C149,461 148,464 143,464 L119,464 C115,463 114,457 114,448 C112,400 109,340 106,286 L100,273 L94,286 C91,340 88,400 86,448 C86,457 85,463 81,464 L57,464 C52,464 51,461 54,457 L69,447 C69,440 68,432 67,418 C65,378 64,338 63,300 C63,272 62,257 61,242 C59,212 61,182 62,152 C56,162 52,170 50,182 C45,212 43,250 41,280 C39,300 39,320 35,328 C30,335 23,332 22,322 C18,300 17,272 18,252 C19,214 21,186 26,156 C30,134 36,123 46,114 C56,104 71,99 82,95 C85,89 85,85 83,79 C73,73 64,62 64,45 C64,24 79,8 100,8 Z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="bodymap-legend">
+          <label>Marked areas / description</label>
+          <div class="bodymap-hint">Numbered pins are placed on the figures; describe each below.</div>
+          <div class="box xl" data-field="body_notes" data-type="multiline"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. HISTORY & EXAMINATION -->
+  <section class="section">
+    <h2><span class="num">6</span> History &amp; Examination</h2>
+    <div class="section-body">
+      <div class="grid cols-2">
+        <div class="field"><label>Associated symptoms</label><div class="box xxl" data-field="associated_symptoms" data-type="multiline"></div></div>
+        <div class="field"><label>Past medical history</label><div class="box xxl" data-field="past_medical_history" data-type="multiline"></div></div>
+        <div class="field"><label>Medications (name / dose / days)</label><div class="box xxl" data-field="medications" data-type="multiline"></div></div>
+        <div class="field"><label>Allergies</label><div class="box xxl" data-field="allergies" data-type="multiline"></div></div>
+        <div class="field"><label>Investigations (POCT / tests / results)</label><div class="box xxl" data-field="investigations" data-type="multiline"></div></div>
+        <div class="field"><label>Physical examination</label><div class="box xxl" data-field="physical_exam" data-type="multiline"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. OTHER COMMENTS -->
+  <section class="section">
+    <h2><span class="num">7</span> Other Comments</h2>
+    <div class="section-body">
+      <div class="field span-all"><label>Other comments</label><div class="box" style="height:110px" data-field="other_comments" data-type="multiline"></div></div>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>
