@@ -17,6 +17,8 @@ import { parallelExtract } from '../lib/medicalExtract.js';
 import type { UserProfile } from '../lib/medicalExtract.js';
 import { fillRmdFormPdftk, checkPdftkAvailable } from '../lib/pdftk.js';
 import { mapSummaryToRmdFields, extractMedicationFields } from '../lib/rmdMapper.js';
+import { mapSummaryToSeafarerFields } from '../lib/seafarerMapper.js';
+import { fillSeafarerForm } from '../lib/seafarerPdf.js';
 import * as fs from 'fs';
 import { query } from '../lib/db.js';
 import { enqueuePdfEmail } from '../lib/emailQueue.js';
@@ -732,6 +734,8 @@ aiRouter.post(
 
 const GeneratePdfSchema = z.object({
   summary: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])),
+  // Which PDF template to fill. Defaults to the RMD form for backward compatibility.
+  template: z.enum(['rmd', 'marina']).optional().default('rmd'),
 });
 
 aiRouter.post(
@@ -747,23 +751,26 @@ aiRouter.post(
       return;
     }
 
-    const available = await checkPdftkAvailable();
-    if (!available) {
+    const { summary, template } = parsed.data;
+
+    // The Marina form is filled in-process with pdf-lib; only the RMD form needs pdftk.
+    if (template === 'rmd' && !(await checkPdftkAvailable())) {
       res.status(503).json({ error: 'pdftk not available on this server' });
       return;
     }
 
-    const { summary } = parsed.data;
-    const medFields = extractMedicationFields(summary.currentMedications);
-    const summaryWithMeds = { ...summary, ...medFields };
-    const rmdFields = mapSummaryToRmdFields(summaryWithMeds);
-
-    const outputPath = `/tmp/marina_rmd_${Date.now()}.pdf`;
+    const outputPath = `/tmp/marina_${template}_${Date.now()}.pdf`;
     let pdfBuffer: Buffer;
     try {
-      pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
+      if (template === 'marina') {
+        pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(summary), outputPath);
+      } else {
+        const medFields = extractMedicationFields(summary.currentMedications);
+        const rmdFields = mapSummaryToRmdFields({ ...summary, ...medFields });
+        pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
+      }
     } catch (err) {
-      console.error('[ai/generate-pdf] pdftk error:', (err as Error).message);
+      console.error(`[ai/generate-pdf] ${template} fill error:`, (err as Error).message);
       res.status(502).json({ error: 'PDF generation failed' });
       return;
     } finally {
@@ -781,9 +788,12 @@ aiRouter.post(
       file_size_bytes: pdfBuffer.length,
     });
 
+    const filename = template === 'marina'
+      ? 'marina-seafarer-medical-report.pdf'
+      : 'rmd-maritime-medical-report.pdf';
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="rmd-maritime-medical-report.pdf"',
+      'Content-Disposition': `attachment; filename="${filename}"`,
       'Content-Length': pdfBuffer.length,
     });
     res.send(pdfBuffer);
@@ -838,9 +848,9 @@ aiRouter.post(
       recipient = parsed.data.recipientEmail;
     }
 
-    const { summary } = parsed.data;
+    const { summary, template } = parsed.data;
 
-    await enqueuePdfEmail(recipient, summary);
+    await enqueuePdfEmail(recipient, summary, template);
 
     const fieldsPopulated = Object.values(summary).filter(
       v => v !== '' && v !== false && v !== null && v !== undefined

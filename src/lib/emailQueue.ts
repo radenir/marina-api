@@ -4,7 +4,11 @@ import { config } from '../config';
 import { sendEmail, buildPdfReportEmail } from './email';
 import { fillRmdFormPdftk } from './pdftk';
 import { mapSummaryToRmdFields, extractMedicationFields } from './rmdMapper';
+import { mapSummaryToSeafarerFields } from './seafarerMapper';
+import { fillSeafarerForm } from './seafarerPdf';
 import * as fs from 'fs';
+
+export type PdfTemplate = 'rmd' | 'marina';
 
 // ---------------------------------------------------------------------------
 // Job types
@@ -24,6 +28,9 @@ export type PdfEmailJob = {
   // Store the summary instead of the Buffer so retries can regenerate the PDF
   // without needing to re-upload a large binary to Redis.
   summary: Record<string, string | boolean | null>;
+  // Which template to fill. Optional for backward compatibility with jobs that
+  // were enqueued before this field existed (defaults to 'rmd').
+  template?: PdfTemplate;
 };
 
 export type EmailJobData = SimpleEmailJob | PdfEmailJob;
@@ -74,23 +81,30 @@ export function createEmailWorker(): Worker<EmailJobData> {
       }
 
       // pdf — regenerate from summary so no Buffer is stored in Redis
-      const medFields = extractMedicationFields(data.summary.currentMedications);
-      const rmdFields = mapSummaryToRmdFields({ ...data.summary, ...medFields });
-
-      const outputPath = `/tmp/marina_rmd_q_${job.id}_${Date.now()}.pdf`;
+      const template: PdfTemplate = data.template ?? 'rmd';
+      const outputPath = `/tmp/marina_${template}_q_${job.id}_${Date.now()}.pdf`;
       let pdfBuffer: Buffer;
       try {
-        pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
+        if (template === 'marina') {
+          pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(data.summary), outputPath);
+        } else {
+          const medFields = extractMedicationFields(data.summary.currentMedications);
+          const rmdFields = mapSummaryToRmdFields({ ...data.summary, ...medFields });
+          pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
+        }
       } finally {
         try { if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath); } catch { /* ignore */ }
       }
 
+      const filename = template === 'marina'
+        ? 'marina-seafarer-medical-report.pdf'
+        : 'rmd-maritime-medical-report.pdf';
       const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       const emailContent = buildPdfReportEmail(dateStr);
       await sendEmail({
         to: data.to,
         ...emailContent,
-        attachments: [{ filename: 'rmd-maritime-medical-report.pdf', content: pdfBuffer, contentType: 'application/pdf' }],
+        attachments: [{ filename, content: pdfBuffer, contentType: 'application/pdf' }],
       });
     },
     {
@@ -121,6 +135,10 @@ export async function enqueueEmail(data: SimpleEmailJob): Promise<void> {
   await emailQueue.add('send', data);
 }
 
-export async function enqueuePdfEmail(to: string, summary: Record<string, string | boolean | null>): Promise<void> {
-  await emailQueue.add('send', { type: 'pdf', to, summary });
+export async function enqueuePdfEmail(
+  to: string,
+  summary: Record<string, string | boolean | null>,
+  template: PdfTemplate = 'rmd',
+): Promise<void> {
+  await emailQueue.add('send', { type: 'pdf', to, summary, template });
 }

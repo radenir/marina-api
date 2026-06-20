@@ -30,6 +30,7 @@
     "multer": "^2.1.1",
     "nodemailer": "^6.9.14",
     "openai": "^6.29.0",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.12.0",
     "zod": "^3.23.8"
   },
@@ -43,7 +44,6 @@
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^6.4.15",
     "@types/pg": "^8.11.6",
-    "pdf-lib": "^1.17.1",
     "playwright-core": "^1.61.0",
     "tsx": "^4.15.7",
     "typescript": "^5.5.3"

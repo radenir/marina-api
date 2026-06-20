@@ -71,17 +71,21 @@ trailer
 %%EOF`;
 }
 
-export async function fillRmdFormPdftk(
+/**
+ * Fill any AcroForm PDF template with the given field values.
+ * @param templatePath absolute path to a fillable PDF template
+ */
+export async function fillFormPdftk(
+  templatePath: string,
   data: Record<string, unknown>,
   outputPath: string
 ): Promise<Buffer> {
-  const templatePath = path.join(process.cwd(), 'public/templates/rmd_form.pdf');
   const tempFdfPath = `/tmp/marina_fdf_${Date.now()}.fdf`;
   const tempPdfPath = `/tmp/marina_filled_${Date.now()}.pdf`;
 
   try {
     if (!fs.existsSync(templatePath)) {
-      throw new Error(`RMD template not found at: ${templatePath}`);
+      throw new Error(`PDF template not found at: ${templatePath}`);
     }
 
     const fdfContent = generateFDF(data, templatePath);
@@ -114,8 +118,17 @@ export async function fillRmdFormPdftk(
     if (fs.existsSync(tempPdfPath)) fs.unlinkSync(tempPdfPath);
 
     const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to generate RMD PDF: ${msg}`);
+    throw new Error(`Failed to generate PDF: ${msg}`);
   }
+}
+
+/** Fill the RMD maritime medical form (backwards-compatible wrapper). */
+export function fillRmdFormPdftk(
+  data: Record<string, unknown>,
+  outputPath: string
+): Promise<Buffer> {
+  const templatePath = path.join(process.cwd(), 'public/templates/rmd_form.pdf');
+  return fillFormPdftk(templatePath, data, outputPath);
 }
 
 export async function checkPdftkAvailable(): Promise<boolean> {

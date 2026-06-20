@@ -1,3 +1,5 @@
+// @ts-nocheck — standalone build tool (run via tsx); page.evaluate callbacks
+// run in the browser and use DOM globals not present in the server tsconfig lib.
 /**
  * Build the fillable "Seafarer Medical Report" PDF.
  *
@@ -203,6 +205,13 @@ async function main() {
         backgroundColor: rgb(1, 1, 1),
       });
     }
+    // pdf-lib gives radio widgets numeric on-states (/0../n) and no /Opt, so the
+    // semantic export values can't be resolved by name. Record them in /Opt (in
+    // option order) so the server-side filler can map name → index.
+    rg.acroField.dict.set(
+      PDFName.of('Opt'),
+      doc.context.obj(opts.map((o) => o.value || 'on')),
+    );
   }
 
   // Standalone checkboxes (e.g. AVPU). The widget draws its own navy box + white

@@ -6,7 +6,7 @@
 
 export type MedicalSummary = Record<string, string | boolean | null | undefined>;
 
-function parseVitals(vitals: string): {
+export function parseVitals(vitals: string): {
   temperature?: string;
   pulse?: string;
   systole?: string;
