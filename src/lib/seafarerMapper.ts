@@ -5,12 +5,12 @@
  * AcroForm field names of public/templates/seafarer-medical-report.pdf
  * (snake_case). Mirrors rmdMapper.ts but for the Marina seafarer form.
  *
- * Radio fields (sex, consciousness, medicine_chest) are selected by emitting
+ * Radio fields (sex, consciousness) are selected by emitting
  * `{ value: true, onValue: '<exportValue>' }`, which the FDF generator turns
  * into `/V /<exportValue>` — the export values must match the form exactly:
  *   sex:           male | female
  *   consciousness: alert | voice | pain | unresponsive
- *   medicine_chest: A | B | C
+ * medicine_chest is a free-text field (flag-state chests vary; A/B/C is EU-only).
  *
  * Fields with no source in MedicalSummary are simply omitted (left blank):
  * flag_state, vessel_type, latitude/longitude (only a combined location exists),
@@ -44,7 +44,8 @@ export function mapSummaryToSeafarerFields(summary: MedicalSummary): Record<stri
     shipping_company: (summary.patientCompany as string) || '',
     ship_email: (summary.patientEmail as string) || '',
     satellite_phone: (summary.shipSatellitePhone as string) || '',
-    medicine_chest: radio(summary.medicineChestType, { a: 'A', b: 'B', c: 'C' }),
+    // free text now (A/B/C is EU-only; flag-state chests vary), so pass through
+    medicine_chest: (summary.medicineChestType as string) || '',
 
     // ---- Voyage & position ----
     nearest_port: (summary.nearestPort as string) || '',

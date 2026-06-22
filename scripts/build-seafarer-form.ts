@@ -161,6 +161,7 @@ async function main() {
   const pdfPages = doc.getPages();
   const helv = await doc.embedFont(StandardFonts.Helvetica);
   const navy = rgb(10 / 255, 75 / 255, 120 / 255); // #0a4b78 — matches the titles
+  const fieldBorder = rgb(216 / 255, 224 / 255, 234 / 255); // #d8e0ea — matches the section card borders
 
   // Group radios so each named group gets one PDFRadioGroup with N options.
   const radioGroups = new Map<string, Measured[]>();
@@ -187,7 +188,16 @@ async function main() {
       const tf = form.createTextField(m.field);
       if (m.type === 'multiline') tf.enableMultiline();
       const size = m.type === 'multiline' ? 9 : 10;
-      tf.addToPage(pdfPages[m.page], { ...toRect(m), borderWidth: 0, font: helv, textColor: navy });
+      // a visible border on the widget itself so the clickable/writable area is
+      // obvious in every viewer (the printed HTML box alone gets hidden under the
+      // transparent field overlay).
+      tf.addToPage(pdfPages[m.page], {
+        ...toRect(m),
+        borderWidth: 0.5,
+        borderColor: fieldBorder,
+        font: helv,
+        textColor: navy,
+      });
       tf.setFontSize(size);
       textFields.push({ tf, size });
     }

@@ -109,6 +109,8 @@
     font-size: 9px;
     font-weight: 700;
   }
+  /* section-header glyph: a simple line icon, navy so it survives B/W fax */
+  .section > h2 svg.ico { width: 14px; height: 14px; flex: none; stroke: var(--navy); }
   .section-body { padding: 8px 12px; }
 
   /* ---------- Field grid ---------- */
@@ -133,6 +135,8 @@
     border-bottom: 1px solid var(--tint-line);
   }
   .subhead:first-child { margin-top: 0; }
+  /* small glyph on a sub-group divider, accent blue, B/W-fax safe */
+  .subhead svg.sico { width: 11px; height: 11px; vertical-align: -2px; margin-right: 4px; stroke: var(--accent); }
 
   .field label {
     display: block;
@@ -151,9 +155,14 @@
     color: var(--muted);
     opacity: 0.75;
   }
+  /* small inline glyph on a field label (e.g. medications, allergies) */
+  .field label svg.lico {
+    width: 12px; height: 12px; vertical-align: -2px; margin-right: 4px;
+    stroke: var(--accent); flex: none;
+  }
   .box {
-    border: 1px solid var(--border);
-    background: var(--field);
+    border: 0.5px solid var(--border);   /* same as section card borders */
+    background: #fff;
     border-radius: 6px;
     height: 17px;
   }
@@ -182,10 +191,11 @@
   }
   .vital .v-label {
     font-size: 7.5px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.4px; color: var(--muted);
+    letter-spacing: 0.4px; color: var(--muted); white-space: nowrap;
   }
+  .vital .v-label svg.vico { width: 10px; height: 10px; vertical-align: -1px; margin-right: 3px; stroke: var(--accent); }
   .vital .v-input {
-    height: 18px; border-bottom: 1px solid var(--tint-line); margin-top: 4px;
+    height: 18px; border: 0.5px solid var(--border); background: #fff; border-radius: 4px; margin-top: 4px;
   }
   .vital .v-unit { font-size: 7px; color: var(--muted); }
 
@@ -281,70 +291,63 @@
 
   <!-- 1. VESSEL -->
   <section class="section">
-    <h2><span class="num">1</span> Vessel &amp; Call Details</h2>
+    <h2><span class="num">1</span> <svg class="ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12a7 7 0 0 0 14 0"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg> Vessel &amp; Call Details</h2>
     <div class="section-body">
       <div class="grid cols-4">
-        <div class="subhead">Vessel</div>
-        <div class="field span-2"><label>Vessel name</label><div class="box" data-field="vessel_name" data-type="text"></div></div>
-        <div class="field"><label>Call sign</label><div class="box" data-field="call_sign" data-type="text"></div></div>
-        <div class="field"><label>Flag state</label><div class="box" data-field="flag_state" data-type="text"></div></div>
-        <div class="field span-2"><label>Shipping company</label><div class="box" data-field="shipping_company" data-type="text"></div></div>
-        <div class="field span-2"><label>Ship e-mail</label><div class="box" data-field="ship_email" data-type="text"></div></div>
-        <div class="field"><label>Type of vessel</label><div class="box" data-field="vessel_type" data-type="text"></div></div>
-        <div class="field"><label>Satellite call no.</label><div class="box" data-field="satellite_phone" data-type="text"></div></div>
-        <div class="field span-2">
-          <label>Medicine chest</label>
-          <div class="checks" style="margin-top:5px">
-            <span class="check"><span class="tick" data-field="medicine_chest" data-type="radio" data-value="A"></span> A</span>
-            <span class="check"><span class="tick" data-field="medicine_chest" data-type="radio" data-value="B"></span> B</span>
-            <span class="check"><span class="tick" data-field="medicine_chest" data-type="radio" data-value="C"></span> C</span>
-          </div>
-        </div>
+        <div class="subhead"><svg class="sico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h18l-1.8 5a2 2 0 0 1-1.9 1.4H6.7a2 2 0 0 1-1.9-1.4z"/><line x1="12" y1="3" x2="12" y2="14"/><path d="M12 6l6 3.2"/></svg>Vessel</div>
+        <div class="field span-2"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h18l-1.8 5a2 2 0 0 1-1.9 1.4H6.7a2 2 0 0 1-1.9-1.4z"/><line x1="12" y1="3" x2="12" y2="14"/><path d="M12 6l6 3.2"/></svg>Vessel name</label><div class="box" data-field="vessel_name" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>Call sign</label><div class="box" data-field="call_sign" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>Flag state</label><div class="box" data-field="flag_state" data-type="text"></div></div>
+        <div class="field span-2"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 21v-4h6v4"/><line x1="9" y1="7" x2="9.01" y2="7"/><line x1="15" y1="7" x2="15.01" y2="7"/><line x1="9" y1="11" x2="9.01" y2="11"/><line x1="15" y1="11" x2="15.01" y2="11"/></svg>Shipping company</label><div class="box" data-field="shipping_company" data-type="text"></div></div>
+        <div class="field span-2"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Ship e-mail</label><div class="box" data-field="ship_email" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>Type of vessel</label><div class="box" data-field="vessel_type" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.5 2.6.6a2 2 0 0 1 1.7 2z"/></svg>Satellite call no.</label><div class="box" data-field="satellite_phone" data-type="text"></div></div>
+        <div class="field span-2"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="9.5" y1="13.5" x2="14.5" y2="13.5"/></svg>Medicine chest</label><div class="box" data-field="medicine_chest" data-type="text"></div></div>
 
-        <div class="subhead">Voyage &amp; Position</div>
-        <div class="field"><label>Latitude <span class="fmt">dd°mm.m′ N/S</span></label><div class="box" data-field="latitude" data-type="text"></div></div>
-        <div class="field"><label>Longitude <span class="fmt">ddd°mm.m′ E/W</span></label><div class="box" data-field="longitude" data-type="text"></div></div>
-        <div class="field"><label>Nearest port</label><div class="box" data-field="nearest_port" data-type="text"></div></div>
-        <div class="field"><label>ETA — nearest port <span class="fmt">2d 6h 30m</span></label><div class="box" data-field="nearest_eta" data-type="text"></div></div>
-        <div class="field"><label>Departure port</label><div class="box" data-field="departure_port" data-type="text"></div></div>
-        <div class="field"><label>Departure date <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="departure_date" data-type="text"></div></div>
-        <div class="field"><label>Destination port</label><div class="box" data-field="arrival_port" data-type="text"></div></div>
-        <div class="field"><label>ETA — destination port <span class="fmt">2d 6h 30m</span></label><div class="box" data-field="arrival_eta" data-type="text"></div></div>
+        <div class="subhead"><svg class="sico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Voyage &amp; Position</div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>Latitude <span class="fmt">dd°mm.m′ N/S</span></label><div class="box" data-field="latitude" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>Longitude <span class="fmt">ddd°mm.m′ E/W</span></label><div class="box" data-field="longitude" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12a7 7 0 0 0 14 0"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>Nearest port</label><div class="box" data-field="nearest_port" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>ETA — nearest port <span class="fmt">2d 6h 30m</span></label><div class="box" data-field="nearest_eta" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Departure port</label><div class="box" data-field="departure_port" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Departure date <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="departure_date" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Destination port</label><div class="box" data-field="arrival_port" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>ETA — destination port <span class="fmt">2d 6h 30m</span></label><div class="box" data-field="arrival_eta" data-type="text"></div></div>
 
-        <div class="subhead">Report</div>
-        <div class="field"><label>Medical officer name</label><div class="box" data-field="medical_officer" data-type="text"></div></div>
-        <div class="field"><label>Report date <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="report_date" data-type="text"></div></div>
-        <div class="field"><label>Time <span class="fmt">hh:mm</span></label><div class="box" data-field="report_time" data-type="text"></div></div>
-        <div class="field"><label>UTC <span class="fmt">±hh:mm</span></label><div class="box" data-field="report_utc" data-type="text"></div></div>
+        <div class="subhead"><svg class="sico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="15" y1="13" x2="9" y2="13"/><line x1="15" y1="17" x2="9" y2="17"/></svg>Report</div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Medical officer name</label><div class="box" data-field="medical_officer" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Report date <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="report_date" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>Time <span class="fmt">hh:mm</span></label><div class="box" data-field="report_time" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>UTC <span class="fmt">±hh:mm</span></label><div class="box" data-field="report_utc" data-type="text"></div></div>
       </div>
     </div>
   </section>
 
   <!-- 2. PATIENT -->
   <section class="section">
-    <h2><span class="num">2</span> Patient</h2>
+    <h2><span class="num">2</span> <svg class="ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Patient</h2>
     <div class="section-body">
       <div class="grid cols-4">
-        <div class="field span-2"><label>Surname, first name</label><div class="box" data-field="patient_name" data-type="text"></div></div>
-        <div class="field"><label>Date of birth <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="dob" data-type="text"></div></div>
-        <div class="field"><label>Age</label><div class="box" data-field="age" data-type="text"></div></div>
+        <div class="field span-2"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M15 8h3"/><path d="M15 12h3"/><path d="M6.5 16a3 3 0 0 1 5 0"/></svg>Surname, first name</label><div class="box" data-field="patient_name" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/></svg>Date of birth <span class="fmt">dd/mm/yyyy</span></label><div class="box" data-field="dob" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22"/><path d="M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2"/></svg>Age</label><div class="box" data-field="age" data-type="text"></div></div>
         <div class="field">
-          <label>Sex</label>
+          <label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="4"/><path d="M11 15v6"/><path d="M8 18h6"/><path d="M14.5 7.5 19 3"/><path d="M15 3h4v4"/></svg>Sex</label>
           <div class="checks" style="margin-top:5px">
             <span class="check"><span class="tick" data-field="sex" data-type="radio" data-value="male"></span> Male</span>
             <span class="check"><span class="tick" data-field="sex" data-type="radio" data-value="female"></span> Female</span>
           </div>
         </div>
-        <div class="field"><label>Nationality</label><div class="box" data-field="nationality" data-type="text"></div></div>
-        <div class="field"><label>Rank</label><div class="box" data-field="rank" data-type="text"></div></div>
-        <div class="field"><label>Native language</label><div class="box" data-field="language" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M9 17h6"/></svg>Nationality</label><div class="box" data-field="nationality" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M8.2 12.5 7 22l5-3 5 3-1.2-9.5"/></svg>Rank</label><div class="box" data-field="rank" data-type="text"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h12"/><path d="M8 2v3"/><path d="M5 8c0 4 2.5 7 6 8"/><path d="M11 5c0 5-3 9-8 11"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>Native language</label><div class="box" data-field="language" data-type="text"></div></div>
       </div>
     </div>
   </section>
 
   <!-- 3. PRESENTING PROBLEM -->
   <section class="section">
-    <h2><span class="num">3</span> Presenting Medical Problem</h2>
+    <h2><span class="num">3</span> <svg class="ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg> Presenting Medical Problem</h2>
     <div class="section-body">
       <div class="field"><label>Problem description</label><div class="box" style="height:199px" data-field="problem_description" data-type="multiline"></div></div>
     </div>
@@ -352,17 +355,17 @@
 
   <!-- 4. VITALS -->
   <section class="section">
-    <h2><span class="num">4</span> Vital Signs &amp; Observations</h2>
+    <h2><span class="num">4</span> <svg class="ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Vital Signs &amp; Observations</h2>
     <div class="section-body">
       <div class="vitals">
-        <div class="vital"><div class="v-label">Temp</div><div class="v-input" data-field="temperature" data-type="text"></div><div class="v-unit">°C</div></div>
-        <div class="vital"><div class="v-label">HR</div><div class="v-input" data-field="heart_rate" data-type="text"></div><div class="v-unit">bpm</div></div>
-        <div class="vital"><div class="v-label">BP</div><div class="v-input" data-field="blood_pressure" data-type="text"></div><div class="v-unit">mmHg</div></div>
-        <div class="vital"><div class="v-label">Resp</div><div class="v-input" data-field="resp_rate" data-type="text"></div><div class="v-unit">/min</div></div>
-        <div class="vital"><div class="v-label">Glucose</div><div class="v-input" data-field="blood_sugar" data-type="text"></div><div class="v-unit">mmol/L</div></div>
-        <div class="vital"><div class="v-label">SpO₂</div><div class="v-input" data-field="spo2" data-type="text"></div><div class="v-unit">%</div></div>
-        <div class="vital"><div class="v-label">Height</div><div class="v-input" data-field="height" data-type="text"></div><div class="v-unit">cm</div></div>
-        <div class="vital"><div class="v-label">Weight</div><div class="v-input" data-field="weight" data-type="text"></div><div class="v-unit">kg</div></div>
+        <div class="vital"><div class="v-label"><svg class="vico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>Temp</div><div class="v-input" data-field="temperature" data-type="text"></div><div class="v-unit">°C</div></div>
+        <div class="vital"><div class="v-label"><svg class="vico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7z"/></svg>HR</div><div class="v-input" data-field="heart_rate" data-type="text"></div><div class="v-unit">bpm</div></div>
+        <div class="vital"><div class="v-label"><svg class="vico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.3 19a10 10 0 1 1 17.4 0"/><line x1="12" y1="14" x2="15.5" y2="10.5"/></svg>BP</div><div class="v-input" data-field="blood_pressure" data-type="text"></div><div class="v-unit">mmHg</div></div>
+        <div class="vital"><div class="v-label"><svg class="vico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/><path d="M17.7 7.5A2.5 2.5 0 1 1 19.5 12H2"/></svg>Resp</div><div class="v-input" data-field="resp_rate" data-type="text"></div><div class="v-unit">/min</div></div>
+        <div class="vital"><div class="v-label"><svg class="vico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>Glucose</div><div class="v-input" data-field="blood_sugar" data-type="text"></div><div class="v-unit">mmol/L</div></div>
+        <div class="vital"><div class="v-label"><svg class="vico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>SpO₂</div><div class="v-input" data-field="spo2" data-type="text"></div><div class="v-unit">%</div></div>
+        <div class="vital"><div class="v-label"><svg class="vico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="8 7 12 3 16 7"/><polyline points="8 17 12 21 16 17"/></svg>Height</div><div class="v-input" data-field="height" data-type="text"></div><div class="v-unit">cm</div></div>
+        <div class="vital"><div class="v-label"><svg class="vico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="2.5"/><path d="M5 9h14l1.4 10.2a1 1 0 0 1-1 1.3H4.6a1 1 0 0 1-1-1.3z"/></svg>Weight</div><div class="v-input" data-field="weight" data-type="text"></div><div class="v-unit">kg</div></div>
       </div>
 
       <div class="grid" style="grid-template-columns: 2.5fr 1fr 1fr 1fr; margin-top:10px; align-items:start;">
@@ -389,7 +392,7 @@
 
   <!-- 5. BODY MAP -->
   <section class="section">
-    <h2><span class="num">5</span> Body Map — Affected Areas</h2>
+    <h2><span class="num">5</span> <svg class="ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Body Map — Affected Areas</h2>
     <div class="section-body">
       <div class="bodymap-grid">
         <div class="bodymap">
@@ -419,22 +422,22 @@
 
   <!-- 6. HISTORY & EXAMINATION -->
   <section class="section">
-    <h2><span class="num">6</span> History &amp; Examination</h2>
+    <h2><span class="num">6</span> <svg class="ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg> History &amp; Examination</h2>
     <div class="section-body">
       <div class="grid cols-2">
-        <div class="field"><label>Associated symptoms</label><div class="box xxl" data-field="associated_symptoms" data-type="multiline"></div></div>
-        <div class="field"><label>Past medical history</label><div class="box xxl" data-field="past_medical_history" data-type="multiline"></div></div>
-        <div class="field"><label>Medications (name / dose / days)</label><div class="box xxl" data-field="medications" data-type="multiline"></div></div>
-        <div class="field"><label>Allergies</label><div class="box xxl" data-field="allergies" data-type="multiline"></div></div>
-        <div class="field"><label>Investigations (POCT / tests / results)</label><div class="box xxl" data-field="investigations" data-type="multiline"></div></div>
-        <div class="field"><label>Physical examination</label><div class="box xxl" data-field="physical_exam" data-type="multiline"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>Associated symptoms</label><div class="box xxl" data-field="associated_symptoms" data-type="multiline"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/><path d="M12 7v5l3 2"/></svg>Past medical history</label><div class="box xxl" data-field="past_medical_history" data-type="multiline"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7z"/><path d="m8.5 8.5 7 7"/></svg>Medications (name / dose / days)</label><div class="box xxl" data-field="medications" data-type="multiline"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="6.5" r="3.5"/><path d="M2.5 21v-1.5A5 5 0 0 1 7.5 14.5h1a5 5 0 0 1 4.3 2.4"/><line x1="13.5" y1="5.5" x2="16.5" y2="4.5"/><line x1="14" y1="8.5" x2="18" y2="8.5"/><line x1="13.5" y1="11.5" x2="16.5" y2="12.5"/></svg>Allergies</label><div class="box xxl" data-field="allergies" data-type="multiline"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2v17.5a2.5 2.5 0 0 1-5 0V2"/><line x1="8.5" y1="2" x2="15.5" y2="2"/><line x1="9.5" y1="14" x2="14.5" y2="14"/></svg>Investigations</label><div class="box xxl" data-field="investigations" data-type="multiline"></div></div>
+        <div class="field"><label><svg class="lico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.7" y2="16.7"/></svg>Physical examination</label><div class="box xxl" data-field="physical_exam" data-type="multiline"></div></div>
       </div>
     </div>
   </section>
 
   <!-- 7. OTHER COMMENTS -->
   <section class="section">
-    <h2><span class="num">7</span> Other Comments</h2>
+    <h2><span class="num">7</span> <svg class="ico" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Other Comments</h2>
     <div class="section-body">
       <div class="field span-all"><label>Other comments</label><div class="box" style="height:110px" data-field="other_comments" data-type="multiline"></div></div>
     </div>
