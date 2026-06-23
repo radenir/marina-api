@@ -138,14 +138,19 @@
   /* small glyph on a sub-group divider, accent blue, B/W-fax safe */
   .subhead svg.sico { width: 11px; height: 11px; vertical-align: -2px; margin-right: 4px; stroke: var(--accent); }
 
+  /* Stack label over box and pin the box to the bottom so every input in a
+     grid row aligns on one line even when a neighbour's label wraps to two. */
+  .field { display: flex; flex-direction: column; }
+  .field > .box { margin-top: auto; }
   .field label {
     display: block;
     font-size: 7.5px;
     font-weight: 600;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.3px;
     text-transform: uppercase;
     color: var(--muted);
     margin-bottom: 2px;
+    white-space: nowrap;   /* keep labels (e.g. "ETA — destination port 2d 6h 30m") on one line */
   }
   /* lowercase format hint appended to a label, e.g. "dd/mm/yyyy" */
   .field label .fmt {

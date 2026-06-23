@@ -15,8 +15,7 @@
  * Fields with no source in MedicalSummary are simply omitted (left blank):
  * flag_state, vessel_type, latitude/longitude (only a combined location exists),
  * departure_port/date, nearest_eta, arrival_eta, blood_sugar, height, weight,
- * gcs_total, pain_scale, language, associated_symptoms, investigations,
- * body_notes, other_comments.
+ * gcs_total, pain_scale, language, body_notes, other_comments.
  */
 import { type MedicalSummary, parseVitals } from './rmdMapper.js';
 
@@ -98,8 +97,8 @@ export function mapSummaryToSeafarerFields(summary: MedicalSummary): Record<stri
     allergies: (summary.allergies as string) || '',
     physical_exam: (summary.exam as string) || '',
 
-    // ---- Other ----
-    other_comments: (summary.performedActions as string) || '',
+    // ---- Investigations / actions ----
+    investigations: (summary.performedActions as string) || '',
   };
 
   // Drop undefined / empty radio selections so pdftk leaves them untouched.
