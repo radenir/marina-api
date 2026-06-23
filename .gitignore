@@ -9,3 +9,8 @@ tests/runs/*/output/
 tests/ai_results.txt
 tests/interview_results.txt
 tests/prod_results.txt
+# generated audit/report evidence (kept as packaged artifacts, not in git)
+tests/reports/
+tests/audit/results/
+tests/audit/marina-verification-report.tex
+tests/*.zip
