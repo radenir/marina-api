@@ -62,8 +62,13 @@ function ageFromDob(dob: string): string {
 export function mapSummaryToSeafarerFields(summary: MedicalSummary): Record<string, FieldValue> {
   const vitals = parseVitals(String(summary.vitals || ''));
 
-  const bloodPressure =
-    vitals.systole && vitals.diastole ? `${vitals.systole}/${vitals.diastole}` : '';
+  // Vitals arrive either as a single `vitals` string (parsed above) or, from
+  // /ai/extract, as discrete fields (circulation_*/breathing_*/expose_*). Prefer
+  // the discrete fields and fall back to the parsed string — the same precedence
+  // the RMD mapper uses, so both report templates read one extract shape.
+  const systole = str(summary.circulation_systole) || vitals.systole || '';
+  const diastole = str(summary.circulation_diastole) || vitals.diastole || '';
+  const bloodPressure = systole && diastole ? `${systole}/${diastole}` : '';
 
   const dob = str(summary.dateOfBirth);
   const { latitude, longitude } = splitCoords(str(summary.location));
@@ -114,11 +119,11 @@ export function mapSummaryToSeafarerFields(summary: MedicalSummary): Record<stri
       '',
 
     // ---- Vital signs ----
-    temperature: vitals.temperature || '',
-    heart_rate: vitals.pulse || '',
+    temperature: str(summary.expose_temperature_measured_mouth) || vitals.temperature || '',
+    heart_rate: str(summary.circulation_pulse_per_min) || vitals.pulse || '',
     blood_pressure: bloodPressure,
-    resp_rate: vitals.respiratoryRate || '',
-    spo2: vitals.oxygenSaturation || '',
+    resp_rate: str(summary.breathing_num_breaths_per_min) || vitals.respiratoryRate || '',
+    spo2: str(summary.breathing_oxygen_saturation) || vitals.oxygenSaturation || '',
     consciousness: radio(summary.avpu, {
       alert: 'alert',
       voice: 'voice',
