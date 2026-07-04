@@ -11,7 +11,7 @@ import { requireVerifiedActiveUser } from '../middleware/requireVerifiedActiveUs
 import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
 import { whisper } from '../lib/whisper.js';
-import { elevenLabsTranscribe } from '../lib/elevenlabs.js';
+import { elevenLabsTranscribe, elevenLabsTextToSpeech } from '../lib/elevenlabs.js';
 import { cortiTranscribe, isCortiConfigured } from '../lib/corti.js';
 import { parallelExtract } from '../lib/medicalExtract.js';
 import type { UserProfile } from '../lib/medicalExtract.js';
@@ -142,6 +142,13 @@ const translateRateLimit = rateLimit({
   keyFn: (req) => req.user!.id,
 });
 
+const ttsRateLimit = rateLimit({
+  prefix: 'ai-tts',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: (req) => req.user!.id,
+});
+
 const extractRateLimit = rateLimit({
   prefix: 'ai-extract',
   limit: 50,
@@ -240,6 +247,11 @@ const TranslateSchema = z.object({
   text:     z.string().min(1).max(5000),
   fromLang: z.enum(LANG_CODES),
   toLang:   z.enum(LANG_CODES),
+});
+
+const TtsSchema = z.object({
+  text:     z.string().min(1).max(2000),
+  language: z.enum(LANG_CODES),
 });
 
 const ExtractSchema = z.object({
@@ -574,6 +586,52 @@ aiRouter.post(
     });
 
     res.json({ translation });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/tts
+// Synthesise speech (MP3) from already-translated text so the app can read the
+// translation aloud in the other person's language.
+// Middleware order: requireAuth → ttsRateLimit → requireVerifiedEmail → requireActiveUser → handler
+// ---------------------------------------------------------------------------
+
+aiRouter.post(
+  '/tts',
+  requireAuth,
+  ttsRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = TtsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { text, language } = parsed.data;
+
+    let audio: Buffer;
+    try {
+      audio = await elevenLabsTextToSpeech(text, language);
+    } catch (err) {
+      console.error('[ai/tts] ElevenLabs error:', (err as Error).message);
+      res.status(502).json({ error: 'Speech synthesis unavailable' });
+      return;
+    }
+
+    await auditLog('text_to_speech', req, attributionFromPrincipal(req), {
+      language,
+      char_count: text.length,
+      audio_bytes: audio.length,
+    });
+
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': audio.length,
+      'Cache-Control': 'no-store',
+    });
+    res.send(audio);
   }
 );
 

@@ -57,6 +57,7 @@ export type AuditEventType =
   | 'conversation_summarized'
   | 'audio_transcribed'
   | 'text_translated'
+  | 'text_to_speech'
   | 'medical_record_extracted'
   | 'report_followups_generated'
   | 'exam_followups_generated'

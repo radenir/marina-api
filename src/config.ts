@@ -70,6 +70,13 @@ export const config = {
     apiKey:   optional_env('ELEVENLABS_API_KEY', ''),
     model:    optional_env('ELEVENLABS_STT_MODEL', 'scribe_v2'),
     baseUrl:  optional_env('ELEVENLABS_BASE_URL', 'https://api.eu.residency.elevenlabs.io'),
+    // Text-to-speech (translator "read aloud"). flash_v2_5 is the only model
+    // covering all 32 app languages (eleven_v3 can't enforce Filipino), and is
+    // fast + cheap for a live translator. The premade voice is multilingual and
+    // language-agnostic; language_code enforces target-language pronunciation.
+    // Both overridable via env.
+    ttsModel:   optional_env('ELEVENLABS_TTS_MODEL', 'eleven_flash_v2_5'),
+    ttsVoiceId: optional_env('ELEVENLABS_VOICE_ID', 'EXAVITQu4vr4xnSDxMaL'), // "Sarah" premade — mature, reassuring
   },
 
   corti: {
