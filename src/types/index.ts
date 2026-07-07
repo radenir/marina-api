@@ -12,6 +12,7 @@ export interface User {
   company: string | null;
   language: string | null;
   email_verified: boolean;
+  is_active: boolean;
   mfa_enabled: boolean;
   reset_token_version: number;
   password_hash_algo: 'bcrypt' | 'argon2id';

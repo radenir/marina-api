@@ -204,9 +204,12 @@ authRouter.post('/register', registerRateLimit, async (req: Request, res: Respon
 
   const passwordHash = await hashPassword(password);
 
+  // New accounts start inactive and email-unverified. An admin activates the
+  // user by hand (is_active = TRUE) before they can use the app; until then the
+  // requireActiveUser middleware blocks every real feature.
   const result = await query<{ id: string }>(
-    `INSERT INTO users (email, password, first_name, last_name, ship_name, call_sign, satellite_phone, medicine_chest, cruise_speed_knots, company, language, email_verified, password_hash_algo)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, COALESCE($11, 'en'), FALSE, 'argon2id')
+    `INSERT INTO users (email, password, first_name, last_name, ship_name, call_sign, satellite_phone, medicine_chest, cruise_speed_knots, company, language, email_verified, is_active, password_hash_algo)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, COALESCE($11, 'en'), FALSE, FALSE, 'argon2id')
      RETURNING id`,
     [normalizedEmail, passwordHash, first_name, last_name, ship_name ?? null, call_sign ?? null, satellite_phone ?? null, medicine_chest ?? null, cruise_speed_knots ?? null, company ?? null, language ?? null]
   );
@@ -246,7 +249,7 @@ authRouter.post('/login', loginRateLimit, async (req: Request, res: Response): P
   const normalizedEmail = email.toLowerCase();
 
   const result = await query<User & { password: string }>(
-    `SELECT id, email, password, role, email_verified, password_hash_algo
+    `SELECT id, email, password, role, email_verified, is_active, password_hash_algo
      FROM users WHERE email = $1`,
     [normalizedEmail]
   );
@@ -286,6 +289,7 @@ authRouter.post('/login', loginRateLimit, async (req: Request, res: Response): P
       email: user.email,
       role: user.role,
       email_verified: user.email_verified,
+      is_active: user.is_active,
     },
   });
 });
@@ -603,7 +607,7 @@ authRouter.post('/verify-email/resend', resendVerifyRateLimit, async (req: Reque
 authRouter.get('/me', requireAuth, async (req: Request, res: Response): Promise<void> => {
   const result = await query<Omit<User, 'password'>>(
     `SELECT id, email, first_name, last_name, role, ship_name, call_sign, satellite_phone, medicine_chest, cruise_speed_knots, company, language,
-            email_verified, mfa_enabled, created_at, updated_at
+            email_verified, is_active, mfa_enabled, created_at, updated_at
      FROM users WHERE id = $1`,
     [req.user!.id]
   );
@@ -653,7 +657,7 @@ authRouter.put('/me', requireAuth, async (req: Request, res: Response): Promise<
 
   const result = await query<Omit<User, 'password'>>(
     `SELECT id, email, first_name, last_name, role, ship_name, call_sign, satellite_phone, medicine_chest, cruise_speed_knots, company, language,
-            email_verified, mfa_enabled, created_at, updated_at
+            email_verified, is_active, mfa_enabled, created_at, updated_at
      FROM users WHERE id = $1`,
     [req.user!.id]
   );
