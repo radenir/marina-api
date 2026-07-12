@@ -244,6 +244,26 @@ const LANG_MAP: Record<string, string> = {
 };
 const LANG_CODES = Object.keys(LANG_MAP) as [string, ...string[]];
 
+/**
+ * Resolve a language identifier to its full English name for prompt interpolation.
+ * Clients send ISO codes ("en"), but the interview prompts read the value directly
+ * ("Respond in X"). A bare code like "en" is misread by the model (it's also the
+ * French word "in"), so Marina opens in a random language. Names are passed through
+ * unchanged, so this is safe for already-resolved input and older clients.
+ */
+function resolveLanguageName(input: string | undefined): string {
+  if (!input) return 'English';
+  const lower = input.toLowerCase();
+  if (LANG_MAP[lower]) return LANG_MAP[lower];
+  try {
+    const name = new Intl.DisplayNames(['en'], { type: 'language' }).of(input);
+    if (name && name.toLowerCase() !== lower) return name;
+  } catch {
+    // ignore — fall through to passthrough
+  }
+  return input;
+}
+
 const TranslateSchema = z.object({
   text:     z.string().min(1).max(5000),
   fromLang: z.enum(LANG_CODES),
@@ -1036,8 +1056,8 @@ aiRouter.post(
       if (state == null) {
         // First call — create fresh state and generate greeting
         const freshState = createFreshState(
-          patientLanguage ?? 'English',
-          medicalOfficerLanguage ?? 'English',
+          resolveLanguageName(patientLanguage),
+          resolveLanguageName(medicalOfficerLanguage),
         );
         const result = await withRetry(() => generateGreeting(freshState));
         reply = result.reply;
