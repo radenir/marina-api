@@ -1,5 +1,17 @@
-import { nebius } from './nebius.js';
+import { ovhInterview } from './ovh.js';
+import { chatWithFallback, type FallbackOpts } from './llmFallback.js';
 import { config } from '../config.js';
+
+/**
+ * Same 10s → Qwen3.5-397B backup as the interview. Qwen reasons by default, so
+ * `reasoning_effort: 'none'` forces an immediate JSON answer.
+ */
+const EXTRACT_FALLBACK: FallbackOpts = {
+  timeoutMs: 10_000,
+  backupClient: ovhInterview,
+  backupModel: config.ovhInterview.model,
+  backupParams: { reasoning_effort: 'none' },
+};
 
 // ---------------------------------------------------------------------------
 // Output shape
@@ -239,8 +251,7 @@ export async function extractInterviewSummary(
     return EMPTY_RESULT;
   }
 
-  const completion = await nebius.chat.completions.create({
-    model: config.nebius.model,
+  const completion = await chatWithFallback({
     temperature: 0.2,
     max_tokens: 50000,
     response_format: { type: 'json_object' },
@@ -248,7 +259,7 @@ export async function extractInterviewSummary(
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: transcript },
     ],
-  });
+  }, EXTRACT_FALLBACK);
 
   let raw = completion.choices[0]?.message?.content?.trim() ?? '{}';
   raw = raw.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();

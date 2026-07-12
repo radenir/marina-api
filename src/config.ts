@@ -70,6 +70,16 @@ export const config = {
     model:   optional_env('OVH_LLM_MODEL', 'gpt-oss-120b'),
   },
 
+  // OVHcloud AI Endpoints — dedicated backup for the medical interview / extract.
+  // Qwen3.5-397B is a stronger model; it is a reasoning model, so callers must
+  // pass `reasoning_effort: 'none'` to get an immediate answer instead of a long
+  // hidden chain-of-thought that never surfaces in `content`.
+  ovhInterview: {
+    apiKey:  optional_env('OVH_INTERVIEW_API_KEY', process.env.WHISPER_API_KEY ?? ''),
+    baseUrl: optional_env('OVH_INTERVIEW_BASE_URL', 'https://qwen-3-5-397b.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1'),
+    model:   optional_env('OVH_INTERVIEW_MODEL', 'Qwen3.5-397B-A17B'),
+  },
+
   whisper: {
     apiKey:  require_env('WHISPER_API_KEY'),
     baseUrl: require_env('WHISPER_BASE_URL'),

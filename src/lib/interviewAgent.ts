@@ -1,9 +1,24 @@
 import type { InterviewState } from './interviewTypes.js';
 import { buildSystemPrompt, STAGES } from './interviewWorkflow.js';
 import { getToolDefs, executeTool } from './interviewTools.js';
-import { nebius } from './nebius.js';
+import { ovhInterview } from './ovh.js';
+import { chatWithFallback, type FallbackOpts } from './llmFallback.js';
 import { config } from '../config.js';
-import type { ChatCompletionMessageParam, ChatCompletion } from 'openai/resources/index.js';
+import type { ChatCompletionMessageParam, ChatCompletion, ChatCompletionCreateParamsNonStreaming } from 'openai/resources/index.js';
+
+type ChatParams = Omit<ChatCompletionCreateParamsNonStreaming, 'model'>;
+
+/**
+ * Backup config for the interview: if Nebius doesn't answer within 10s, fall back
+ * to OVH's Qwen3.5-397B. That model reasons by default, so `reasoning_effort: 'none'`
+ * forces it to answer immediately instead of emitting a hidden chain-of-thought.
+ */
+const INTERVIEW_FALLBACK: FallbackOpts = {
+  timeoutMs: 10_000,
+  backupClient: ovhInterview,
+  backupModel: config.ovhInterview.model,
+  backupParams: { reasoning_effort: 'none' },
+};
 
 function toMessages(history: Record<string, unknown>[]): ChatCompletionMessageParam[] {
   return history as unknown as ChatCompletionMessageParam[];
@@ -88,19 +103,18 @@ export async function runAgent(state: InterviewState, userText: string): Promise
       ...toMessages(currentState.conversationHistory),
     ];
 
-    const requestParams: Parameters<typeof nebius.chat.completions.create>[0] = {
-      model: config.nebius.model,
+    const requestParams: ChatParams = {
       max_tokens: MAX_TOKENS,
       temperature: TEMPERATURE,
       frequency_penalty: FREQUENCY_PENALTY,
       messages,
     };
     if (stageTools.length > 0) {
-      requestParams.tools = stageTools as Parameters<typeof nebius.chat.completions.create>[0]['tools'];
+      requestParams.tools = stageTools as ChatParams['tools'];
       requestParams.tool_choice = 'auto';
     }
 
-    const response = await withRetry(() => nebius.chat.completions.create(requestParams) as Promise<ChatCompletion>) as ChatCompletion;
+    const response = await withRetry(() => chatWithFallback(requestParams, INTERVIEW_FALLBACK)) as ChatCompletion;
     const choice = response.choices[0];
     const msg = choice.message;
 
@@ -122,8 +136,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
       // with a nudge so the LLM has something new to react to.
       if (replyText === '' && !STAGE_ADVANCING_TOOLS.has(lastToolName ?? '')) {
         const cleanHistory = currentState.conversationHistory.slice(0, -1);
-        const retryParams: Parameters<typeof nebius.chat.completions.create>[0] = {
-          model: config.nebius.model,
+        const retryParams: ChatParams = {
           max_tokens: MAX_TOKENS,
           temperature: TEMPERATURE,
           frequency_penalty: FREQUENCY_PENALTY,
@@ -134,10 +147,10 @@ export async function runAgent(state: InterviewState, userText: string): Promise
           ],
         };
         if (stageTools.length > 0) {
-          retryParams.tools = stageTools as Parameters<typeof nebius.chat.completions.create>[0]['tools'];
+          retryParams.tools = stageTools as ChatParams['tools'];
           retryParams.tool_choice = 'auto';
         }
-        const retryResponse = await withRetry(() => nebius.chat.completions.create(retryParams) as Promise<ChatCompletion>) as ChatCompletion;
+        const retryResponse = await withRetry(() => chatWithFallback(retryParams, INTERVIEW_FALLBACK)) as ChatCompletion;
         const retryMsg = retryResponse.choices[0].message;
 
         if (retryMsg.tool_calls && retryMsg.tool_calls.length > 0) {
@@ -229,8 +242,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
 
       // MO stages include tools so the model can call completeStage immediately if needed
       // (e.g. stage 7 when all conditional investigations are unmet).
-      const openingRequestParams: Parameters<typeof nebius.chat.completions.create>[0] = {
-        model: config.nebius.model,
+      const openingRequestParams: ChatParams = {
         max_tokens: MAX_TOKENS,
         temperature: TEMPERATURE,
         frequency_penalty: FREQUENCY_PENALTY,
@@ -240,10 +252,10 @@ export async function runAgent(state: InterviewState, userText: string): Promise
         ],
       };
       if (isMOStage && stageTools.length > 0) {
-        openingRequestParams.tools = stageTools as Parameters<typeof nebius.chat.completions.create>[0]['tools'];
+        openingRequestParams.tools = stageTools as ChatParams['tools'];
         openingRequestParams.tool_choice = 'auto';
       }
-      const openingResponse = await withRetry(() => nebius.chat.completions.create(openingRequestParams) as Promise<ChatCompletion>) as ChatCompletion;
+      const openingResponse = await withRetry(() => chatWithFallback(openingRequestParams, INTERVIEW_FALLBACK)) as ChatCompletion;
       const openingMsg = openingResponse.choices[0].message;
 
       const openingEntry: Record<string, unknown> = { role: 'assistant', content: stripThinking(openingMsg.content) || null };
@@ -268,8 +280,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
 
   // Iteration limit hit — make one final text-only call to get a graceful response
   try {
-    const fallbackResponse = await withRetry(() => nebius.chat.completions.create({
-      model: config.nebius.model,
+    const fallbackResponse = await withRetry(() => chatWithFallback({
       max_tokens: MAX_TOKENS,
       temperature: TEMPERATURE,
       frequency_penalty: FREQUENCY_PENALTY,
@@ -278,7 +289,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
         ...toMessages(currentState.conversationHistory),
         { role: 'user', content: '[Please summarise what has been covered so far and ask if the medical officer has anything to add.]' },
       ],
-    }) as Promise<ChatCompletion>) as ChatCompletion;
+    }, INTERVIEW_FALLBACK)) as ChatCompletion;
     const fallbackMsg = fallbackResponse.choices[0].message;
     currentState = {
       ...currentState,
@@ -296,8 +307,7 @@ export async function runAgent(state: InterviewState, userText: string): Promise
  */
 export async function generateGreeting(state: InterviewState): Promise<AgentResult> {
   const systemPrompt = buildSystemPrompt(state);
-  const response = await withRetry(() => nebius.chat.completions.create({
-    model: config.nebius.model,
+  const response = await withRetry(() => chatWithFallback({
     max_tokens: 128,
     temperature: TEMPERATURE,
     frequency_penalty: FREQUENCY_PENALTY,
@@ -305,7 +315,7 @@ export async function generateGreeting(state: InterviewState): Promise<AgentResu
       { role: 'system', content: systemPrompt },
       { role: 'user', content: `[Begin: introduce yourself as Marina, your AI medical assistant, then ask the patient what is wrong or what happened. Respond in ${state.variables.patientLanguage}. One or two short sentences.]` },
     ],
-  }) as Promise<ChatCompletion>) as ChatCompletion;
+  }, INTERVIEW_FALLBACK)) as ChatCompletion;
   const reply = stripThinking(response.choices[0]?.message?.content);
   return { reply, newState: state, done: false, report: null };
 }
