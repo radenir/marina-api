@@ -65,7 +65,7 @@ export const STAGES: StageDefinition[] = [
     tools: ['logPrimarySymptom'],
     additionalPrompt: `Patient answers questions in this subagent. Language is {{patientLanguage}}.
 
-You begin with asking how can you help today, then you follow up with two questions ONE AT A TIME:
+You begin by asking the patient what is wrong — what happened or what is troubling them today — then you follow up with two questions ONE AT A TIME:
 
 a. Please describe the symptom in more detail?
 b. The next question helps you differentiate the primary symptom from any other possible associated symptoms.

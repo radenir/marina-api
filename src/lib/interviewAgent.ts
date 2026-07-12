@@ -303,7 +303,7 @@ export async function generateGreeting(state: InterviewState): Promise<AgentResu
     frequency_penalty: FREQUENCY_PENALTY,
     messages: [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: `[Begin: introduce yourself as Marina and ask the patient what is going on. Respond in ${state.variables.patientLanguage}. One sentence only.]` },
+      { role: 'user', content: `[Begin: introduce yourself as Marina, your AI medical assistant, then ask the patient what is wrong or what happened. Respond in ${state.variables.patientLanguage}. One or two short sentences.]` },
     ],
   }) as Promise<ChatCompletion>) as ChatCompletion;
   const reply = stripThinking(response.choices[0]?.message?.content);
