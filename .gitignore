@@ -1,16 +1,17 @@
-node_modules/
+# generated audit/report evidence (kept as packaged artifacts, not in git)
+*.log
+.DS_Store
 .env
 dist/
-*.log
+node_modules/
+tests/*.zip
+tests/ai_results.txt
+tests/audit/marina-verification-report.tex
+tests/audit/results/
 tests/conversations/
+tests/interview_results.txt
 tests/output/
+tests/prod_results.txt
+tests/reports/
 tests/runs/*.txt
 tests/runs/*/output/
-tests/ai_results.txt
-tests/interview_results.txt
-tests/prod_results.txt
-# generated audit/report evidence (kept as packaged artifacts, not in git)
-tests/reports/
-tests/audit/results/
-tests/audit/marina-verification-report.tex
-tests/*.zip
