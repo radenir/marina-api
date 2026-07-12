@@ -10,6 +10,7 @@ import { requireScope } from '../middleware/requireScope.js';
 import { requireVerifiedActiveUser } from '../middleware/requireVerifiedActiveUser.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
+import { chatWithFallback } from '../lib/llmFallback.js';
 import { whisper } from '../lib/whisper.js';
 import { elevenLabsTranscribe, elevenLabsTextToSpeech } from '../lib/elevenlabs.js';
 import { cortiTranscribe, isCortiConfigured } from '../lib/corti.js';
@@ -554,8 +555,7 @@ aiRouter.post(
 
     let translation: string;
     try {
-      const completion = await withRetry(() => nebius.chat.completions.create({
-        model: config.nebius.model,
+      const completion = await chatWithFallback({
         temperature: 0.3,
         top_p: 0.9,
         max_tokens: 1000,
@@ -563,7 +563,7 @@ aiRouter.post(
           { role: 'system', content: createTranslationPrompt(fromLanguageName, toLanguageName) },
           { role: 'user', content: text },
         ],
-      }));
+      }, { primaryModel: config.nebius.translateModel });
 
       const content = completion.choices[0]?.message?.content;
       if (!content) {

@@ -58,6 +58,16 @@ export const config = {
     apiKey: require_env('NEBIUS_API_KEY'),
     baseUrl: optional_env('NEBIUS_BASE_URL', 'https://api.studio.nebius.com/v1'),
     model:   optional_env('NEBIUS_MODEL', 'minimax/MiniMax-Text-01'),
+    // Dedicated (cheaper/faster) model for the translation endpoint.
+    translateModel: optional_env('NEBIUS_TRANSLATE_MODEL', 'openai/gpt-oss-120b'),
+  },
+
+  // OVHcloud AI Endpoints — backup LLM used when Nebius is slow/unavailable.
+  // Defaults to the same OVH endpoint/key already used for Whisper.
+  ovh: {
+    apiKey:  optional_env('OVH_LLM_API_KEY', process.env.WHISPER_API_KEY ?? ''),
+    baseUrl: optional_env('OVH_LLM_BASE_URL', process.env.WHISPER_BASE_URL ?? 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1'),
+    model:   optional_env('OVH_LLM_MODEL', 'gpt-oss-120b'),
   },
 
   whisper: {
