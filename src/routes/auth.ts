@@ -249,7 +249,9 @@ authRouter.post('/login', loginRateLimit, async (req: Request, res: Response): P
   const normalizedEmail = email.toLowerCase();
 
   const result = await query<User & { password: string }>(
-    `SELECT id, email, password, role, email_verified, is_active, password_hash_algo
+    `SELECT id, email, password, first_name, last_name, role, ship_name, call_sign, satellite_phone,
+            medicine_chest, cruise_speed_knots, company, language, email_verified, is_active,
+            mfa_enabled, created_at, updated_at, password_hash_algo
      FROM users WHERE email = $1`,
     [normalizedEmail]
   );
@@ -284,12 +286,27 @@ authRouter.post('/login', loginRateLimit, async (req: Request, res: Response): P
     refresh_token: tokens.refresh_token,
     token_type: 'Bearer',
     expires_in: config.jwt.accessTokenTtl,
+    // Return the full user object (matching GET /auth/me) so clients can pre-fill
+    // profile-sourced fields (vessel details, name) straight after login without a
+    // second /auth/me round-trip.
     user: {
       id: user.id,
       email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
       role: user.role,
+      ship_name: user.ship_name,
+      call_sign: user.call_sign,
+      satellite_phone: user.satellite_phone,
+      medicine_chest: user.medicine_chest,
+      cruise_speed_knots: user.cruise_speed_knots,
+      company: user.company,
+      language: user.language,
       email_verified: user.email_verified,
       is_active: user.is_active,
+      mfa_enabled: user.mfa_enabled,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
     },
   });
 });
