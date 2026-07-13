@@ -150,7 +150,7 @@ For EACH investigation, decide:
    - "absent": the test is indicated but not documented at all.
 Ground every "complete"/"partial" in a verbatim quote from the documentation; otherwise status is "absent" (evidence "").
 
-Also write ONE concise sentence naming the single most important indicated test still to perform or document. Return "" if nothing applicable is missing.
+Also write ONE concise sentence LISTING the specific indicated tests that still need to be performed or documented, using short test names (e.g. "Perform and document a CRP test and a malaria test."). Name every applicable test that is not yet complete — do not just pick one. Return "" if nothing applicable is missing.
 
 Return ONLY a JSON object (one entry per investigation, in order):
 {"grades":[{"applicable":true|false,"status":"complete|partial|absent","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;
