@@ -159,7 +159,7 @@ RULES:
 - Judge ONLY documentation quality, not clinical management. Do not infer facts that are not written.
 - Use "not_applicable" sparingly — only when the axis truly cannot apply.
 
-Also write ONE concise, direct sentence telling the officer the single most impactful detail to add to improve this field. If every axis is already "complete", return "" for the suggestion.
+Also write ONE short sentence telling the officer the single most useful thing to ask about or add next — just one thing, not a list. Use plain, everyday language that a person with NO medical training understands: no medical jargon or abbreviations. If every axis is already "complete", return "" for the suggestion.
 
 Return ONLY a JSON object with this shape (one grade per axis, in the same order):
 {"grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}], "suggestion":"<one sentence or empty>"}`;

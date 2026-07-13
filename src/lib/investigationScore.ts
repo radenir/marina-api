@@ -155,7 +155,7 @@ For every applicable investigation (met OR pending), assign a documentation "sta
 - "absent": not documented — this INCLUDES a test that is pending on a fact that has not been established.
 Ground every "complete"/"partial" in a verbatim quote from the documentation; otherwise status is "absent" (evidence "").
 
-Also write ONE concise sentence LISTING the specific indicated tests that still need to be performed or documented, using short test names. Name every applicable test that is not yet complete — do not just pick one. For a test that is PENDING on a fact that has not been established, say which fact to establish (e.g. "Measure the temperature — a CRP test is indicated if ≥38°C; confirm diabetic status and check blood sugar if diabetic."). Return "" if nothing applicable is missing.
+Also write ONE short sentence naming just the SINGLE most important next step — one test or one thing to check, not a list. Use plain, everyday language that a person with NO medical training understands: no medical jargon, abbreviations or test codes (for example say "a blood test to check for infection" rather than "CRP"). If that step is waiting on a fact that has not been established yet, tell them the simple thing to do first (for example "Take the patient's temperature."). Return "" if nothing applicable is missing.
 
 Return ONLY a JSON object (one entry per investigation, in order):
 {"grades":[{"applicable":true|false,"status":"complete|partial|absent","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;

@@ -136,7 +136,7 @@ For each, assign a status:
 - "not_applicable": the topic genuinely cannot apply to this patient (e.g. pregnancy status for a male patient).
 Ground every "complete"/"partial" grade in a verbatim quote from the text; if you cannot quote supporting text, the status is "absent" (evidence "").
 
-Also write ONE concise, direct sentence naming the single most valuable past-history topic still to ask about or clarify. Return "" if every axis is already "complete".
+Also write ONE short sentence naming the single most useful past-health topic still to ask about — just one thing, not a list. Use plain, everyday language that a person with NO medical training understands: no medical jargon or abbreviations. Return "" if every axis is already "complete".
 
 Return ONLY a JSON object (one grade per axis, same order):
 {"grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;

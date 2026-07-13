@@ -104,7 +104,7 @@ Ground every "complete"/"partial" grade in a verbatim quote from the text; if yo
 
 If the status is NOT "medications_present", return an empty "grades" array.
 
-Also write ONE concise, direct sentence naming the single most impactful detail to add. Return "" for the suggestion when the status is "no_medications" or when every axis is already "complete".
+Also write ONE short sentence naming the single most useful thing to ask about or add next — just one thing, not a list. Use plain, everyday language that a person with NO medical training understands: no medical jargon or abbreviations. Return "" for the suggestion when the status is "no_medications" or when every axis is already "complete".
 
 Return ONLY a JSON object with this shape (grades in the same order as the axes):
 {"status":"not_assessed|no_medications|medications_present","grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;
