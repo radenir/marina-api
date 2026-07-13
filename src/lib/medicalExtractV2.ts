@@ -77,7 +77,7 @@ The story of the MAIN problem, in the patient's account. Include only what was s
 EXCLUDE from this field: the associated-symptom checklist (Field 2), past medical
 history / chronic conditions / regular medications / allergies (separate fields),
 vital signs, examination findings, and investigation results.
-🚨 MANDATORY: problemDescription must always contain at least one sentence. NEVER return empty string.
+If the patient's main problem was NOT described at all in the conversation, leave problemDescription EMPTY (""). Never write a placeholder like "No information provided" — an empty string is correct when nothing was said.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 FIELD 2: associatedSymptoms  (accompanying symptoms — present AND denied)
