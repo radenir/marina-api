@@ -39,6 +39,7 @@ import { scoreMedications } from '../lib/medicationScore.js';
 import { scoreAssociatedSymptoms } from '../lib/associatedSymptomsScore.js';
 import { scorePastMedicalHistory } from '../lib/pastMedicalHistoryScore.js';
 import { scoreInvestigations } from '../lib/investigationScore.js';
+import { scorePhysicalExamination } from '../lib/physicalExaminationScore.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -254,6 +255,13 @@ const pastMedicalHistoryScoreRateLimit = rateLimit({
 
 const investigationScoreRateLimit = rateLimit({
   prefix: 'ai-investigation-score',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const physicalExamScoreRateLimit = rateLimit({
+  prefix: 'ai-physical-examination-score',
   limit: 500,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
@@ -1757,6 +1765,60 @@ aiRouter.post(
     }
 
     await auditLog('investigation_score_generated', req, attributionFromPrincipal(req), {
+      scorable: result.scorable,
+      score: result.score,
+      pathway: result.pathway,
+      required: result.required,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/physical-examination-score
+// Grades the physical examination 0–100 against the symptom's SYBRA expected
+// examinations (symptomGuidelines["Examinations"]). One facet per expected
+// examination; the LLM assigns a documentation status (a documented normal
+// finding counts as complete), sex-conditional examinations drop to
+// not_applicable from the gender case fact, and the score is computed in code.
+// The vital-signs pseudo-exam is excluded (graded via its own fields). Not
+// scorable when no symptom is identifiable.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const PhysicalExaminationScoreSchema = z.object({
+  documentation: z.string().max(5000),
+  pathway: z.string().max(200).optional(),
+  chiefComplaint: z.string().max(1000).optional(),
+  gender: z.string().max(20).optional(),
+  age: z.number().int().min(0).max(130).optional(),
+  caseSummary: z.string().max(5000).optional(),
+});
+
+aiRouter.post(
+  '/report/physical-examination-score',
+  authenticate,
+  requireScope('extract:write'),
+  physicalExamScoreRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = PhysicalExaminationScoreSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    let result;
+    try {
+      result = await scorePhysicalExamination(parsed.data);
+    } catch (err) {
+      console.error('[ai/report/physical-examination-score] scoring error:', (err as Error).message);
+      res.status(502).json({ error: 'Physical-examination-score service unavailable' });
+      return;
+    }
+
+    await auditLog('physical_examination_score_generated', req, attributionFromPrincipal(req), {
       scorable: result.scorable,
       score: result.score,
       pathway: result.pathway,
