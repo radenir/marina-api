@@ -25,12 +25,12 @@ export interface UserProfile {
 //                 treatment_medications, problemAndActions
 // ---------------------------------------------------------------------------
 
-interface BatchConfig {
+export interface BatchConfig {
   name: string;
   prompt: string;
 }
 
-const BATCHES: BatchConfig[] = [
+export const BATCHES: BatchConfig[] = [
   {
     name: 'core_identification',
     prompt: `⚠️ OUTPUT MUST BE IN ENGLISH ONLY - TRANSLATE ALL INPUT ⚠️
@@ -313,11 +313,11 @@ Return JSON format:
 // Helpers
 // ---------------------------------------------------------------------------
 
-function conversationToText(conversation: Array<{ role: string; content: string }>): string {
+export function conversationToText(conversation: Array<{ role: string; content: string }>): string {
   return conversation.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
 }
 
-async function extractBatch(
+export async function extractBatch(
   text: string,
   batch: BatchConfig,
   mewsScore?: number | null,
@@ -417,27 +417,36 @@ export async function parallelExtract(
   }
 
   // Post-processing: pre-populate from userProfile (only if AI left field empty)
-  if (userProfile) {
-    if (userProfile.ship_name && !merged.shipName)           merged.shipName = userProfile.ship_name;
-    if (userProfile.call_sign && !merged.shipCallSign)       merged.shipCallSign = userProfile.call_sign;
-    if (userProfile.satellite_phone && !merged.shipSatellitePhone) merged.shipSatellitePhone = userProfile.satellite_phone;
-    if (userProfile.company && !merged.patientCompany)       merged.patientCompany = userProfile.company;
-    if (userProfile.email && !merged.patientEmail)           merged.patientEmail = userProfile.email;
-    if (userProfile.first_name && !merged.patientFirstName)  merged.patientFirstName = userProfile.first_name;
-    if (userProfile.last_name && !merged.patientLastName)    merged.patientLastName = userProfile.last_name;
-    if (userProfile.gender && !merged.gender)                merged.gender = userProfile.gender;
-    if (userProfile.nationality && !merged.patientNationality) merged.patientNationality = userProfile.nationality;
-    if (userProfile.date_of_birth && !merged.dateOfBirth) {
-      const dob = new Date(userProfile.date_of_birth);
-      if (!isNaN(dob.getTime())) {
-        const day = String(dob.getDate()).padStart(2, '0');
-        const month = String(dob.getMonth() + 1).padStart(2, '0');
-        merged.dateOfBirth = `${day}/${month}/${dob.getFullYear()}`;
-      } else {
-        merged.dateOfBirth = userProfile.date_of_birth;
-      }
-    }
-  }
+  if (userProfile) applyUserProfile(merged, userProfile);
 
   return merged;
+}
+
+/**
+ * Pre-populate identity/vessel fields from the user's profile, only where the
+ * extractor left the field empty. Shared by v1 and v2 extract.
+ */
+export function applyUserProfile(
+  merged: Record<string, string | boolean>,
+  userProfile: UserProfile,
+): void {
+  if (userProfile.ship_name && !merged.shipName)           merged.shipName = userProfile.ship_name;
+  if (userProfile.call_sign && !merged.shipCallSign)       merged.shipCallSign = userProfile.call_sign;
+  if (userProfile.satellite_phone && !merged.shipSatellitePhone) merged.shipSatellitePhone = userProfile.satellite_phone;
+  if (userProfile.company && !merged.patientCompany)       merged.patientCompany = userProfile.company;
+  if (userProfile.email && !merged.patientEmail)           merged.patientEmail = userProfile.email;
+  if (userProfile.first_name && !merged.patientFirstName)  merged.patientFirstName = userProfile.first_name;
+  if (userProfile.last_name && !merged.patientLastName)    merged.patientLastName = userProfile.last_name;
+  if (userProfile.gender && !merged.gender)                merged.gender = userProfile.gender;
+  if (userProfile.nationality && !merged.patientNationality) merged.patientNationality = userProfile.nationality;
+  if (userProfile.date_of_birth && !merged.dateOfBirth) {
+    const dob = new Date(userProfile.date_of_birth);
+    if (!isNaN(dob.getTime())) {
+      const day = String(dob.getDate()).padStart(2, '0');
+      const month = String(dob.getMonth() + 1).padStart(2, '0');
+      merged.dateOfBirth = `${day}/${month}/${dob.getFullYear()}`;
+    } else {
+      merged.dateOfBirth = userProfile.date_of_birth;
+    }
+  }
 }

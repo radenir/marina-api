@@ -15,3 +15,6 @@ tests/prod_results.txt
 tests/reports/
 tests/runs/*.txt
 tests/runs/*/output/
+
+# Local dev/scratch scripts that may embed credentials — never commit
+score.mjs

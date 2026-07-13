@@ -144,14 +144,18 @@ export function mapSummaryToSeafarerFields(summary: MedicalSummary): Record<stri
     body_notes: str(summary.bodyNotes) || str(summary.markedAreas),
 
     // ---- History & examination ----
-    associated_symptoms: (summary.chiefSymptom as string) || '',
+    // Prefer the v2 clean-split fields; fall back to the v1 shape so both
+    // /v2/ai/extract and legacy /ai/extract summaries fill the form.
+    associated_symptoms: (summary.associatedSymptoms as string) || (summary.chiefSymptom as string) || '',
     past_medical_history: (summary.pastHistory as string) || '',
     medications: (summary.currentMedications as string) || '',
     allergies: (summary.allergies as string) || '',
     physical_exam: (summary.exam as string) || '',
 
     // ---- Investigations / actions ----
-    investigations: (summary.performedActions as string) || '',
+    // v2 gives a dedicated `investigations` field; v1 lumped results into
+    // `performedActions`, so fall back to it.
+    investigations: (summary.investigations as string) || (summary.performedActions as string) || '',
 
     // ---- Other ----
     other_comments: str(summary.otherComments),

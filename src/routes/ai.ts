@@ -16,6 +16,7 @@ import { elevenLabsTranscribe, elevenLabsTextToSpeech } from '../lib/elevenlabs.
 import { cortiTranscribe, isCortiConfigured } from '../lib/corti.js';
 import { parallelExtract } from '../lib/medicalExtract.js';
 import type { UserProfile } from '../lib/medicalExtract.js';
+import { parallelExtractV2 } from '../lib/medicalExtractV2.js';
 import { fillRmdFormPdftk, checkPdftkAvailable } from '../lib/pdftk.js';
 import { mapSummaryToRmdFields, extractMedicationFields } from '../lib/rmdMapper.js';
 import { mapSummaryToSeafarerFields } from '../lib/seafarerMapper.js';
@@ -47,6 +48,10 @@ import {
 } from '../lib/conversationStore.js';
 
 export const aiRouter = Router();
+
+// Versioned router mounted at /v2/ai. Holds endpoints whose response shape
+// diverges from the frozen v1 surface (e.g. the clean-split extract).
+export const aiV2Router = Router();
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -784,6 +789,97 @@ aiRouter.post(
         });
       } catch (err) {
         console.error('[ai/extract] note-taker persist failed:', (err as Error).message);
+      }
+    }
+
+    await auditLog('medical_record_extracted', req, attributionFromPrincipal(req), {
+      message_count: conversation.length,
+      fields_populated: fieldsPopulated,
+      conversation_id: persistedId,
+      mode: conversationId ? 'marina' : 'note_taker',
+    });
+
+    res.json({ summary, conversationId: persistedId });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /v2/ai/extract
+// Same contract and middleware as POST /ai/extract, but returns a CLEAN SPLIT
+// summary: problemDescription (history only), associatedSymptoms, pastHistory,
+// allergies, currentMedications, investigations, exam, plus a dedicated
+// mewsScore field — instead of v1's lumped `performedActions`. v1 is untouched
+// so existing partner/client integrations keep working.
+// Middleware order: authenticate → requireScope → extractRateLimit → requireVerifiedActiveUser → handler
+// ---------------------------------------------------------------------------
+
+aiV2Router.post(
+  '/extract',
+  authenticate,
+  requireScope('extract:write'),
+  extractRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ExtractSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const {
+      conversation,
+      userProfile,
+      mewsScore,
+      conversationId,
+      patientLanguage,
+      medicalOfficerLanguage,
+    } = parsed.data;
+
+    const principal = req.principal!;
+    const isPartner = principal.type === 'partner';
+
+    if (isPartner && conversationId) {
+      res.status(400).json({ error: 'conversationId is not supported for partner authentication' });
+      return;
+    }
+
+    let summary: Record<string, string | boolean>;
+    try {
+      summary = await parallelExtractV2(conversation, userProfile as UserProfile | undefined, mewsScore ?? null);
+    } catch (err) {
+      console.error('[v2/ai/extract] extraction error:', (err as Error).message);
+      res.status(502).json({ error: 'Extraction service unavailable' });
+      return;
+    }
+
+    const fieldsPopulated = Object.values(summary).filter(v => v !== '' && v !== false && v !== null && v !== undefined).length;
+
+    let persistedId = conversationId ?? null;
+    if (conversationId && principal.type === 'user') {
+      try {
+        await updateFromExtract(conversationId, principal.userId, summary);
+      } catch (err) {
+        console.error('[v2/ai/extract] conversation persist failed:', (err as Error).message);
+      }
+    } else {
+      try {
+        const chiefSymptomRaw =
+          (typeof summary.chiefSymptom === 'string' && summary.chiefSymptom.trim()) ||
+          (typeof summary.chiefComplaint === 'string' && summary.chiefComplaint.trim()) ||
+          conversation.find((m) => m.role === 'user')?.content?.split(/[.!?]/)[0] ||
+          null;
+        const owner = principal.type === 'partner'
+          ? { partnerId: principal.partnerId, partnerUserRef: principal.partnerUserRef ?? null }
+          : { userId: principal.userId };
+        persistedId = await createNoteTakerConversation(owner, {
+          messages: conversation,
+          summary,
+          patientLanguage: patientLanguage ?? 'en',
+          medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
+          chiefSymptom: chiefSymptomRaw ? chiefSymptomRaw.slice(0, 200) : null,
+        });
+      } catch (err) {
+        console.error('[v2/ai/extract] note-taker persist failed:', (err as Error).message);
       }
     }
 

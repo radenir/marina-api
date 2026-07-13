@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { config } from './config';
 import { authRouter } from './routes/auth';
-import { aiRouter } from './routes/ai';
+import { aiRouter, aiV2Router } from './routes/ai';
 import { conversationsRouter } from './routes/conversations';
 import { maritimeRouter } from './routes/maritime';
 import { pool } from './lib/db';
@@ -112,6 +112,7 @@ app.use(
 
 app.use('/auth', authRouter);
 app.use('/ai', aiRouter);
+app.use('/v2/ai', aiV2Router);
 app.use('/conversations', conversationsRouter);
 app.use('/maritime', maritimeRouter);
 
