@@ -142,15 +142,18 @@ ${numbered}
 CASE FACTS:
 ${facts}
 
-For EACH investigation, decide:
-- "applicable": true only if its condition is clearly met by the case facts or case summary (an unconditional test like "always" is always applicable). If the condition is NOT met, or a fact needed to judge it is unknown, set applicable=false — do NOT penalise skipping a test that was not indicated.
-- If applicable, assign a documentation "status":
-   - "complete": the test is documented as performed WITH a result.
-   - "partial": the test is mentioned or ordered but no result is recorded.
-   - "absent": the test is indicated but not documented at all.
+For EACH investigation, decide "applicable":
+- true — the condition is clearly MET by the case facts / case summary (an unconditional "always" test is always applicable);
+- true (PENDING) — the condition CANNOT be ruled out because a fact needed to judge it has NOT been established: e.g. the temperature has not been measured, or diabetic status / recent travel / a relevant symptom was never assessed. Treat such a test as indicated-until-ruled-out — the officer must first establish that fact. Do NOT assume a missing measurement means the condition is absent (an unmeasured temperature is NOT "afebrile"; unstated diabetic status is NOT "not diabetic").
+- false — ONLY when the condition is clearly NOT met by an ESTABLISHED fact (e.g. temperature is recorded and is <38°C, or the patient is documented as not diabetic).
+
+For every applicable investigation (met OR pending), assign a documentation "status":
+- "complete": documented as performed WITH a result.
+- "partial": mentioned or ordered but no result recorded.
+- "absent": not documented — this INCLUDES a test that is pending on a fact that has not been established.
 Ground every "complete"/"partial" in a verbatim quote from the documentation; otherwise status is "absent" (evidence "").
 
-Also write ONE concise sentence LISTING the specific indicated tests that still need to be performed or documented, using short test names (e.g. "Perform and document a CRP test and a malaria test."). Name every applicable test that is not yet complete — do not just pick one. Return "" if nothing applicable is missing.
+Also write ONE concise sentence LISTING the specific indicated tests that still need to be performed or documented, using short test names. Name every applicable test that is not yet complete — do not just pick one. For a test that is PENDING on a fact that has not been established, say which fact to establish (e.g. "Measure the temperature — a CRP test is indicated if ≥38°C; confirm diabetic status and check blood sugar if diabetic."). Return "" if nothing applicable is missing.
 
 Return ONLY a JSON object (one entry per investigation, in order):
 {"grades":[{"applicable":true|false,"status":"complete|partial|absent","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;
