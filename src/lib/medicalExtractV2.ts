@@ -121,9 +121,27 @@ Return JSON format:
 }`,
 };
 
-// v2 batch set: every v1 batch EXCEPT problemAndActions, plus the clean split.
+// v2 forks the shared medical_history prompt so allergies / currentMedications
+// are left EMPTY when the topic was never mentioned (instead of a
+// "…was not provided" sentinel), making them behave like every other field.
+// Real answers — including negatives ("no known allergies") and "unsure" — are
+// kept. v1's medical_history batch is untouched. Derived from v1's prompt so the
+// unchanged parts stay in lock-step.
+const V1_MEDICAL_HISTORY = BATCHES.find(b => b.name === 'medical_history');
+const MEDICAL_HISTORY_V2_BATCH: BatchConfig = {
+  name: 'medical_history',
+  prompt: (V1_MEDICAL_HISTORY?.prompt ?? '')
+    .split('MUST ALWAYS HAVE CONTENT. Follow these rules:').join('Follow these rules:')
+    .split('- NEVER leave this field empty.').join('- If the topic was NOT discussed at all: leave the field empty ("").')
+    .split('- If medications were NOT discussed at all: Write "Information on medications was not provided."').join('')
+    .split('- If allergies were NOT discussed at all: Write "Information on allergies was not provided."').join(''),
+};
+
+// v2 batch set: v1 batches EXCEPT problemAndActions and medical_history
+// (replaced by the forks/split above), plus the v2 clinical split.
 const BATCHES_V2: BatchConfig[] = [
-  ...BATCHES.filter(b => b.name !== 'problemAndActions'),
+  ...BATCHES.filter(b => b.name !== 'problemAndActions' && b.name !== 'medical_history'),
+  MEDICAL_HISTORY_V2_BATCH,
   CLINICAL_V2_BATCH,
 ];
 
