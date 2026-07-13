@@ -67,6 +67,7 @@ export type AuditEventType =
   | 'medication_score_generated'
   | 'associated_symptoms_score_generated'
   | 'past_medical_history_score_generated'
+  | 'investigation_score_generated'
   | 'pdf_generated'
   | 'pdf_emailed'
   | 'interview_message_sent';

@@ -69,7 +69,7 @@ const GRADE: Record<FacetStatus, number | null> = {
   not_applicable: null,
 };
 
-export function computeScore(facets: ProblemFacet[]): number {
+export function computeScore(facets: { status: FacetStatus }[]): number {
   let num = 0;
   let den = 0;
   for (const f of facets) {

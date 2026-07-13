@@ -37,6 +37,7 @@ import { scoreAllergies } from '../lib/allergyScore.js';
 import { scoreMedications } from '../lib/medicationScore.js';
 import { scoreAssociatedSymptoms } from '../lib/associatedSymptomsScore.js';
 import { scorePastMedicalHistory } from '../lib/pastMedicalHistoryScore.js';
+import { scoreInvestigations } from '../lib/investigationScore.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -241,6 +242,13 @@ const associatedSymptomsScoreRateLimit = rateLimit({
 
 const pastMedicalHistoryScoreRateLimit = rateLimit({
   prefix: 'ai-past-medical-history-score',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const investigationScoreRateLimit = rateLimit({
+  prefix: 'ai-investigation-score',
   limit: 500,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
@@ -1603,6 +1611,60 @@ aiRouter.post(
       scorable: result.scorable,
       score: result.score,
       pathway: result.pathway,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/investigation-score
+// Grades documented investigations 0–100 against the symptom's SYBRA
+// "Investigations" list — a conditional checklist. The LLM resolves each rule's
+// applicability from the case facts (temperature / gender / age / case summary)
+// and its documentation status; the score is computed in code over applicable
+// rules only. No investigation indicated for this case → 100. Not scorable when
+// no symptom is identifiable.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const InvestigationScoreSchema = z.object({
+  documentation: z.string().max(5000),
+  pathway: z.string().max(200).optional(),
+  chiefComplaint: z.string().max(1000).optional(),
+  temperatureCelsius: z.string().max(20).optional(),
+  gender: z.string().max(20).optional(),
+  age: z.number().int().min(0).max(130).optional(),
+  caseSummary: z.string().max(5000).optional(),
+});
+
+aiRouter.post(
+  '/report/investigation-score',
+  authenticate,
+  requireScope('extract:write'),
+  investigationScoreRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = InvestigationScoreSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    let result;
+    try {
+      result = await scoreInvestigations(parsed.data);
+    } catch (err) {
+      console.error('[ai/report/investigation-score] scoring error:', (err as Error).message);
+      res.status(502).json({ error: 'Investigation-score service unavailable' });
+      return;
+    }
+
+    await auditLog('investigation_score_generated', req, attributionFromPrincipal(req), {
+      scorable: result.scorable,
+      score: result.score,
+      pathway: result.pathway,
+      required: result.required,
     });
 
     res.json(result);
