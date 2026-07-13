@@ -161,7 +161,9 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
 
     // Treatment & actions
     'Text Field 44': summary.preparedBy || summary.medical_officer_name_and_title || '',
-    'Kl': summary.performed_actions_time || dateTime.time,
+    // Time of actions = the report's Time (incidentTime). Keep performed_actions_time
+    // as a fallback for older/partner clients, then the computed time.
+    'Kl': summary.incidentTime || summary.performed_actions_time || dateTime.time,
     // v1 lumps investigation results into `performedActions`; v2 splits them into
     // a dedicated `investigations` field — read whichever the summary carries.
     'Text Field 41': summary.performedActions || summary.investigations || '',
