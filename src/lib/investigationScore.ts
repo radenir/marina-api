@@ -142,6 +142,8 @@ ${numbered}
 CASE FACTS:
 ${facts}
 
+The CASE FACTS above are AUTHORITATIVE. Use ONLY these values for temperature, gender and age conditions, and IGNORE any different temperature/gender/age mentioned in the case summary or documentation (e.g. a temperature the patient reported earlier). A fact shown as "not recorded" is unestablished — do NOT infer it from the narrative. Conditions that are not covered by the case facts (diabetic status, recent travel, associated symptoms, kidney pain, etc.) are judged from the case summary.
+
 For EACH investigation, decide "applicable":
 - true — the condition is clearly MET by the case facts / case summary (an unconditional "always" test is always applicable);
 - true (PENDING) — the condition CANNOT be ruled out because a fact needed to judge it has NOT been established: e.g. the temperature has not been measured, or diabetic status / recent travel / a relevant symptom was never assessed. Treat such a test as indicated-until-ruled-out — the officer must first establish that fact. Do NOT assume a missing measurement means the condition is absent (an unmeasured temperature is NOT "afebrile"; unstated diabetic status is NOT "not diabetic").
