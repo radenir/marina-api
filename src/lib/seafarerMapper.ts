@@ -144,9 +144,11 @@ export function mapSummaryToSeafarerFields(summary: MedicalSummary): Record<stri
     body_notes: str(summary.bodyNotes) || str(summary.markedAreas),
 
     // ---- History & examination ----
-    // Prefer the v2 clean-split fields; fall back to the v1 shape so both
-    // /v2/ai/extract and legacy /ai/extract summaries fill the form.
-    associated_symptoms: (summary.associatedSymptoms as string) || (summary.chiefSymptom as string) || '',
+    // Associated symptoms is the accompanying-symptoms narrative — only the v2
+    // `associatedSymptoms` field. Do NOT fall back to `chiefSymptom`: that is the
+    // SYBRA pathway label (e.g. "Abdominal Pain"), not associated symptoms, and
+    // put the wrong text in this box. v1 summaries (no such field) leave it blank.
+    associated_symptoms: (summary.associatedSymptoms as string) || '',
     past_medical_history: (summary.pastHistory as string) || '',
     medications: (summary.currentMedications as string) || '',
     allergies: (summary.allergies as string) || '',
