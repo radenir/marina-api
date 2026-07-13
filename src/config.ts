@@ -60,6 +60,10 @@ export const config = {
     model:   optional_env('NEBIUS_MODEL', 'minimax/MiniMax-Text-01'),
     // Dedicated (cheaper/faster) model for the translation endpoint.
     translateModel: optional_env('NEBIUS_TRANSLATE_MODEL', 'openai/gpt-oss-120b'),
+    // Dedicated, pinned model for the report Problem-Description scorer. Kept
+    // fixed so grading stays reproducible when NEBIUS_MODEL is swapped for
+    // interview tuning.
+    problemScoreModel: optional_env('NEBIUS_PROBLEM_SCORE_MODEL', 'openai/gpt-oss-120b'),
   },
 
   // OVHcloud AI Endpoints — backup LLM used when Nebius is slow/unavailable.

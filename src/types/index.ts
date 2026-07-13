@@ -62,6 +62,7 @@ export type AuditEventType =
   | 'medical_record_extracted'
   | 'report_followups_generated'
   | 'exam_followups_generated'
+  | 'problem_score_generated'
   | 'pdf_generated'
   | 'pdf_emailed'
   | 'interview_message_sent';

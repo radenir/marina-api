@@ -32,6 +32,7 @@ import { executeTool } from '../lib/interviewTools.js';
 import { extractInterviewSummary } from '../lib/interviewExtract.js';
 import { generateFollowups } from '../lib/reportFollowups.js';
 import { generateExamFollowups } from '../lib/examFollowups.js';
+import { scoreProblemDescription } from '../lib/problemScore.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -202,6 +203,13 @@ const reportFollowupsRateLimit = rateLimit({
 const examFollowupsRateLimit = rateLimit({
   prefix: 'ai-exam-followups',
   limit: 200,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const problemScoreRateLimit = rateLimit({
+  prefix: 'ai-problem-score',
+  limit: 500,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
 });
@@ -1328,6 +1336,55 @@ aiRouter.post(
       mode: parsed.data.mode,
       symptom: result.symptom,
       picks: result.examFollowUps.length,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/problem-score
+// Grades the report's "Problem Description" 0–100 against the identified
+// symptom's SYBRA "History Taking" axes (equal-weight facets). The LLM assigns
+// per-facet statuses; the numeric score is computed in code. If no chief
+// complaint / symptom can be identified from the text, the section is not
+// scorable and no score is returned. Also returns one concise improvement
+// suggestion when the score is below 100.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const ProblemScoreSchema = z.object({
+  problemDescription: z.string().max(5000),
+  chiefComplaint: z.string().max(1000).optional(),
+  pathway: z.string().max(200).optional(),
+});
+
+aiRouter.post(
+  '/report/problem-score',
+  authenticate,
+  requireScope('extract:write'),
+  problemScoreRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ProblemScoreSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    let result;
+    try {
+      result = await scoreProblemDescription(parsed.data);
+    } catch (err) {
+      console.error('[ai/report/problem-score] scoring error:', (err as Error).message);
+      res.status(502).json({ error: 'Problem-score service unavailable' });
+      return;
+    }
+
+    await auditLog('problem_score_generated', req, attributionFromPrincipal(req), {
+      scorable: result.scorable,
+      score: result.score,
+      pathway: result.pathway,
     });
 
     res.json(result);
