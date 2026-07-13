@@ -33,6 +33,10 @@ import { extractInterviewSummary } from '../lib/interviewExtract.js';
 import { generateFollowups } from '../lib/reportFollowups.js';
 import { generateExamFollowups } from '../lib/examFollowups.js';
 import { scoreProblemDescription } from '../lib/problemScore.js';
+import { scoreAllergies } from '../lib/allergyScore.js';
+import { scoreMedications } from '../lib/medicationScore.js';
+import { scoreAssociatedSymptoms } from '../lib/associatedSymptomsScore.js';
+import { scorePastMedicalHistory } from '../lib/pastMedicalHistoryScore.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -209,6 +213,34 @@ const examFollowupsRateLimit = rateLimit({
 
 const problemScoreRateLimit = rateLimit({
   prefix: 'ai-problem-score',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const allergyScoreRateLimit = rateLimit({
+  prefix: 'ai-allergy-score',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const medicationScoreRateLimit = rateLimit({
+  prefix: 'ai-medication-score',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const associatedSymptomsScoreRateLimit = rateLimit({
+  prefix: 'ai-associated-symptoms-score',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const pastMedicalHistoryScoreRateLimit = rateLimit({
+  prefix: 'ai-past-medical-history-score',
   limit: 500,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
@@ -1382,6 +1414,192 @@ aiRouter.post(
     }
 
     await auditLog('problem_score_generated', req, attributionFromPrincipal(req), {
+      scorable: result.scorable,
+      score: result.score,
+      pathway: result.pathway,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/allergy-score
+// Grades the report's "Allergies" field 0–100 against a fixed allergy rubric
+// (allergen / type / reaction / severity). "No known allergies" scores 100;
+// "Not assessed" / empty is not scorable. The LLM classifies the status and
+// assigns per-facet statuses; the score is computed in code. Returns one
+// concise improvement suggestion when below 100.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const AllergyScoreSchema = z.object({
+  allergies: z.string().max(3000),
+});
+
+aiRouter.post(
+  '/report/allergy-score',
+  authenticate,
+  requireScope('extract:write'),
+  allergyScoreRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = AllergyScoreSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    let result;
+    try {
+      result = await scoreAllergies(parsed.data.allergies);
+    } catch (err) {
+      console.error('[ai/report/allergy-score] scoring error:', (err as Error).message);
+      res.status(502).json({ error: 'Allergy-score service unavailable' });
+      return;
+    }
+
+    await auditLog('allergy_score_generated', req, attributionFromPrincipal(req), {
+      scorable: result.scorable,
+      score: result.score,
+      status: result.status,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/medication-score
+// Grades the report's "Current Medications" field 0–100 against a fixed rubric
+// (name / dose / frequency / indication). "No medications" scores 100;
+// "Not assessed" / empty is not scorable. The LLM classifies the status and
+// assigns per-facet statuses; the score is computed in code. Returns one
+// concise improvement suggestion when below 100.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const MedicationScoreSchema = z.object({
+  medications: z.string().max(3000),
+});
+
+aiRouter.post(
+  '/report/medication-score',
+  authenticate,
+  requireScope('extract:write'),
+  medicationScoreRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = MedicationScoreSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    let result;
+    try {
+      result = await scoreMedications(parsed.data.medications);
+    } catch (err) {
+      console.error('[ai/report/medication-score] scoring error:', (err as Error).message);
+      res.status(502).json({ error: 'Medication-score service unavailable' });
+      return;
+    }
+
+    await auditLog('medication_score_generated', req, attributionFromPrincipal(req), {
+      scorable: result.scorable,
+      score: result.score,
+      status: result.status,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/associated-symptoms-score
+// Grades the report's "Associated Symptoms" field 0–100 against the identified
+// symptom's SYBRA "Associated Symptoms" list. A documented negative counts as
+// complete; gender/age-conditional items drop to not_applicable. Not scorable
+// when no symptom is identifiable or the field is empty / "Not assessed".
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const AssociatedSymptomsScoreSchema = z.object({
+  associatedSymptoms: z.string().max(5000),
+  chiefComplaint: z.string().max(1000).optional(),
+  pathway: z.string().max(200).optional(),
+});
+
+aiRouter.post(
+  '/report/associated-symptoms-score',
+  authenticate,
+  requireScope('extract:write'),
+  associatedSymptomsScoreRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = AssociatedSymptomsScoreSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    let result;
+    try {
+      result = await scoreAssociatedSymptoms(parsed.data);
+    } catch (err) {
+      console.error('[ai/report/associated-symptoms-score] scoring error:', (err as Error).message);
+      res.status(502).json({ error: 'Associated-symptoms-score service unavailable' });
+      return;
+    }
+
+    await auditLog('associated_symptoms_score_generated', req, attributionFromPrincipal(req), {
+      scorable: result.scorable,
+      score: result.score,
+      pathway: result.pathway,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/past-medical-history-score
+// Grades the report's "Past Medical History" field 0–100 against the identified
+// symptom's SYBRA "Focused Past Medical History" list. A documented negative
+// counts as complete; gender/age-conditional items drop to not_applicable. Not
+// scorable when no symptom is identifiable or the field is empty / "Not assessed".
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const PastMedicalHistoryScoreSchema = z.object({
+  pastMedicalHistory: z.string().max(5000),
+  chiefComplaint: z.string().max(1000).optional(),
+  pathway: z.string().max(200).optional(),
+});
+
+aiRouter.post(
+  '/report/past-medical-history-score',
+  authenticate,
+  requireScope('extract:write'),
+  pastMedicalHistoryScoreRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = PastMedicalHistoryScoreSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    let result;
+    try {
+      result = await scorePastMedicalHistory(parsed.data);
+    } catch (err) {
+      console.error('[ai/report/past-medical-history-score] scoring error:', (err as Error).message);
+      res.status(502).json({ error: 'Past-medical-history-score service unavailable' });
+      return;
+    }
+
+    await auditLog('past_medical_history_score_generated', req, attributionFromPrincipal(req), {
       scorable: result.scorable,
       score: result.score,
       pathway: result.pathway,
