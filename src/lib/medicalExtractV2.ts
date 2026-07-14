@@ -207,7 +207,9 @@ Capture what was stated:
   • Previous hospital stays
   • Smoking, if mentioned
   • For women, pregnancy status or gynaecological history, if relevant and mentioned
-Only include a chronic condition if the patient stated it (or clearly stated a regular medicine for it). "" if not discussed.
+Only include a chronic condition if the patient stated it (or clearly stated a regular medicine for it).
+Record explicit DENIALS too: if the patient was asked about a past condition, surgery, or hospitalisation and said no, document it (e.g. "Denies diabetes and heart disease. No previous surgery."). A documented negative is as valuable as a positive. Never invent a denial for a topic that was never raised.
+"" if past medical history was not discussed at all.
 
 ────────────────────────────────────────────────────────
 allergies
