@@ -67,7 +67,8 @@ RULES (follow strictly):
 2. Only record that something is absent/denied ("Denies fever") when the patient was ASKED about it and said no. Never invent a denial for a topic never raised.
 3. No medical abbreviations — write in full ("shortness of breath", not "SOB"). Numbers as digits ("7/10", "2 days").
 4. NEVER put vital signs anywhere (no temperature, pulse, blood pressure, breathing rate, oxygen saturation) — they are captured elsewhere.
-5. Keep each field to what was actually discussed; leave a field "" if its topic was not discussed.`;
+5. Keep each field to what was actually discussed; leave a field "" if its topic was not discussed.
+6. NEVER describe what is missing or was not said. Do NOT write sentences such as "no other details were provided", "not mentioned", "not specified", "no information about ...", or "the patient did not report ...". Simply omit anything that was not discussed — the reader must never see a note about absent information. Stating a fact was not said is itself a claim you must not make.`;
 
 const HISTORY_V2_BATCH: BatchConfig = {
   name: 'historyV2',
@@ -78,7 +79,7 @@ ${SHARED_RULES}
 ────────────────────────────────────────────────────────
 problemDescription : the patient's account of the MAIN problem
 ────────────────────────────────────────────────────────
-Write the story of the presenting complaint as prose. Capture EVERY one of these that was mentioned (skip the rest):
+Write the story of the presenting complaint as prose, using ONLY what the patient said plus anything they were asked about and explicitly denied. The list below is just a guide to WHAT to capture IF it came up — include only the points that were actually discussed, and never mention or list the ones that were not:
   • Onset — when it started; sudden or gradual
   • Duration and pattern — how long; constant or comes and goes
   • Location — where it is; whether it spreads/radiates or has moved
@@ -89,7 +90,7 @@ Write the story of the presenting complaint as prose. Capture EVERY one of these
   • Course — how it has changed since it started
   • Previous episodes — whether this happened before
   • Relevant context — recent travel, food, or injury, if mentioned
-Include age and sex only if stated. Do NOT put here: associated symptoms, past history, medications, allergies, examination findings, or test results.
+Do NOT add any sentence about which of these were not covered or that details are missing (see rule 6). Include age and sex only if stated. Do NOT put here: associated symptoms, past history, medications, allergies, examination findings, or test results.
 If the main problem was never described, leave this "".
 
 ────────────────────────────────────────────────────────
