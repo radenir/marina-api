@@ -39,6 +39,15 @@ function load(): Port[] {
   return PORTS;
 }
 
+/**
+ * Normalise for matching: strip diacritics and upper-case, so a spoken/typed
+ * "Gdańsk" matches the index's ASCII "Gdansk" (→ PLGDN). Unlocodes are ASCII,
+ * so folding them is a harmless no-op.
+ */
+function fold(s: string): string {
+  return s.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+}
+
 /** Haversine distance in km. */
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // earth radius km
@@ -84,14 +93,14 @@ export function portCount(): number {
  */
 export function searchPorts(query: string, limit = 10): Port[] {
   const ports = load();
-  const q = query.trim().toUpperCase();
+  const q = fold(query);
   if (!q) return [];
 
   const scored: { port: Port; score: number }[] = [];
   for (const p of ports) {
-    const code = (p.unlocode || '').toUpperCase();
-    const name = p.name.toUpperCase();
-    const alt = (p.alt_name || '').toUpperCase();
+    const code = fold(p.unlocode || '');
+    const name = fold(p.name);
+    const alt = fold(p.alt_name || '');
     let score = 0;
     if (code === q) score = 100;
     else if (code.startsWith(q)) score = 80;
