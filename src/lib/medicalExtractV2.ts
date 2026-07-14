@@ -36,6 +36,24 @@ function canonicalPathway(s: string): string | null {
   return PATHWAY_BY_LC.get(s.trim().toLowerCase()) ?? null;
 }
 
+// Resolve a spoken port name/phrase to its UN/LOCODE. Tries the whole string,
+// then progressively simpler forms (before a comma, before " in ", first word)
+// so "Copenhagen in Denmark" still finds Copenhagen (DKCPH).
+function resolvePortCode(raw: string): string | null {
+  const base = raw.trim();
+  const candidates = [
+    base,
+    base.split(',')[0],
+    base.split(/\s+in\s+/i)[0],
+    base.split(/\s+/)[0],
+  ].map((s) => s.trim()).filter((s, i, a) => s && a.indexOf(s) === i);
+  for (const c of candidates) {
+    const hit = searchPorts(c, 1)[0];
+    if (hit?.unlocode) return hit.unlocode;
+  }
+  return null;
+}
+
 // v2 runs its batches on config.nebius.extractV2Model (gpt-oss-120b) — faster
 // than the v1 model — so /v2/ai/extract returns quicker. This is a local fork of
 // v1's extractBatch (no M-EWS prompt injection, since no v2 batch needs it); the
@@ -253,10 +271,13 @@ export async function parallelExtractV2(
   // Pre-populate identity/vessel fields from the profile (shared with v1).
   if (userProfile) applyUserProfile(merged, userProfile);
 
-  // Resolve the spoken destination port to its UN/LOCODE (5-letter code).
-  if (typeof merged.destination === 'string' && merged.destination.trim()) {
-    const hit = searchPorts(merged.destination.trim(), 1)[0];
-    if (hit?.unlocode) merged.destination = hit.unlocode;
+  // Resolve spoken destination / nearest ports to their UN/LOCODE (5-letter code).
+  for (const key of ['destination', 'nearestPort']) {
+    const v = merged[key];
+    if (typeof v === 'string' && v.trim()) {
+      const code = resolvePortCode(v);
+      if (code) merged[key] = code;
+    }
   }
 
   // Chief symptom is restricted to the SYBRA pathway list — canonicalise it.
