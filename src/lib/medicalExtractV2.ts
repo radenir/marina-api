@@ -17,6 +17,8 @@
 import { config } from '../config.js';
 import { nebius } from './nebius.js';
 import { calculateMEWS } from './mewsCalculator.js';
+import { searchPorts } from './portIndex.js';
+import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
 import {
   BATCHES,
   conversationToText,
@@ -24,6 +26,15 @@ import {
   type BatchConfig,
   type UserProfile,
 } from './medicalExtract.js';
+
+// Chief symptom must be one of the SYBRA pathways — nothing else. Canonicalise a
+// loosely-extracted symptom name (case/spelling) to the exact pathway key.
+const PATHWAY_BY_LC = new Map(
+  Object.keys(_symptomGuidelines as Record<string, unknown>).map((k) => [k.toLowerCase(), k]),
+);
+function canonicalPathway(s: string): string | null {
+  return PATHWAY_BY_LC.get(s.trim().toLowerCase()) ?? null;
+}
 
 // v2 runs its batches on config.nebius.extractV2Model (gpt-oss-120b) — faster
 // than the v1 model — so /v2/ai/extract returns quicker. This is a local fork of
@@ -241,6 +252,18 @@ export async function parallelExtractV2(
 
   // Pre-populate identity/vessel fields from the profile (shared with v1).
   if (userProfile) applyUserProfile(merged, userProfile);
+
+  // Resolve the spoken destination port to its UN/LOCODE (5-letter code).
+  if (typeof merged.destination === 'string' && merged.destination.trim()) {
+    const hit = searchPorts(merged.destination.trim(), 1)[0];
+    if (hit?.unlocode) merged.destination = hit.unlocode;
+  }
+
+  // Chief symptom is restricted to the SYBRA pathway list — canonicalise it.
+  if (typeof merged.chiefSymptom === 'string' && merged.chiefSymptom.trim()) {
+    const canonical = canonicalPathway(merged.chiefSymptom);
+    if (canonical) merged.chiefSymptom = canonical;
+  }
 
   return merged;
 }
