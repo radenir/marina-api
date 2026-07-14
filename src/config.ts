@@ -64,6 +64,9 @@ export const config = {
     // fixed so grading stays reproducible when NEBIUS_MODEL is swapped for
     // interview tuning.
     problemScoreModel: optional_env('NEBIUS_PROBLEM_SCORE_MODEL', 'openai/gpt-oss-120b'),
+    // Model for /v2/ai/extract only — gpt-oss-120b is faster than the v1 model.
+    // v1 /ai/extract keeps using `model` above, unchanged.
+    extractV2Model: optional_env('NEBIUS_EXTRACT_V2_MODEL', 'openai/gpt-oss-120b'),
   },
 
   // OVHcloud AI Endpoints — backup LLM used when Nebius is slow/unavailable.

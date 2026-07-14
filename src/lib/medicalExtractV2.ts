@@ -15,15 +15,44 @@
 // `mewsScore` field rather than being prepended into free text.
 // ---------------------------------------------------------------------------
 import { config } from '../config.js';
+import { nebius } from './nebius.js';
 import { calculateMEWS } from './mewsCalculator.js';
 import {
   BATCHES,
-  extractBatch,
   conversationToText,
   applyUserProfile,
   type BatchConfig,
   type UserProfile,
 } from './medicalExtract.js';
+
+// v2 runs its batches on config.nebius.extractV2Model (gpt-oss-120b) — faster
+// than the v1 model — so /v2/ai/extract returns quicker. This is a local fork of
+// v1's extractBatch (no M-EWS prompt injection, since no v2 batch needs it); the
+// shared v1 extractBatch is deliberately left untouched.
+async function extractBatchV2(text: string, batch: BatchConfig): Promise<Record<string, string | boolean>> {
+  const start = Date.now();
+  try {
+    const completion = await nebius.chat.completions.create({
+      model: config.nebius.extractV2Model,
+      temperature: 0.3,
+      max_tokens: 1500,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: batch.prompt },
+        { role: 'user', content: text },
+      ],
+    });
+    let raw = completion.choices[0]?.message?.content?.trim() ?? '{}';
+    raw = raw.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
+    const extracted: Record<string, string | boolean> = JSON.parse(raw);
+    console.log(`[v2/ai/extract] batch=${batch.name} duration=${Date.now() - start}ms model=${config.nebius.extractV2Model}`);
+    return extracted;
+  } catch (err) {
+    const e = err as Error & { status?: number };
+    console.error(`[v2/ai/extract] batch=${batch.name} failed: status=${e.status ?? 'n/a'} message=${e.message}`);
+    return {};
+  }
+}
 
 // ---------------------------------------------------------------------------
 // v2 clinical batch — replaces problemAndActions with a clean four-field split.
@@ -157,8 +186,8 @@ export async function parallelExtractV2(
   const text = conversationToText(conversation);
 
   // The v2 clinical batch takes no M-EWS injection (M-EWS is a separate field),
-  // so extractBatch is called without a score for every batch.
-  const results = await Promise.all(BATCHES_V2.map(b => extractBatch(text, b)));
+  // so every batch runs through the gpt-oss-120b v2 runner.
+  const results = await Promise.all(BATCHES_V2.map(b => extractBatchV2(text, b)));
   const merged: Record<string, string | boolean> = {};
   results.forEach(r => Object.assign(merged, r));
 
