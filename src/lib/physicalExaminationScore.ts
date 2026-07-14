@@ -234,7 +234,7 @@ For EACH numbered question assign a status:
 - "not_applicable": the question genuinely cannot apply to this patient — e.g. a testicular or male-genital question when the patient is not male (use the CASE FACTS), or a conditional question whose precondition is not met (e.g. "[If there is active bleeding] …" when there is no bleeding). Do NOT mark not_applicable merely because a finding is missing.
 Ground every "complete"/"partial" status in a verbatim quote from the documentation; otherwise the status is "absent" (evidence "").
 
-Also write ONE short sentence naming just the SINGLE most important thing still to check on the patient, not a list. Use plain, everyday language that a person with NO medical training understands, and describe it simply (for example "check whether both sides of the face look the same" instead of "assess facial symmetry"). Return "" if nothing applicable is missing.
+Also write ONE short, DIRECT QUESTION or instruction — the single most important thing still to check on the patient. Keep it concise, to the point, and easy for anyone to understand, described simply (for example "Do both sides of the face look the same?" instead of "assess facial symmetry"). Return "" if nothing applicable is missing.
 
 Return ONLY a JSON object (one entry per numbered question, in order):
 {"grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;

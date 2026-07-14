@@ -104,7 +104,7 @@ Ground every "complete"/"partial" grade in a verbatim quote from the text; if yo
 
 If the status is NOT "allergies_present", return an empty "grades" array.
 
-Also write ONE short sentence naming the single most useful thing to ask about or add next — just one thing, not a list. Use plain, everyday language that a person with NO medical training understands: no medical jargon or abbreviations. Return "" for the suggestion when the status is "no_known_allergies" or when every axis is already "complete".
+Also write ONE short, DIRECT QUESTION to ask the patient — the single most useful thing still to find out about their allergies. Keep it concise, to the point, and easy for anyone to understand: no medical jargon or abbreviations (for example "What happens when you take penicillin?"). Return "" for the suggestion when the status is "no_known_allergies" or when every axis is already "complete".
 
 Return ONLY a JSON object with this shape (grades in the same order as the axes):
 {"status":"not_assessed|no_known_allergies|allergies_present","grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;
