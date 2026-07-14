@@ -60,110 +60,111 @@ async function extractBatchV2(text: string, batch: BatchConfig): Promise<Record<
 
 const CLINICAL_V2_BATCH: BatchConfig = {
   name: 'clinicalV2',
-  prompt: `⚠️ OUTPUT MUST BE IN ENGLISH ONLY - TRANSLATE ALL INPUT ⚠️
+  prompt: `You extract four fields of a maritime medical report from a transcript in which a ship's medical officer describes a patient. Return ONE JSON object with exactly these keys: "problemDescription", "associatedSymptoms", "investigations", "exam".
 
-Generate FOUR separate fields: problemDescription, associatedSymptoms, investigations, exam. Return JSON only.
+OUTPUT LANGUAGE: English only. If the transcript is in another language, translate to English first.
 
-🚫🚫🚫 VITAL SIGNS BAN - READ THIS FIRST 🚫🚫🚫
-DO NOT INCLUDE ANY VITAL SIGNS IN ANY FIELD. THIS IS MANDATORY.
-- NO blood pressure (e.g., 120/80, 220/100)
-- NO pulse or heart rate (e.g., 72 bpm, 150 beats per minute)
-- NO respiratory rate or breathing rate (e.g., 19 breaths per minute)
-- NO oxygen saturation or SpO2 (e.g., 95%, 98%)
-- NO temperature (e.g., 39 degrees, 37.5°C)
-Vital signs are extracted separately into dedicated fields. NEVER mention them here.
-If vital signs appear in any field, you have failed this task.
+RULES (follow strictly):
+1. Use ONLY facts stated in the transcript. Never guess, infer, or add clinical detail that was not said. No placeholders ("Unknown", "N/A", "Not assessed").
+2. Only record that something is absent/denied ("Denies fever", "no vomiting") when the patient was ASKED about it and said no. Never invent a denial for a topic that was never raised.
+3. No medical abbreviations — write in full ("shortness of breath", not "SOB"; "year-old", not "yo"). Numbers as digits ("7/10", "2 days").
+4. NEVER put vital signs in any field (no temperature, pulse, blood pressure, breathing rate, oxygen saturation) — they are captured elsewhere.
+5. Keep each field to what was actually discussed. A short transcript gives short fields. Leave a field as "" if its topic was not discussed. Do not repeat the same fact in more than one field.
 
-CRITICAL: Translate all non-English input to English. ALL OUTPUT MUST BE IN ENGLISH.
+────────────────────────────────────────────────────────
+FIELD 1 — problemDescription : the patient's account of the MAIN problem
+────────────────────────────────────────────────────────
+Write the story of the presenting complaint as prose. Capture EVERY one of these that was mentioned (skip the ones that were not):
+  • Onset — when it started; sudden or gradual
+  • Duration and pattern — how long it has lasted; constant or comes and goes
+  • Location — where it is; whether it spreads/radiates or has moved
+  • Character — what it feels like (e.g. sharp, cramping, pressure, throbbing, burning)
+  • Severity — on a 0 to 10 scale, if the patient gave one
+  • Aggravating factors — what makes it worse (movement, breathing, food, position…)
+  • Relieving factors — what makes it better (rest, position, medication…)
+  • Course — how it has changed since it started (better, worse, same)
+  • Previous episodes — whether this has happened before
+  • Relevant context — recent travel, food, or injury/trauma, if mentioned
+Include age and sex only if stated. Do NOT put here: associated symptoms (Field 2), past history / medications / allergies, examination findings, or test results.
+If the main problem was never described, leave this "". Never write a placeholder sentence.
 
-🚨 ANTI-HALLUCINATION RULE 🚨
-- ONLY include information EXPLICITLY stated in the conversation
-- NEVER guess, infer, or make up information
-- NEVER use placeholders like "Unknown", "N/A", "Not assessed"
-- Only write "Denies X" if the patient said "no" (or equivalent) as a DIRECT ANSWER to a question about X that appears verbatim in the conversation. NEVER write "Denies X" for topics never asked.
+────────────────────────────────────────────────────────
+FIELD 2 — associatedSymptoms : OTHER symptoms, present OR denied
+────────────────────────────────────────────────────────
+Symptoms besides the main complaint that were asked about or volunteered. For EACH, say whether it is present or explicitly denied — a documented "no" is as valuable as a "yes".
+Example: "Reports nausea and one episode of vomiting. Denies fever. Denies urinary symptoms."
+Do not restate the main complaint. "" if none were discussed.
 
-🚫 DO NOT USE MEDICAL ABBREVIATIONS 🚫
-- Write everything in full, clear English (readers may not know abbreviations)
-- Do NOT use: "c/o", "h/o", "yo", "SOB", "N/V", "BP", "HR", "w/", "b/l", "pt", "IV", "IM", "PO", etc.
-- Write "complains of" not "c/o", "shortness of breath" not "SOB", "year-old" not "yo"
+────────────────────────────────────────────────────────
+FIELD 3 — investigations : RESULTS of tests the officer performed
+────────────────────────────────────────────────────────
+Point-of-care tests the officer carried out and their results — e.g. urine dipstick, blood glucose / blood sugar, electrocardiogram, pregnancy test, malaria rapid test. State each test AND its result.
+Example: "Blood glucose 6.1 mmol/L. Urine dipstick negative for blood and leukocytes."
+Do NOT include physical examination findings (Field 4) or vital signs. "" if no test was done.
 
-⚠️ OUTPUT LENGTH MUST MATCH CONVERSATION LENGTH:
-- A short conversation (1-3 exchanges) → 1-2 sentences maximum per field
-- Only document what was actually said — never invent clinical detail that was not discussed
-- ALWAYS write numbers as digits ("57" not "fifty-seven", "7/10" not "seven out of ten")
-- State each fact ONCE only — no redundancy, and do NOT repeat the same fact across fields
+────────────────────────────────────────────────────────
+FIELD 4 — exam : physical examination FINDINGS by the officer
+────────────────────────────────────────────────────────
+What the officer found when examining the patient — general appearance, level of consciousness (Alert / Voice / Pain / Unresponsive), inspection, palpation, listening (auscultation), tenderness, guarding, swelling, movement, skin. State each finding, whether NORMAL or abnormal (a normal finding is worth recording).
+Example: "Looks unwell, lying still. Abdomen soft, tender in the right lower quadrant with guarding and rebound. Chest clear on listening."
+Do NOT include patient-reported symptoms, test results, or vital signs. "" if no examination was done.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 FIELD 1: problemDescription  (the HISTORY of the presenting complaint)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-The story of the MAIN problem, in the patient's account. Include only what was said:
-  - Age/gender ONLY if explicitly stated
-  - Onset and timing (when it started, sudden or gradual, constant or intermittent)
-  - Location and radiation of the complaint
-  - Character/quality and severity (e.g. "7/10")
-  - Aggravating and relieving factors
-  - Progression since onset, and any previous similar episodes
-EXCLUDE from this field: the associated-symptom checklist (Field 2), past medical
-history / chronic conditions / regular medications / allergies (separate fields),
-vital signs, examination findings, and investigation results.
-If the patient's main problem was NOT described at all in the conversation, leave problemDescription EMPTY (""). Never write a placeholder like "No information provided" — an empty string is correct when nothing was said.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 FIELD 2: associatedSymptoms  (accompanying symptoms — present AND denied)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Symptoms OTHER than the main complaint that were asked about or volunteered:
-  - Every accompanying symptom the patient CONFIRMS (e.g. "nausea, one episode of vomiting")
-  - Every accompanying symptom the patient EXPLICITLY DENIES when directly asked
-    (e.g. "Denies fever. Denies urinary symptoms.")
-Do NOT restate the main complaint here. If no associated symptoms were discussed,
-return empty string "".
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 FIELD 3: investigations  (results of tests the MEDICAL OFFICER performed)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Point-of-care tests / investigations the human medical officer carried out and
-their RESULTS — for example: urine dipstick, blood glucose / blood sugar,
-electrocardiogram, pregnancy test, malaria rapid test, capillary blood tests.
-  - State the test and its result directly (e.g. "Blood glucose 6.1 mmol/L. Urine dipstick negative for blood and leukocytes.")
-  - Do NOT include physical examination findings (those go in Field 4)
-  - Do NOT include vital signs
-  - Include ONLY tests actually performed and reported. If none were performed, return empty string "".
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 FIELD 4: exam  (physical examination findings by the MEDICAL OFFICER)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-What the officer found on examination — inspection, palpation, percussion,
-auscultation, level of consciousness (Alert/Voice/Pain/Unresponsive), general
-appearance, tenderness, guarding, swelling, range of movement, skin findings, etc.
-  - State findings directly, without "Medical officer did/said/confirmed" prefixes
-  - Do NOT include patient-reported symptoms or history (Fields 1–2)
-  - Do NOT include investigation/test results (Field 3) or vital signs
-  - Do NOT include anything said or done by Marina (the AI)
-  - If the officer reported no examination, return empty string "".
-
-Return JSON format:
-{
-  "problemDescription": "",
-  "associatedSymptoms": "",
-  "investigations": "",
-  "exam": ""
-}`,
+Return JSON:
+{"problemDescription":"","associatedSymptoms":"","investigations":"","exam":""}`,
 };
 
-// v2 forks the shared medical_history prompt so allergies / currentMedications
-// are left EMPTY when the topic was never mentioned (instead of a
-// "…was not provided" sentinel), making them behave like every other field.
-// Real answers — including negatives ("no known allergies") and "unsure" — are
-// kept. v1's medical_history batch is untouched. Derived from v1's prompt so the
-// unchanged parts stay in lock-step.
-const V1_MEDICAL_HISTORY = BATCHES.find(b => b.name === 'medical_history');
+// v2 medical-history batch — a purpose-written prompt aligned with the
+// past-medical-history, allergy and medication judges (so each field carries the
+// details those judges grade). Replaces v1's medical_history batch for v2 only;
+// v1's batch is untouched. Fields are left EMPTY when the topic was never raised.
 const MEDICAL_HISTORY_V2_BATCH: BatchConfig = {
   name: 'medical_history',
-  prompt: (V1_MEDICAL_HISTORY?.prompt ?? '')
-    .split('MUST ALWAYS HAVE CONTENT. Follow these rules:').join('Follow these rules:')
-    .split('- NEVER leave this field empty.').join('- If the topic was NOT discussed at all: leave the field empty ("").')
-    .split('- If medications were NOT discussed at all: Write "Information on medications was not provided."').join('')
-    .split('- If allergies were NOT discussed at all: Write "Information on allergies was not provided."').join(''),
+  prompt: `You extract three fields of a maritime medical report from a transcript. Return ONE JSON object with exactly these keys: "pastHistory", "allergies", "currentMedications".
+
+OUTPUT LANGUAGE: English only (translate first if needed).
+
+RULES (follow strictly):
+1. Use ONLY what is explicitly stated. Never guess or invent. No medical abbreviations. Numbers as digits.
+2. Leave a field "" if its topic was not discussed at all. Never write a placeholder like "not provided" or "not assessed".
+
+────────────────────────────────────────────────────────
+pastHistory : the patient's relevant PAST health
+────────────────────────────────────────────────────────
+Capture what was stated:
+  • Previous illnesses and long-term conditions (e.g. diabetes, high blood pressure, heart disease, asthma, kidney stones)
+  • Past operations (surgeries)
+  • Previous hospital stays
+  • Smoking, if mentioned
+  • For women, pregnancy status or gynaecological history, if relevant and mentioned
+Only include a chronic condition if the patient stated it (or clearly stated a regular medicine for it). "" if not discussed.
+
+────────────────────────────────────────────────────────
+allergies
+────────────────────────────────────────────────────────
+If the patient named one or more allergies, for EACH give:
+  • the substance (e.g. penicillin, peanuts, latex)
+  • what kind it is — medicine, food, or environmental
+  • the reaction it causes (e.g. rash, swelling, difficulty breathing)
+  • how severe it is, or whether it has happened more than once
+  Example: "Penicillin (medicine) — skin rash, moderate. Shellfish (food) — throat swelling, severe."
+If the patient clearly has NO allergies, write "No known allergies."
+If allergies were not discussed at all, "".
+
+────────────────────────────────────────────────────────
+currentMedications
+────────────────────────────────────────────────────────
+If the patient named one or more medicines, for EACH give:
+  • the name (e.g. paracetamol, metformin, amlodipine)
+  • the dose / strength (e.g. 500 mg, 10 units, one tablet)
+  • how often it is taken (e.g. twice daily, every 8 hours, as needed)
+  • what it is for, if stated
+  Include tablets, inhalers, injections, and supplements.
+  Example: "Metformin 500 mg twice daily for diabetes. Ibuprofen 400 mg as needed for pain."
+If the patient clearly takes NO medicines, write "No regular medications."
+If medications were not discussed at all, "".
+
+Return JSON:
+{"pastHistory":"","allergies":"","currentMedications":""}`,
 };
 
 // v2 batch set: v1 batches EXCEPT problemAndActions and medical_history
