@@ -58,59 +58,73 @@ async function extractBatchV2(text: string, batch: BatchConfig): Promise<Record<
 // v2 clinical batch — replaces problemAndActions with a clean four-field split.
 // ---------------------------------------------------------------------------
 
-const CLINICAL_V2_BATCH: BatchConfig = {
-  name: 'clinicalV2',
-  prompt: `You extract four fields of a maritime medical report from a transcript in which a ship's medical officer describes a patient. Return ONE JSON object with exactly these keys: "problemDescription", "associatedSymptoms", "investigations", "exam".
-
-OUTPUT LANGUAGE: English only. If the transcript is in another language, translate to English first.
+// The clinical split runs as TWO batches (history + findings) so their fields
+// generate in parallel — the single 4-field batch was the extract's bottleneck.
+const SHARED_RULES = `OUTPUT LANGUAGE: English only. If the transcript is in another language, translate to English first.
 
 RULES (follow strictly):
 1. Use ONLY facts stated in the transcript. Never guess, infer, or add clinical detail that was not said. No placeholders ("Unknown", "N/A", "Not assessed").
-2. Only record that something is absent/denied ("Denies fever", "no vomiting") when the patient was ASKED about it and said no. Never invent a denial for a topic that was never raised.
-3. No medical abbreviations — write in full ("shortness of breath", not "SOB"; "year-old", not "yo"). Numbers as digits ("7/10", "2 days").
-4. NEVER put vital signs in any field (no temperature, pulse, blood pressure, breathing rate, oxygen saturation) — they are captured elsewhere.
-5. Keep each field to what was actually discussed. A short transcript gives short fields. Leave a field as "" if its topic was not discussed. Do not repeat the same fact in more than one field.
+2. Only record that something is absent/denied ("Denies fever") when the patient was ASKED about it and said no. Never invent a denial for a topic never raised.
+3. No medical abbreviations — write in full ("shortness of breath", not "SOB"). Numbers as digits ("7/10", "2 days").
+4. NEVER put vital signs anywhere (no temperature, pulse, blood pressure, breathing rate, oxygen saturation) — they are captured elsewhere.
+5. Keep each field to what was actually discussed; leave a field "" if its topic was not discussed.`;
+
+const HISTORY_V2_BATCH: BatchConfig = {
+  name: 'historyV2',
+  prompt: `You extract two fields of a maritime medical report from a transcript in which a ship's officer describes a patient. Return ONE JSON object with keys: "problemDescription", "associatedSymptoms".
+
+${SHARED_RULES}
 
 ────────────────────────────────────────────────────────
-FIELD 1 — problemDescription : the patient's account of the MAIN problem
+problemDescription : the patient's account of the MAIN problem
 ────────────────────────────────────────────────────────
-Write the story of the presenting complaint as prose. Capture EVERY one of these that was mentioned (skip the ones that were not):
+Write the story of the presenting complaint as prose. Capture EVERY one of these that was mentioned (skip the rest):
   • Onset — when it started; sudden or gradual
-  • Duration and pattern — how long it has lasted; constant or comes and goes
+  • Duration and pattern — how long; constant or comes and goes
   • Location — where it is; whether it spreads/radiates or has moved
-  • Character — what it feels like (e.g. sharp, cramping, pressure, throbbing, burning)
+  • Character — what it feels like (sharp, cramping, pressure, throbbing, burning…)
   • Severity — on a 0 to 10 scale, if the patient gave one
-  • Aggravating factors — what makes it worse (movement, breathing, food, position…)
-  • Relieving factors — what makes it better (rest, position, medication…)
-  • Course — how it has changed since it started (better, worse, same)
-  • Previous episodes — whether this has happened before
-  • Relevant context — recent travel, food, or injury/trauma, if mentioned
-Include age and sex only if stated. Do NOT put here: associated symptoms (Field 2), past history / medications / allergies, examination findings, or test results.
-If the main problem was never described, leave this "". Never write a placeholder sentence.
+  • Aggravating factors — what makes it worse
+  • Relieving factors — what makes it better
+  • Course — how it has changed since it started
+  • Previous episodes — whether this happened before
+  • Relevant context — recent travel, food, or injury, if mentioned
+Include age and sex only if stated. Do NOT put here: associated symptoms, past history, medications, allergies, examination findings, or test results.
+If the main problem was never described, leave this "".
 
 ────────────────────────────────────────────────────────
-FIELD 2 — associatedSymptoms : OTHER symptoms, present OR denied
+associatedSymptoms : OTHER symptoms, present OR denied
 ────────────────────────────────────────────────────────
-Symptoms besides the main complaint that were asked about or volunteered. For EACH, say whether it is present or explicitly denied — a documented "no" is as valuable as a "yes".
+Symptoms besides the main complaint that were asked about or volunteered. For EACH, say whether present or explicitly denied — a documented "no" is as valuable as a "yes".
 Example: "Reports nausea and one episode of vomiting. Denies fever. Denies urinary symptoms."
-Do not restate the main complaint. "" if none were discussed.
+Do not restate the main complaint. "" if none discussed.
+
+Return JSON:
+{"problemDescription":"","associatedSymptoms":""}`,
+};
+
+const FINDINGS_V2_BATCH: BatchConfig = {
+  name: 'findingsV2',
+  prompt: `You extract two fields of a maritime medical report from a transcript in which a ship's officer describes a patient. Return ONE JSON object with keys: "investigations", "exam".
+
+${SHARED_RULES}
 
 ────────────────────────────────────────────────────────
-FIELD 3 — investigations : RESULTS of tests the officer performed
+investigations : RESULTS of tests the officer performed
 ────────────────────────────────────────────────────────
 Point-of-care tests the officer carried out and their results — e.g. urine dipstick, blood glucose / blood sugar, electrocardiogram, pregnancy test, malaria rapid test. State each test AND its result.
 Example: "Blood glucose 6.1 mmol/L. Urine dipstick negative for blood and leukocytes."
-Do NOT include physical examination findings (Field 4) or vital signs. "" if no test was done.
+Do NOT include physical examination findings or vital signs. "" if no test was done.
 
 ────────────────────────────────────────────────────────
-FIELD 4 — exam : physical examination FINDINGS by the officer
+exam : physical examination FINDINGS by the officer
 ────────────────────────────────────────────────────────
 What the officer found when examining the patient — general appearance, level of consciousness (Alert / Voice / Pain / Unresponsive), inspection, palpation, listening (auscultation), tenderness, guarding, swelling, movement, skin. State each finding, whether NORMAL or abnormal (a normal finding is worth recording).
 Example: "Looks unwell, lying still. Abdomen soft, tender in the right lower quadrant with guarding and rebound. Chest clear on listening."
 Do NOT include patient-reported symptoms, test results, or vital signs. "" if no examination was done.
 
 Return JSON:
-{"problemDescription":"","associatedSymptoms":"","investigations":"","exam":""}`,
+{"investigations":"","exam":""}`,
 };
 
 // v2 medical-history batch — a purpose-written prompt aligned with the
@@ -172,7 +186,8 @@ Return JSON:
 const BATCHES_V2: BatchConfig[] = [
   ...BATCHES.filter(b => b.name !== 'problemAndActions' && b.name !== 'medical_history'),
   MEDICAL_HISTORY_V2_BATCH,
-  CLINICAL_V2_BATCH,
+  HISTORY_V2_BATCH,
+  FINDINGS_V2_BATCH,
 ];
 
 // ---------------------------------------------------------------------------
