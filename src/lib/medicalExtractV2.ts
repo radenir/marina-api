@@ -33,7 +33,23 @@ const PATHWAY_BY_LC = new Map(
   Object.keys(_symptomGuidelines as Record<string, unknown>).map((k) => [k.toLowerCase(), k]),
 );
 function canonicalPathway(s: string): string | null {
-  return PATHWAY_BY_LC.get(s.trim().toLowerCase()) ?? null;
+  const lc = s.trim().toLowerCase();
+  if (!lc) return null;
+  // 1. Exact pathway name.
+  const exact = PATHWAY_BY_LC.get(lc);
+  if (exact) return exact;
+  // 2. A pathway name appears inside a descriptive phrase (e.g. "right-hand side
+  //    headache" → "Headache", "sharp chest pain" → "Chest pain"). Prefer the
+  //    longest match so specific pathways win over shorter accidental ones.
+  let best: string | null = null;
+  let bestLen = 0;
+  for (const [keyLc, key] of PATHWAY_BY_LC) {
+    if (keyLc.length > bestLen && lc.includes(keyLc)) {
+      best = key;
+      bestLen = keyLc.length;
+    }
+  }
+  return best;
 }
 
 // Resolve a spoken port name/phrase to its UN/LOCODE. Tries the whole string,
@@ -280,10 +296,11 @@ export async function parallelExtractV2(
     }
   }
 
-  // Chief symptom is restricted to the SYBRA pathway list — canonicalise it.
+  // Chief symptom is restricted to the SYBRA pathway list — it can only ever be a
+  // pathway name, never free text. Canonicalise it; if it can't be mapped to a
+  // pathway, clear it (the raw wording is preserved in chiefComplaint).
   if (typeof merged.chiefSymptom === 'string' && merged.chiefSymptom.trim()) {
-    const canonical = canonicalPathway(merged.chiefSymptom);
-    if (canonical) merged.chiefSymptom = canonical;
+    merged.chiefSymptom = canonicalPathway(merged.chiefSymptom) ?? '';
   }
 
   return merged;
