@@ -15,7 +15,8 @@
 // `mewsScore` field rather than being prepended into free text.
 // ---------------------------------------------------------------------------
 import { config } from '../config.js';
-import { nebius } from './nebius.js';
+import { chatWithFallback } from './llmFallback.js';
+import { ovh } from './ovh.js';
 import { calculateMEWS } from './mewsCalculator.js';
 import { searchPorts } from './portIndex.js';
 import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
@@ -74,23 +75,33 @@ function resolvePortCode(raw: string): string | null {
 // than the v1 model — so /v2/ai/extract returns quicker. This is a local fork of
 // v1's extractBatch (no M-EWS prompt injection, since no v2 batch needs it); the
 // shared v1 extractBatch is deliberately left untouched.
+//
+// If Nebius stalls (>10s) or errors, fall back to the OVH gpt-oss-120b backup so
+// "Update report" can't hang indefinitely on a slow primary provider.
 async function extractBatchV2(text: string, batch: BatchConfig): Promise<Record<string, string | boolean>> {
   const start = Date.now();
   try {
-    const completion = await nebius.chat.completions.create({
-      model: config.nebius.extractV2Model,
-      temperature: 0.3,
-      max_tokens: 1500,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: batch.prompt },
-        { role: 'user', content: text },
-      ],
-    });
+    const completion = await chatWithFallback(
+      {
+        temperature: 0.3,
+        max_tokens: 1500,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: batch.prompt },
+          { role: 'user', content: text },
+        ],
+      },
+      {
+        primaryModel: config.nebius.extractV2Model,
+        timeoutMs: 10000,
+        backupClient: ovh,
+        backupModel: config.ovh.model,
+      },
+    );
     let raw = completion.choices[0]?.message?.content?.trim() ?? '{}';
     raw = raw.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
     const extracted: Record<string, string | boolean> = JSON.parse(raw);
-    console.log(`[v2/ai/extract] batch=${batch.name} duration=${Date.now() - start}ms model=${config.nebius.extractV2Model}`);
+    console.log(`[v2/ai/extract] batch=${batch.name} duration=${Date.now() - start}ms`);
     return extracted;
   } catch (err) {
     const e = err as Error & { status?: number };
