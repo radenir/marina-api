@@ -261,8 +261,9 @@ Return JSON:
 //   • patientNationality sat under "VESSEL INFO" with no description —
 //     adjective forms ("a Polish motorman") extracted 0/5; with the reworded
 //     block below, 18/18.
-//   • location was described only as "(coordinates, position)" — "at anchor
-//     off Lagos" extracted 3/6; with the fuller description, consistently.
+//   • location is coordinates-only in the app, but "(coordinates, position)"
+//     let the model drop prose there ("sailing to Bangkok"); it must return
+//     "" instead so the app keeps the current (GPS-set) value.
 //   • gender was never inferred from pronouns ("he vomited twice" → "").
 //
 // The forks are built by patching the v1 prompt text so the shared scaffolding
@@ -284,9 +285,13 @@ function forkPrompt(v1Name: string, edits: Array<[string, string]>): string {
 const CORE_IDENTIFICATION_V2_BATCH: BatchConfig = {
   name: 'core_identification',
   prompt: forkPrompt('core_identification', [
+    // The app's Location field is COORDINATES ONLY (it has a GPS "Use my
+    // location" button); prose like "sailing to Bangkok" is junk there. An
+    // empty "" lets the app keep whatever the field already holds.
     [
       '- location (coordinates, position)',
-      '- location (the SHIP\'s current whereabouts, however stated: coordinates, a sea area or waterway ("Bay of Biscay", "transiting the Suez Canal"), "at anchor off X", "docked in X", or a distance from a named place)',
+      `- location (the ship's position as COORDINATES ONLY — latitude/longitude in any spoken form, e.g. "55 degrees 30 minutes north, 012 degrees 10 minutes east" or "43 12 north, 005 22 east".
+  If no coordinates were stated, leave "" — NEVER put a place name, sea area, port, heading, or phrases like "sailing to X" / "docked in X" here. Where the ship is GOING belongs in no field here (destination is captured elsewhere).)`,
     ],
     // Examples are load-bearing: instruction-only wordings ("a pronoun counts
     // as stated") still extracted "" for he/him 0/9 on gpt-oss-120b; with the

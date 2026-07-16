@@ -29,15 +29,19 @@ const CASES: Case[] = [
   { id: 'dest-port-of-klang', conv: [u('We are heading to the Port of Klang in Malaysia, arriving Saturday. The messman has a toothache that keeps him awake.')], expect: { destination: /^MYPKG$/ } },
   { id: 'dest-piraeus', conv: [u('The closest port to us right now would be Algeciras, but we are continuing to Piraeus as planned. Patient is a motorman with back pain.')], expect: { destination: /^GRPIR$/, nearestPort: /^ESALG$/ } },
   { id: 'dest-make-port', conv: [u('We will make port in Aden the day after tomorrow. The patient is a deck cadet who twisted his ankle.')], expect: { destination: /^YEADE$/ } },
-  // ── previously flaky: location ──
-  { id: 'loc-anchor', conv: [u('We are at anchor off Lagos. An able seaman has a deep cut on his left hand from a mooring wire.')], expect: { location: /lagos/i } },
-  { id: 'loc-descriptive', conv: [u('We are currently in the Bay of Biscay, about 120 nautical miles west of Brest. An able seaman fell on deck and hurt his shoulder.')], expect: { location: /biscay/i } },
+  // ── location: COORDINATES ONLY — prose/place-names must come back "" so the
+  //    app keeps its current (GPS-set) value ──
+  { id: 'loc-coords-spoken', conv: [u('Our position is 55 degrees 30 minutes north, 012 degrees 10 minutes east. An able seaman has a deep cut on his left hand.')], expect: { location: /55/ } },
+  { id: 'loc-coords-digits', conv: [u('Position 43 12 north, 005 22 east. The patient has had a nosebleed for 40 minutes that will not stop.')], expect: { location: /43/ } },
+  { id: 'loc-anchor', conv: [u('We are at anchor off Lagos. An able seaman has a deep cut on his left hand from a mooring wire.')], expect: { location: /^$/ } },
+  { id: 'loc-descriptive', conv: [u('We are currently in the Bay of Biscay, about 120 nautical miles west of Brest. An able seaman fell on deck and hurt his shoulder.')], expect: { location: /^$/ } },
+  { id: 'loc-sailing-to', conv: [u('We are sailing to Bangkok. The patient is a female crew member, born 10th of August 2000, she is Armenian. She has a stomach ache.')], expect: { location: /^$/, destination: /^THBKK$/, patientNationality: /armenia/i, gender: /female/i } },
   // ── previously failing: meds contamination + gender ──
   { id: 'meds-contamination', conv: [u('The patient is an oiler with a headache since this morning, 5 out of 10. He takes no regular medications and has no allergies. I gave him 1 gram of paracetamol at 09:30.')], expect: { currentMedications: /no (regular )?medication/i }, forbid: { currentMedications: /paracetamol/i } },
   { id: 'gender-pronoun', conv: [u('The patient is Rajesh Kumar, an oiler. He has had abdominal pain since yesterday. He vomited twice.')], expect: { gender: /male/i } },
   { id: 'lay-language', conv: [u('The patient had his gallbladder removed in 2019 and his appendix out as a child. No other conditions. He is complaining of stomach pain.')], expect: { pastHistory: /gallbladder/i }, forbid: { pastHistory: /cholecystectomy|appendectomy|appendicectomy/i } },
   // ── regression: Danish transcript ──
-  { id: 'danish', conv: [u('Dette er overstyrmanden på MV Vestkyst. Vi sejler mod Gdynia, nærmeste havn er Skagen. Vores position er i Kattegat, cirka 20 sømil øst for Grenaa. Patienten er en filippinsk matros med stærke mavesmerter.')], expect: { destination: /^PLGDY$/, nearestPort: /^DKSKA$/, location: /kattegat/i, patientNationality: /filipin|philipp/i } },
+  { id: 'danish', conv: [u('Dette er overstyrmanden på MV Vestkyst. Vi sejler mod Gdynia, nærmeste havn er Skagen. Vores position er i Kattegat, cirka 20 sømil øst for Grenaa. Patienten er en filippinsk matros med stærke mavesmerter.')], expect: { destination: /^PLGDY$/, nearestPort: /^DKSKA$/, location: /^$/, patientNationality: /filipin|philipp/i } },
   // ── regression: comprehensive case across every field ──
   {
     id: 'full-report',
@@ -53,7 +57,7 @@ const CASES: Case[] = [
     expect: {
       shipName: /skagen maersk/i,
       shipCallSign: /OYGR2/i,
-      location: /north sea|esbjerg/i,
+      location: /^$/, // "North Sea, 60 nm west of Esbjerg" is prose, not coordinates
       patientFirstName: /rajesh/i,
       patientLastName: /kumar/i,
       dateOfBirth: /1988/,
