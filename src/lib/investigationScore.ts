@@ -155,6 +155,7 @@ For every applicable investigation (met OR pending), assign a documentation "sta
 - "partial": mentioned or ordered but no result recorded.
 - "absent": not documented — this INCLUDES a test that is pending on a fact that has not been established.
 Ground every "complete"/"partial" in a verbatim quote from the documentation; otherwise status is "absent" (evidence "").
+Officers dictate in PLAIN WORDS — grade the substance, not the vocabulary. A plain-language description of a test IS that test: "the blood test for infection/inflammation" IS the CRP test; "the urine stick/urine test" IS the urine analysis/dipstick; "the sugar" IS blood glucose; "the malaria test showed one line" IS a malaria rapid test with a negative result. Never mark a test absent merely because the documentation doesn't use its technical name or abbreviation.
 
 Also write the ONE next question to answer: the single most important missing test result — or the fact needed to decide whether a test is required (ask for that first). Phrase it as ONE simple, specific question with a concrete answer, ending in "?". Plain words, no medical jargon, abbreviations or test codes (say "the blood test for infection" rather than "CRP") — "What did the blood test for infection show?", "What is the patient's temperature?", "Is the patient diabetic?". NEVER write an instruction ("Perform…", "Do…", "Order…", "Check…") — always a question. Return "" if nothing applicable is missing.
 
