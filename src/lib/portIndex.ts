@@ -87,14 +87,39 @@ export function portCount(): number {
 }
 
 /**
+ * Common English exonyms the WPI lists only under a local/transliterated name
+ * (audited against the index — every code here exists in world-ports.json).
+ * Without this, a correctly-spoken "Piraeus" resolves to nothing because the
+ * index only knows "Piraievs". Keys are fold()ed names, values UN/LOCODEs.
+ */
+const EXONYMS: Record<string, string> = {
+  'PIRAEUS': 'GRPIR',            // Piraievs
+  'SAINT PETERSBURG': 'RULED',   // Sankt-Peterburg
+  'HO CHI MINH CITY': 'VNSGN',   // Thanh Ho Chi Minh
+  'HO CHI MINH': 'VNSGN',
+  'JEDDAH': 'SAJED',             // Jiddah
+  'GENOA': 'ITGOA',              // Genova
+  'SALONIKA': 'GRSKG',           // Thessaloniki
+  'ODESSA': 'UAODS',             // Odesa
+  'MUSCAT': 'OMSTQ',             // Mina Qabus
+  'KOLKATA': 'INCCU',            // Calcutta
+  'YANGON': 'MMRGN',             // Rangoon
+  'SHENZHEN': 'CNYTN',           // Yantian
+  'KAOHSIUNG': 'TWKHH',          // Kao-Hsiung
+  'INCHEON': 'KRINC',            // Inchon
+  'SINGAPORE': 'SGKEP',          // Keppel - (East Singapore)
+};
+
+/**
  * Substring/code search across the port index. Returns top matches sorted by
- * a simple relevance score: exact LOCODE > LOCODE prefix > name starts-with >
- * name substring. Case-insensitive. Empty query returns [].
+ * a simple relevance score: exonym alias > exact LOCODE > LOCODE prefix >
+ * name starts-with > name substring. Case-insensitive. Empty query returns [].
  */
 export function searchPorts(query: string, limit = 10): Port[] {
   const ports = load();
   const q = fold(query);
   if (!q) return [];
+  const aliasCode = EXONYMS[q];
 
   const scored: { port: Port; score: number }[] = [];
   for (const p of ports) {
@@ -102,7 +127,8 @@ export function searchPorts(query: string, limit = 10): Port[] {
     const name = fold(p.name);
     const alt = fold(p.alt_name || '');
     let score = 0;
-    if (code === q) score = 100;
+    if (aliasCode && code === aliasCode) score = 110;
+    else if (code === q) score = 100;
     else if (code.startsWith(q)) score = 80;
     else if (name === q || alt === q) score = 70;
     else if (name.startsWith(q) || alt.startsWith(q)) score = 60;

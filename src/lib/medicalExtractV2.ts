@@ -2,9 +2,10 @@
 // medicalExtractV2.ts — versioned extractor powering POST /v2/ai/extract.
 //
 // v1 (medicalExtract.ts / POST /ai/extract) is frozen: other clients depend on
-// its exact shape, so it must NOT change. v2 reuses v1's unchanged batches
-// (identification, medical history, vitals, treatment) verbatim and replaces
-// only the "problemAndActions" batch with a CLEAN SPLIT:
+// its exact shape, so it must NOT change. v2 reuses v1's vitals batch
+// verbatim, forks identification/treatment/medical-history with prompt fixes
+// for the weaker v2 model (same JSON shape), and replaces the
+// "problemAndActions" batch with a CLEAN SPLIT:
 //
 //   problemAndActions → { problemDescription, associatedSymptoms,
 //                         investigations, exam }
@@ -54,16 +55,20 @@ function canonicalPathway(s: string): string | null {
 }
 
 // Resolve a spoken port name/phrase to its UN/LOCODE. Tries the whole string,
-// then progressively simpler forms (before a comma, before " in ", first word)
-// so "Copenhagen in Denmark" still finds Copenhagen (DKCPH).
+// then progressively simpler forms (before a comma, before " in ", without a
+// leading "the"/"port of") so "Copenhagen in Denmark" still finds Copenhagen
+// (DKCPH) and "Port of Klang, Malaysia" finds Port Klang (MYPKG).
+//
+// Deliberately NO first-word fallback: "Port of Klang" → "Port" used to
+// substring-match an arbitrary port (Port Suez, Egypt). An unresolved name is
+// better than a confidently wrong port.
 function resolvePortCode(raw: string): string | null {
   const base = raw.trim();
-  const candidates = [
-    base,
-    base.split(',')[0],
-    base.split(/\s+in\s+/i)[0],
-    base.split(/\s+/)[0],
-  ].map((s) => s.trim()).filter((s, i, a) => s && a.indexOf(s) === i);
+  const beforeComma = base.split(',')[0].trim();
+  const beforeIn = beforeComma.split(/\s+in\s+/i)[0].trim();
+  const noPrefix = beforeIn.replace(/^(?:the\s+)?port\s+of\s+/i, '').trim();
+  const candidates = [base, beforeComma, beforeIn, noPrefix]
+    .filter((s, i, a) => s && a.indexOf(s) === i);
   for (const c of candidates) {
     const hit = searchPorts(c, 1)[0];
     if (hit?.unlocode) return hit.unlocode;
@@ -214,6 +219,7 @@ Capture what was stated:
   • Smoking, if mentioned
   • For women, pregnancy status or gynaecological history, if relevant and mentioned
 Only include a chronic condition if the patient stated it (or clearly stated a regular medicine for it).
+Use the patient's own plain words — never convert to medical terminology (write "gallbladder removed", not "cholecystectomy"; "appendix out", not "appendectomy"). The readers are ship officers, not doctors.
 Record explicit DENIALS too: if the patient was asked about a past condition, surgery, or hospitalisation and said no, document it (e.g. "Denies diabetes and heart disease. No previous surgery."). A documented negative is as valuable as a positive. Never invent a denial for a topic that was never raised.
 "" if past medical history was not discussed at all.
 
@@ -232,24 +238,100 @@ If allergies were not discussed at all, "".
 ────────────────────────────────────────────────────────
 currentMedications
 ────────────────────────────────────────────────────────
-If the patient named one or more medicines, for EACH give:
+ONLY medicines the patient takes as their own, from before this illness. Medicine given ON BOARD to treat THIS illness ("I gave him 1 gram of paracetamol") is TREATMENT — never list it here, it is captured elsewhere.
+If the patient named one or more of their own medicines, for EACH give:
   • the name (e.g. paracetamol, metformin, amlodipine)
   • the dose / strength (e.g. 500 mg, 10 units, one tablet)
   • how often it is taken (e.g. twice daily, every 8 hours, as needed)
   • what it is for, if stated
   Include tablets, inhalers, injections, and supplements.
   Example: "Metformin 500 mg twice daily for diabetes. Ibuprofen 400 mg as needed for pain."
-If the patient clearly takes NO medicines, write "No regular medications."
+If the patient clearly takes NO regular medicines, write "No regular medications." — even if treatment was given on board.
 If medications were not discussed at all, "".
 
 Return JSON:
 {"pastHistory":"","allergies":"","currentMedications":""}`,
 };
 
-// v2 batch set: v1 batches EXCEPT problemAndActions and medical_history
-// (replaced by the forks/split above), plus the v2 clinical split.
+// ---------------------------------------------------------------------------
+// v2 forks of the frozen v1 identification/treatment batches. v1 must not
+// change, but its prompts under-describe several fields and the weaker v2
+// model misses them (measured on gpt-oss-120b, scripts/test-extract-v2-*.ts):
+//
+//   • patientNationality sat under "VESSEL INFO" with no description —
+//     adjective forms ("a Polish motorman") extracted 0/5; with the reworded
+//     block below, 18/18.
+//   • location was described only as "(coordinates, position)" — "at anchor
+//     off Lagos" extracted 3/6; with the fuller description, consistently.
+//   • gender was never inferred from pronouns ("he vomited twice" → "").
+//
+// The forks are built by patching the v1 prompt text so the shared scaffolding
+// (translation, anti-hallucination rules, JSON shape) stays identical by
+// construction. v1 is frozen, so the anchors are stable; forkPrompt throws at
+// module load if an anchor ever fails to match.
+// ---------------------------------------------------------------------------
+function forkPrompt(v1Name: string, edits: Array<[string, string]>): string {
+  const v1 = BATCHES.find(b => b.name === v1Name);
+  if (!v1) throw new Error(`v2 fork: v1 batch "${v1Name}" not found`);
+  let prompt = v1.prompt;
+  for (const [from, to] of edits) {
+    if (!prompt.includes(from)) throw new Error(`v2 fork of "${v1Name}": anchor not found: ${from.slice(0, 60)}`);
+    prompt = prompt.replace(from, to);
+  }
+  return prompt;
+}
+
+const CORE_IDENTIFICATION_V2_BATCH: BatchConfig = {
+  name: 'core_identification',
+  prompt: forkPrompt('core_identification', [
+    [
+      '- location (coordinates, position)',
+      '- location (the SHIP\'s current whereabouts, however stated: coordinates, a sea area or waterway ("Bay of Biscay", "transiting the Suez Canal"), "at anchor off X", "docked in X", or a distance from a named place)',
+    ],
+    // Examples are load-bearing: instruction-only wordings ("a pronoun counts
+    // as stated") still extracted "" for he/him 0/9 on gpt-oss-120b; with the
+    // examples below it's 9/9 (and "" is still returned when no pronoun). The
+    // multi-person example matters too — without it, long transcripts that
+    // also mention the officer made the model drop the field.
+    [
+      '- gender (male/female)',
+      `- gender ("male" or "female". The patient's pronouns state their gender explicitly — ALWAYS extract it from them, even in a long report that mentions other people.
+  Example: "The patient is an oiler. He vomited twice." → "gender": "male"
+  Example: "She has had a headache since morning." → "gender": "female"
+  Example: "This is the captain speaking. The patient is Rajesh Kumar. He has had pain since yesterday." → "gender": "male" (the patient's pronoun, not the speaker's)
+  Only leave "" if the transcript never uses he/she (or an equivalent) for the patient.)`,
+    ],
+  ]),
+};
+
+const TREATMENT_V2_BATCH: BatchConfig = {
+  name: 'treatment_medications',
+  prompt: forkPrompt('treatment_medications', [
+    [
+      `VESSEL INFO (if mentioned):
+- patientNationality, patientUtc, patientCompany, patientEmail
+- destination, nearestPort, medicineChestType
+- medical_officer_name_and_title`,
+      `PATIENT DETAILS (if mentioned):
+- patientNationality: the PATIENT's nationality/citizenship, however phrased — "a Polish motorman", "he is Filipino", "holds a Romanian passport", "nationality Ukrainian" all count. The patient's nationality, NEVER the reporting officer's.
+- patientCompany, patientEmail
+
+VOYAGE INFO (if mentioned):
+- destination: the port the ship is heading to / next port of call ("bound for X", "en route to X", "ETA X tomorrow")
+- nearestPort: the closest port right now, if different from the destination
+- patientUtc, medicineChestType
+- medical_officer_name_and_title`,
+    ],
+  ]),
+};
+
+// v2 batch set: v1 batches EXCEPT the ones forked/replaced above (only
+// vitalSignsSimple is still shared verbatim), plus the v2 clinical split.
+const V2_REPLACED = new Set(['problemAndActions', 'medical_history', 'core_identification', 'treatment_medications']);
 const BATCHES_V2: BatchConfig[] = [
-  ...BATCHES.filter(b => b.name !== 'problemAndActions' && b.name !== 'medical_history'),
+  ...BATCHES.filter(b => !V2_REPLACED.has(b.name)),
+  CORE_IDENTIFICATION_V2_BATCH,
+  TREATMENT_V2_BATCH,
   MEDICAL_HISTORY_V2_BATCH,
   HISTORY_V2_BATCH,
   FINDINGS_V2_BATCH,
