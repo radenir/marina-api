@@ -136,7 +136,8 @@ RULES (follow strictly):
 3. No medical abbreviations — write in full ("shortness of breath", not "SOB"). Numbers as digits ("7/10", "2 days").
 4. NEVER put vital signs anywhere (no temperature, pulse, blood pressure, breathing rate, oxygen saturation) — they are captured elsewhere.
 5. Keep each field to what was actually discussed; leave a field "" if its topic was not discussed.
-6. NEVER describe what is missing or was not said. Do NOT write sentences such as "no other details were provided", "not mentioned", "not specified", "no information about ...", or "the patient did not report ...". Simply omit anything that was not discussed — the reader must never see a note about absent information. Stating a fact was not said is itself a claim you must not make.`;
+6. NEVER describe what is missing or was not said. Do NOT write sentences such as "no other details were provided", "not mentioned", "not specified", "no information about ...", or "the patient did not report ...". Simply omit anything that was not discussed — the reader must never see a note about absent information. Stating a fact was not said is itself a claim you must not make.
+7. The transcript is auto-transcribed speech and may be long, fragmented and unpunctuated. Search ALL of it — a fact stated at the very beginning counts exactly as much as the latest words, and must never be dropped because the transcript grew. If a value is corrected or restated later, the FINAL statement wins.`;
 
 const HISTORY_V2_BATCH: BatchConfig = {
   name: 'historyV2',
@@ -224,6 +225,7 @@ PATHWAY CHECKLIST — "${pathway}" (recognition aid)
 The officer works through the "${pathway}" pathway, answering the examination questions below. Spoken answers rarely name the examination — use the questions to RECOGNISE them, then record the finding in "exam" WITH the examination's name: "colour came back in two seconds" → exam: "Capillary refill normal (about 2 seconds)".
 Every answer to one of these examination questions belongs in "exam" — even when the examination is called a test (capillary refill test, pain assessment). Only laboratory / point-of-care results (the Tests list) belong in "investigations".
 ${examQuestions ? `\nExaminations of the "${pathway}" pathway ("exam"):\n${examQuestions}\n` : ''}${investigations.length ? `\nTests of the "${pathway}" pathway ("investigations"):\n${investigations.map((t) => `  • ${t}`).join('\n')}\n` : ''}
+Work through BOTH lists ITEM BY ITEM — every examination question and every test: for each one, search the ENTIRE transcript for an answer or result — statements from the beginning of the recording count exactly as much as the most recent ones, and a finding or test result must NEVER be dropped just because it was said early or the transcript is long. Then add any examination findings or test results that are not on the checklist at all.
 The checklist is what MIGHT have been done, not what was done: record only findings and results the transcript actually states, stay silent about checklist items it never mentions, and never note that something was not done (rule 6 applies).
 
 Return JSON:`;
