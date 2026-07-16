@@ -167,6 +167,10 @@ associatedSymptoms : OTHER symptoms, present OR denied
 ────────────────────────────────────────────────────────
 Symptoms besides the main complaint that were asked about or volunteered. For EACH, say whether present or explicitly denied — a documented "no" is as valuable as a "yes".
 Example: "Reports nausea and one episode of vomiting. Denies fever. Denies urinary symptoms."
+ONLY things the PATIENT feels or reports (or denies feeling) belong here. Do NOT put here:
+  • past illnesses, conditions, operations or their denials ("denies diabetes", "no previous surgery" — that is past medical history, not a symptom)
+  • allergies or medications (captured elsewhere, including their denials)
+  • findings from the OFFICER's examination (pupil checks, strength or walking tests, swallow tests — those are examination findings, even when normal)
 Do not restate the main complaint. "" if none discussed.
 
 Return JSON:
@@ -234,6 +238,58 @@ Return JSON:`;
   return {
     name: FINDINGS_V2_BATCH.name,
     prompt: FINDINGS_V2_BATCH.prompt.replace('Return JSON:', context),
+  };
+}
+
+// Same idea for the history batch: when the pathway is known, give the model
+// the pathway's own "History Taking" and "Associated Symptoms" question lists
+// so it can tell what belongs to the story of the complaint, what is an
+// associated symptom, and — crucially — what belongs to NEITHER (past-history
+// denials and examination findings were being dumped into associatedSymptoms).
+export function historyBatchFor(pathway: string | null): BatchConfig {
+  const g = pathway ? (_symptomGuidelines as Record<string, Record<string, unknown>>)[pathway] : undefined;
+  if (!g) return HISTORY_V2_BATCH;
+
+  const historyTaking = (g['History Taking'] as string[] | undefined) ?? [];
+  const associated = (g['Associated Symptoms'] as string[] | undefined) ?? [];
+  if (!historyTaking.length && !associated.length) return HISTORY_V2_BATCH;
+
+  const context = `────────────────────────────────────────────────────────
+PATHWAY CHECKLIST — "${pathway}" (recognition aid)
+────────────────────────────────────────────────────────
+The officer works through the "${pathway}" pathway, asking the questions below. Use them to RECOGNISE what a statement answers and WHICH field it belongs to. Work through BOTH lists ITEM BY ITEM, searching the ENTIRE transcript for each — early statements count exactly as much as the latest words.
+${historyTaking.length ? `\nQuestions about the MAIN problem ("problemDescription"):\n${historyTaking.map((q) => `  • ${q}`).join('\n')}\n` : ''}${associated.length ? `\nSymptoms asked alongside it ("associatedSymptoms" — record present OR denied):\n${associated.map((q) => `  • ${q}`).join('\n')}\n` : ''}
+The checklist is what MIGHT have been asked, not what was asked: record only what the transcript actually states, stay silent about items it never mentions, and never note that something was not asked (rule 6 applies).
+
+Return JSON:`;
+
+  return {
+    name: HISTORY_V2_BATCH.name,
+    prompt: HISTORY_V2_BATCH.prompt.replace('Return JSON:', context),
+  };
+}
+
+// And for past medical history: the pathway's "Focused Past Medical History"
+// list tells the model which conditions the officer is prompted to ask about,
+// so those answers (and denials) land in pastHistory instead of drifting into
+// associatedSymptoms.
+export function medicalHistoryBatchFor(pathway: string | null): BatchConfig {
+  const g = pathway ? (_symptomGuidelines as Record<string, Record<string, unknown>>)[pathway] : undefined;
+  const focused = (g?.['Focused Past Medical History'] as string[] | undefined) ?? [];
+  if (!focused.length) return MEDICAL_HISTORY_V2_BATCH;
+
+  const context = `────────────────────────────────────────────────────────
+PATHWAY CHECKLIST — "${pathway}" (recognition aid)
+────────────────────────────────────────────────────────
+For this complaint the officer is prompted to ask specifically about:
+${focused.map((q) => `  • ${q}`).join('\n')}
+Work through these ITEM BY ITEM, searching the ENTIRE transcript for each — answers AND explicit denials both belong in "pastHistory". Record only what the transcript actually states; never mention items it is silent about.
+
+Return JSON:`;
+
+  return {
+    name: MEDICAL_HISTORY_V2_BATCH.name,
+    prompt: MEDICAL_HISTORY_V2_BATCH.prompt.replace('Return JSON:', context),
   };
 }
 
@@ -409,25 +465,28 @@ export async function parallelExtractV2(
   // The v2 clinical batch takes no M-EWS injection (M-EWS is a separate field),
   // so every batch runs through the gpt-oss-120b v2 runner.
   //
-  // findingsV2 alone runs AFTER core_identification: once the chief symptom
-  // maps to a SYBRA pathway, the findings prompt is enriched with that
-  // pathway's examination questions and test list (see findingsBatchFor) so
-  // terse spoken answers are recognised for what they are. Only the findings
-  // batch pays the sequential latency; every other batch stays parallel.
+  // The clinical batches (findings, history, medical history) run AFTER
+  // core_identification: once the chief symptom maps to a SYBRA pathway, each
+  // prompt is enriched with that pathway's own question lists (see
+  // *BatchFor helpers) so terse spoken answers are recognised for what they
+  // are — and routed to the right field. They pay one sequential hop on the
+  // core batch, then run in parallel with each other; vitals/treatment stay
+  // fully parallel from the start.
   const corePromise = extractBatchV2(text, CORE_IDENTIFICATION_V2_BATCH);
-  const findingsPromise = corePromise.then((core) => {
-    const pathway =
-      canonicalPathway(String(core.chiefSymptom ?? '')) ??
-      canonicalPathway(String(core.chiefComplaint ?? ''));
-    return extractBatchV2(text, findingsBatchFor(pathway));
-  });
+  const pathwayPromise = corePromise.then((core) =>
+    canonicalPathway(String(core.chiefSymptom ?? '')) ??
+    canonicalPathway(String(core.chiefComplaint ?? '')),
+  );
+  const PATHWAY_ENRICHED = new Set([FINDINGS_V2_BATCH, HISTORY_V2_BATCH, MEDICAL_HISTORY_V2_BATCH]);
   const parallelBatches = BATCHES_V2.filter(
-    (b) => b !== CORE_IDENTIFICATION_V2_BATCH && b !== FINDINGS_V2_BATCH,
+    (b) => b !== CORE_IDENTIFICATION_V2_BATCH && !PATHWAY_ENRICHED.has(b),
   );
   const results = await Promise.all([
     corePromise,
     ...parallelBatches.map((b) => extractBatchV2(text, b)),
-    findingsPromise,
+    pathwayPromise.then((p) => extractBatchV2(text, findingsBatchFor(p))),
+    pathwayPromise.then((p) => extractBatchV2(text, historyBatchFor(p))),
+    pathwayPromise.then((p) => extractBatchV2(text, medicalHistoryBatchFor(p))),
   ]);
   const merged: Record<string, string | boolean> = {};
   results.forEach(r => Object.assign(merged, r));
