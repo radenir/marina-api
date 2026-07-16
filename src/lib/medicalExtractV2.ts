@@ -85,6 +85,12 @@ async function extractBatchV2(text: string, batch: BatchConfig): Promise<Record<
       {
         temperature: 0.3,
         max_tokens: 1500,
+        // gpt-oss-120b is a reasoning model; at the default (medium) effort most
+        // of each batch's tokens are hidden chain-of-thought. Structured
+        // extraction doesn't need it: 'low' cuts reasoning ~7× and roughly
+        // halves batch latency on both providers ('none' is rejected by the
+        // model's Harmony format). Applies to the OVH fallback call too.
+        reasoning_effort: 'low',
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: batch.prompt },
