@@ -21,6 +21,7 @@ import { ovh } from './ovh.js';
 import { calculateMEWS } from './mewsCalculator.js';
 import { searchPorts } from './portIndex.js';
 import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
+import { examinationInstructions } from './examinationInstructions.js';
 import {
   BATCHES,
   conversationToText,
@@ -195,6 +196,44 @@ Return JSON:
 {"investigations":"","exam":""}`,
 };
 
+// When the chief symptom maps to a SYBRA pathway, enrich the findings batch
+// with that pathway's own examination questions and investigation list. The
+// officer literally works through these questions, so their spoken answers
+// ("colour came back after two seconds") often name neither the examination
+// nor the finding — without the checklist the model can't tell that's the
+// capillary refill test. The checklist is framed strictly as recognition
+// context: rule 6 already forbids recording anything the transcript doesn't
+// state, and the block repeats that guard.
+export function findingsBatchFor(pathway: string | null): BatchConfig {
+  const g = pathway ? (_symptomGuidelines as Record<string, Record<string, unknown>>)[pathway] : undefined;
+  if (!g) return FINDINGS_V2_BATCH;
+
+  const investigations = (g['Investigations'] as string[] | undefined) ?? [];
+  const examIdList = (g['Examinations'] as number[] | undefined) ?? [];
+  const examQuestions = examIdList
+    .map((id) => (examinationInstructions as Record<number, string>)[id])
+    .filter(Boolean)
+    // "Eye examination:Q3/9:" → "Eye examination:" — the counters are UI noise.
+    .map((s) => s.replace(/:Q\d+\/\d+:/g, ':').replace(/\n{2,}/g, '\n').trim())
+    .join('\n');
+  if (!investigations.length && !examQuestions) return FINDINGS_V2_BATCH;
+
+  const context = `────────────────────────────────────────────────────────
+PATHWAY CHECKLIST — "${pathway}" (recognition aid)
+────────────────────────────────────────────────────────
+The officer works through the "${pathway}" pathway, answering the examination questions below. Spoken answers rarely name the examination — use the questions to RECOGNISE them, then record the finding in "exam" WITH the examination's name: "colour came back in two seconds" → exam: "Capillary refill normal (about 2 seconds)".
+Every answer to one of these examination questions belongs in "exam" — even when the examination is called a test (capillary refill test, pain assessment). Only laboratory / point-of-care results (the Tests list) belong in "investigations".
+${examQuestions ? `\nExaminations of the "${pathway}" pathway ("exam"):\n${examQuestions}\n` : ''}${investigations.length ? `\nTests of the "${pathway}" pathway ("investigations"):\n${investigations.map((t) => `  • ${t}`).join('\n')}\n` : ''}
+The checklist is what MIGHT have been done, not what was done: record only findings and results the transcript actually states, stay silent about checklist items it never mentions, and never note that something was not done (rule 6 applies).
+
+Return JSON:`;
+
+  return {
+    name: FINDINGS_V2_BATCH.name,
+    prompt: FINDINGS_V2_BATCH.prompt.replace('Return JSON:', context),
+  };
+}
+
 // v2 medical-history batch — a purpose-written prompt aligned with the
 // past-medical-history, allergy and medication judges (so each field carries the
 // details those judges grade). Replaces v1's medical_history batch for v2 only;
@@ -282,6 +321,13 @@ function forkPrompt(v1Name: string, edits: Array<[string, string]>): string {
   return prompt;
 }
 
+// chiefSymptom can only ever be a SYBRA pathway (the report snaps it to one),
+// but v1's "(primary symptom)" yields free text like "stomach pain" that no
+// pathway name contains — so the field came back empty for anything not said
+// in textbook words. Constrain the model to the actual pathway list instead;
+// canonicalPathway() then merely validates the spelling.
+const PATHWAY_LIST = Object.keys(_symptomGuidelines as Record<string, unknown>).join('; ');
+
 const CORE_IDENTIFICATION_V2_BATCH: BatchConfig = {
   name: 'core_identification',
   prompt: forkPrompt('core_identification', [
@@ -292,6 +338,10 @@ const CORE_IDENTIFICATION_V2_BATCH: BatchConfig = {
       '- location (coordinates, position)',
       `- location (the ship's position as COORDINATES ONLY — latitude/longitude in any spoken form, e.g. "55 degrees 30 minutes north, 012 degrees 10 minutes east" or "43 12 north, 005 22 east".
   If no coordinates were stated, leave "" — NEVER put a place name, sea area, port, heading, or phrases like "sailing to X" / "docked in X" here. Where the ship is GOING belongs in no field here (destination is captured elsewhere).)`,
+    ],
+    [
+      '- chiefSymptom (primary symptom)',
+      `- chiefSymptom (the ONE entry from this list that best matches the main problem — copy it EXACTLY as written, or "" if nothing fits: ${PATHWAY_LIST})`,
     ],
     // Examples are load-bearing: instruction-only wordings ("a pronoun counts
     // as stated") still extracted "" for he/him 0/9 on gpt-oss-120b; with the
@@ -355,7 +405,27 @@ export async function parallelExtractV2(
 
   // The v2 clinical batch takes no M-EWS injection (M-EWS is a separate field),
   // so every batch runs through the gpt-oss-120b v2 runner.
-  const results = await Promise.all(BATCHES_V2.map(b => extractBatchV2(text, b)));
+  //
+  // findingsV2 alone runs AFTER core_identification: once the chief symptom
+  // maps to a SYBRA pathway, the findings prompt is enriched with that
+  // pathway's examination questions and test list (see findingsBatchFor) so
+  // terse spoken answers are recognised for what they are. Only the findings
+  // batch pays the sequential latency; every other batch stays parallel.
+  const corePromise = extractBatchV2(text, CORE_IDENTIFICATION_V2_BATCH);
+  const findingsPromise = corePromise.then((core) => {
+    const pathway =
+      canonicalPathway(String(core.chiefSymptom ?? '')) ??
+      canonicalPathway(String(core.chiefComplaint ?? ''));
+    return extractBatchV2(text, findingsBatchFor(pathway));
+  });
+  const parallelBatches = BATCHES_V2.filter(
+    (b) => b !== CORE_IDENTIFICATION_V2_BATCH && b !== FINDINGS_V2_BATCH,
+  );
+  const results = await Promise.all([
+    corePromise,
+    ...parallelBatches.map((b) => extractBatchV2(text, b)),
+    findingsPromise,
+  ]);
   const merged: Record<string, string | boolean> = {};
   results.forEach(r => Object.assign(merged, r));
 
