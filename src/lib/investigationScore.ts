@@ -95,6 +95,7 @@ If the text does not point to an identifiable primary complaint, return "UNKNOWN
 Return ONLY a JSON object: {"symptom": "<exact name from the list, or UNKNOWN>"}`;
 
   const completion = await chatWithFallback({
+    reasoning_effort: 'low',
     temperature: 0,
     max_tokens: 60,
     response_format: { type: 'json_object' },
@@ -167,6 +168,7 @@ DOCUMENTATION (where investigation results would be recorded):
 ${input.documentation?.trim() || '(empty)'}`;
 
   const completion = await chatWithFallback({
+    reasoning_effort: 'low',
     temperature: 0.15,
     max_tokens: 1500,
     response_format: { type: 'json_object' },

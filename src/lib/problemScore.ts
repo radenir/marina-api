@@ -24,7 +24,10 @@ const VALID_SYMPTOMS: string[] = Object.keys(symptomGuidelines).filter(
 
 // Grading runs on a pinned gpt-oss-120b judge (kept fixed independent of the
 // interview model): Nebius gpt-oss-120b primary, OVH gpt-oss-120b backup on a
-// 10s timeout. gpt-oss is not reason-by-default, so no reasoning_effort override.
+// 10s timeout. gpt-oss DOES reason by default (medium effort, ~2k chars of
+// hidden chain-of-thought per call), so every judge passes
+// reasoning_effort 'low' — grading rubrics are explicit enough not to need
+// deep reasoning, and it roughly halves judge latency on both providers.
 const SCORE_FALLBACK: FallbackOpts = {
   primaryModel: config.nebius.problemScoreModel,
   timeoutMs: 10_000,
@@ -112,6 +115,7 @@ If the text does not describe an identifiable chief complaint (it is empty, non-
 Return ONLY a JSON object: {"symptom": "<exact name from the list, or UNKNOWN>"}`;
 
   const completion = await chatWithFallback({
+    reasoning_effort: 'low',
     temperature: 0,
     max_tokens: 60,
     response_format: { type: 'json_object' },
@@ -165,6 +169,7 @@ Return ONLY a JSON object with this shape (one grade per axis, in the same order
 {"grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}], "suggestion":"<one sentence or empty>"}`;
 
   const completion = await chatWithFallback({
+    reasoning_effort: 'low',
     temperature: 0.15,
     max_tokens: 1500,
     response_format: { type: 'json_object' },

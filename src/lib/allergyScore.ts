@@ -110,6 +110,7 @@ Return ONLY a JSON object with this shape (grades in the same order as the axes)
 {"status":"not_assessed|no_known_allergies|allergies_present","grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;
 
   const completion = await chatWithFallback({
+    reasoning_effort: 'low',
     temperature: 0.15,
     max_tokens: 1200,
     response_format: { type: 'json_object' },
