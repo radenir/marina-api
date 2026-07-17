@@ -40,6 +40,7 @@ import { scoreAssociatedSymptoms } from '../lib/associatedSymptomsScore.js';
 import { scorePastMedicalHistory } from '../lib/pastMedicalHistoryScore.js';
 import { scoreInvestigations } from '../lib/investigationScore.js';
 import { scorePhysicalExamination } from '../lib/physicalExaminationScore.js';
+import { scoreVitalSigns } from '../lib/vitalSignsScore.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -262,6 +263,13 @@ const investigationScoreRateLimit = rateLimit({
 
 const physicalExamScoreRateLimit = rateLimit({
   prefix: 'ai-physical-examination-score',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const vitalSignsScoreRateLimit = rateLimit({
+  prefix: 'ai-vital-signs-score',
   limit: 500,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
@@ -1823,6 +1831,48 @@ aiRouter.post(
       score: result.score,
       pathway: result.pathway,
       required: result.required,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/report/vital-signs-score
+// Grades the Vital Signs section 0–100 by how many of the six gradable vitals
+// (temperature, respiratory rate, pulse, blood pressure, oxygen saturation,
+// AVPU) are recorded. Deterministic — no LLM. The suggestion names the top
+// missing vital and carries its "Vital signs" demo video (Q1–Q5 have one).
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const VitalSignsScoreSchema = z.object({
+  temperatureCelsius: z.string().max(50).nullish(),
+  respiratoryRate: z.string().max(50).nullish(),
+  pulse: z.string().max(50).nullish(),
+  systolic: z.string().max(50).nullish(),
+  spo2: z.string().max(50).nullish(),
+  avpu: z.string().max(50).nullish(),
+});
+
+aiRouter.post(
+  '/report/vital-signs-score',
+  authenticate,
+  requireScope('extract:write'),
+  vitalSignsScoreRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = VitalSignsScoreSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const result = scoreVitalSigns(parsed.data);
+
+    await auditLog('vital_signs_score_generated', req, attributionFromPrincipal(req), {
+      scorable: result.scorable,
+      score: result.score,
     });
 
     res.json(result);
