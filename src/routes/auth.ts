@@ -136,6 +136,10 @@ const VerifyEmailSchema = z.object({
   token: z.string().min(1),
 });
 
+const DeleteAccountSchema = z.object({
+  password: z.string().min(1).max(128),
+});
+
 const ResendVerifySchema = z.object({
   email: z.string().email(),
 });
@@ -175,6 +179,7 @@ const resendVerifyRateLimit = rateLimit({ prefix: 'resend', limit: 5, windowSeco
 const refreshRateLimit = rateLimit({ prefix: 'refresh', limit: 100, windowSeconds: 15 * 60 });
 const resetPasswordRateLimit = rateLimit({ prefix: 'reset-pw', limit: 100, windowSeconds: 60 * 60 });
 const verifyEmailRateLimit = rateLimit({ prefix: 'verify-email', limit: 10, windowSeconds: 60 * 60 });
+const deleteAccountRateLimit = rateLimit({ prefix: 'delete-account', limit: 20, windowSeconds: 60 * 60 });
 
 // ---------------------------------------------------------------------------
 // POST /auth/register
@@ -680,4 +685,54 @@ authRouter.put('/me', requireAuth, async (req: Request, res: Response): Promise<
   );
 
   res.json({ user: result.rows[0] });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /auth/me — permanent, self-service account deletion
+//
+// Required by App Store Guideline 5.1.1(v) and Google Play: any app that
+// supports account creation must let the user delete their account from inside
+// the app, not merely deactivate it or email support.
+//
+// The password is re-verified as the confirmation step, and so that a stolen
+// access token alone cannot destroy an account. Deleting the users row cascades
+// to refresh_tokens and the user's own conversations (ON DELETE CASCADE);
+// audit_logs.user_id is ON DELETE SET NULL, so the security trail survives but
+// is de-linked from the erased identity. No requireActiveUser: an unactivated
+// account was still created, so its owner must be able to delete it too.
+// ---------------------------------------------------------------------------
+authRouter.delete('/me', deleteAccountRateLimit, requireAuth, async (req: Request, res: Response): Promise<void> => {
+  const parsed = DeleteAccountSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    return;
+  }
+
+  const userId = req.user!.id;
+
+  const result = await query<{ password: string; email: string }>(
+    'SELECT password, email FROM users WHERE id = $1',
+    [userId]
+  );
+  const user = result.rows[0];
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const valid = await verifyPasswordConstantTime(user.password, parsed.data.password);
+  if (!valid) {
+    await auditLog('account_deletion_failed', req, userId);
+    res.status(401).json({ error: 'Incorrect password' });
+    return;
+  }
+
+  // Record the event while the row still exists; the FK then nulls its user_id.
+  await auditLog('account_deleted', req, userId, { email_hash: sha256hex(user.email) });
+
+  // Cascades to refresh_tokens and user-owned conversations.
+  await query('DELETE FROM users WHERE id = $1', [userId]);
+
+  res.clearCookie('refresh_token', { path: '/auth/refresh' });
+  res.json({ message: 'Account deleted' });
 });

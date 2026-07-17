@@ -71,7 +71,9 @@ export type AuditEventType =
   | 'physical_examination_score_generated'
   | 'pdf_generated'
   | 'pdf_emailed'
-  | 'interview_message_sent';
+  | 'interview_message_sent'
+  | 'account_deletion_failed'
+  | 'account_deleted';
 
 export interface JWTPayload {
   sub: string;       // userId
