@@ -315,6 +315,7 @@ Capture what was stated:
   • Past operations (surgeries)
   • Previous hospital stays
   • Smoking, if mentioned
+  • Occupation / job role and physically relevant work habits, if mentioned (e.g. heavy lifting, repetitive movements, prolonged standing, deck work) — for many complaints these are the risk factors the doctor needs
   • For women, pregnancy status or gynaecological history, if relevant and mentioned
 Only include a chronic condition if the patient stated it (or clearly stated a regular medicine for it).
 Use the patient's own plain words — never convert to medical terminology (write "gallbladder removed", not "cholecystectomy"; "appendix out", not "appendectomy"). The readers are ship officers, not doctors.
