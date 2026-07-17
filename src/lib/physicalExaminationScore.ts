@@ -33,6 +33,7 @@ import {
   examinationIds as _examinationIds,
 } from './symptomGuidelines.js';
 import { examinationInstructions as _examinationInstructions } from './examinationInstructions.js';
+import { getExamVideoUrl } from './examVideos.js';
 
 type SymptomGuideline = { Examinations?: number[] };
 const symptomGuidelines = _symptomGuidelines as unknown as Record<string, SymptomGuideline>;
@@ -111,6 +112,11 @@ export interface PhysicalExamFacet {
   question: string;      // the individual examination question (the facet)
   status: FacetStatus;   // complete / partial / absent / not_applicable
   evidence: string;      // verbatim quote from the documentation, or ""
+  // The SYBRA Q-number of the examination question this bullet belongs to (the
+  // same numbering examFollowups + examVideos use). Several bullets can share a
+  // Q-number, so this is NOT the facet's position in the list. Used to look up
+  // the demo video for the suggestion.
+  questionNumber: number;
 }
 
 export interface PhysicalExaminationInput {
@@ -130,6 +136,13 @@ export interface PhysicalExaminationResult {
   required: number;                      // count of applicable questions
   facets: PhysicalExamFacet[] | null;
   suggestion: string | null;
+  /**
+   * Absolute URL to a demo video for the examination question the suggestion is
+   * about, when one exists (e.g. https://api.marinahealth.eu/videos/video-7.mp4).
+   * Mirrors examFollowups: mapping lives in examVideos.ts, the API serves the
+   * files at /videos. Omitted when there is no suggestion or no video for it.
+   */
+  videoUrl?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -153,20 +166,40 @@ function resolvePathway(input: string | undefined): string | null {
   return PATHWAY_KEYS_LC.get(input.trim().toLowerCase()) ?? null;
 }
 
-/** The individual examination questions (bullet items) for one examination ID. */
-function questionsFor(id: number): string[] {
+export interface ExamQuestionItem {
+  text: string;            // the bullet text (one graded facet)
+  questionNumber: number;  // the enclosing SYBRA Q-number (examVideos/examFollowups key)
+}
+
+/**
+ * The individual examination questions (bullet items) for one examination ID,
+ * each tagged with the SYBRA Q-number of its enclosing `Name:Q<n>/<total>:`
+ * header. One facet per bullet (grading is unchanged), but bullets can share a
+ * Q-number — that number, not the bullet's position, is the examVideos key.
+ */
+function questionsFor(id: number): ExamQuestionItem[] {
   const raw = examinationInstructions[id];
   if (!raw) return [];
-  return raw
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l.startsWith('•'))
-    .map((l) => l.replace(/^•\s*/, '').replace(/\s+/g, ' ').trim())
-    .filter(Boolean);
+  const headerRe = /^(.+?):Q(\d+)\/(\d+):$/;
+  const out: ExamQuestionItem[] = [];
+  let currentQ = 0;
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    const header = headerRe.exec(trimmed);
+    if (header) {
+      currentQ = Number(header[2]);
+      continue;
+    }
+    if (trimmed.startsWith('•')) {
+      const text = trimmed.replace(/^•\s*/, '').replace(/\s+/g, ' ').trim();
+      if (text && currentQ > 0) out.push({ text, questionNumber: currentQ });
+    }
+  }
+  return out;
 }
 
 /** The chosen examination (name + questions) for a pathway, or null if none. */
-function chosenExamination(pathway: string): { id: number; name: string; questions: string[] } | null {
+function chosenExamination(pathway: string): { id: number; name: string; questions: ExamQuestionItem[] } | null {
   const id = PATHWAY_EXAMINATION[pathway];
   if (id === undefined) return null;
   const questions = questionsFor(id);
@@ -211,9 +244,9 @@ Return ONLY a JSON object: {"symptom": "<exact name from the list, or UNKNOWN>"}
 async function gradeQuestions(
   input: PhysicalExaminationInput,
   pathway: string,
-  exam: { name: string; questions: string[] },
-): Promise<{ facets: PhysicalExamFacet[]; suggestion: string }> {
-  const numbered = exam.questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
+  exam: { name: string; questions: ExamQuestionItem[] },
+): Promise<{ facets: PhysicalExamFacet[]; suggestion: string; suggestionIndex: number }> {
+  const numbered = exam.questions.map((q, i) => `${i + 1}. ${q.text}`).join('\n');
 
   const facts = [
     input.gender ? `Gender: ${input.gender}` : 'Gender: not recorded',
@@ -237,8 +270,10 @@ Ground every "complete"/"partial" status in a verbatim quote from the documentat
 
 Also write the ONE next examination question to answer: take the single most important missing item from the numbered questions above and phrase it as ONE simple, specific question about THIS patient with a concrete answer (a yes/no, a number, or a short observation). It MUST be a question ending in "?", in plain words anyone can understand, with NO medical jargon or anatomical terms — describe the spot or action instead (say "the lower right side of the belly" rather than "McBurney's point", "press and let go quickly — does it hurt more when you let go?" rather than "rebound tenderness"). Examples: "Do both sides of the face look the same?", "Is the belly swollen?", "How many seconds until the colour comes back after pressing the fingernail?". NEVER write an instruction ("Perform…", "Assess…", "Check…", "Examine…") and NEVER ask for a whole examination at once — ask for exactly one specific finding. Return "" if nothing applicable is missing.
 
+Also return "suggestionIndex": the NUMBER (from the numbered EXPECTED EXAMINATION QUESTIONS list above) of the single question your suggestion is based on. Use 0 when the suggestion is "".
+
 Return ONLY a JSON object (one entry per numbered question, in order):
-{"grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>"}`;
+{"grades":[{"status":"complete|partial|absent|not_applicable","evidence":"<verbatim quote or empty>"}],"suggestion":"<one sentence or empty>","suggestionIndex":<number>}`;
 
   const user = `CASE SUMMARY (problem / history):
 ${input.caseSummary?.trim() || '(none provided)'}
@@ -261,18 +296,21 @@ ${input.documentation?.trim() || '(empty)'}`;
   const parsed = JSON.parse(raw) as {
     grades?: { status?: unknown; evidence?: unknown }[];
     suggestion?: unknown;
+    suggestionIndex?: unknown;
   };
 
   const grades = Array.isArray(parsed.grades) ? parsed.grades : [];
-  const facets: PhysicalExamFacet[] = exam.questions.map((question, i) => {
+  const facets: PhysicalExamFacet[] = exam.questions.map((q, i) => {
     const g = grades[i];
     const status = normalizeFacetStatus(g?.status);
     const evidence = typeof g?.evidence === 'string' ? g.evidence : '';
-    return { question, status, evidence: status === 'absent' ? '' : evidence };
+    return { question: q.text, status, evidence: status === 'absent' ? '' : evidence, questionNumber: q.questionNumber };
   });
 
   const suggestion = typeof parsed.suggestion === 'string' ? parsed.suggestion.trim() : '';
-  return { facets, suggestion };
+  const idxRaw = Number(parsed.suggestionIndex);
+  const suggestionIndex = Number.isInteger(idxRaw) ? idxRaw : 0;
+  return { facets, suggestion, suggestionIndex };
 }
 
 // ---------------------------------------------------------------------------
@@ -308,7 +346,7 @@ export async function scorePhysicalExamination(
     return { scorable: true, score: 100, pathway, examination: null, required: 0, facets: [], suggestion: null };
   }
 
-  const { facets, suggestion } = await gradeQuestions(input, pathway, exam);
+  const { facets, suggestion, suggestionIndex } = await gradeQuestions(input, pathway, exam);
   const applicable = facets.filter((f) => f.status !== 'not_applicable');
 
   // Every question ruled not-applicable to this patient → nothing was required.
@@ -317,6 +355,17 @@ export async function scorePhysicalExamination(
   }
 
   const score = computeScore(facets);   // not_applicable questions are dropped
+  const finalSuggestion = score >= 100 ? null : (suggestion || null);
+
+  // Attach a demo video for the exact question the suggestion is about, when one
+  // exists. suggestionIndex is 1-based into the numbered list shown to the model,
+  // i.e. the facet position; map it back to that facet's SYBRA Q-number (bullets
+  // can share a Q-number) and reuse the examVideos lookup examFollowups uses.
+  let videoUrl: string | undefined;
+  if (finalSuggestion && suggestionIndex >= 1 && suggestionIndex <= facets.length) {
+    videoUrl = getExamVideoUrl(exam.name, facets[suggestionIndex - 1].questionNumber);
+  }
+
   return {
     scorable: true,
     score,
@@ -324,6 +373,7 @@ export async function scorePhysicalExamination(
     examination: exam.name,
     required: applicable.length,
     facets,
-    suggestion: score >= 100 ? null : (suggestion || null),
+    suggestion: finalSuggestion,
+    videoUrl,
   };
 }
