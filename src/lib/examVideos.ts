@@ -29,8 +29,12 @@ const videoMap: Record<string, string> = {
   // Capillary Refill test (video 6)
   'Capillary Refill test::1': `${VIDEO_BASE}/video-6.mp4`,
 
-  // Abdomen examination (video 7)
+  // Abdomen examination (video 7) — four-quadrant palpation.
   'Abdomen examination::4': `${VIDEO_BASE}/video-7.mp4`,
+  // Same palpation demo for the Abdominal Pain pathway's own exam (Q2 is the
+  // "press across all four quadrants" question) — the most common abdominal
+  // complaint, which otherwise had no video.
+  'Abdominal pain exam::2': `${VIDEO_BASE}/video-7.mp4`,
 
   // Eye examination (videos 8, 22, 23, 24)
   'Eye examination::1': `${VIDEO_BASE}/video-22.mp4`, // redness around iris
