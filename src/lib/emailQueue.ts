@@ -2,13 +2,14 @@ import { Queue, Worker, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { config } from '../config';
 import { sendEmail, buildPdfReportEmail } from './email';
-import { fillRmdFormPdftk } from './pdftk';
+import { fillRmdFormPdftk, fillGermanFormPdftk } from './pdftk';
 import { mapSummaryToRmdFields, extractMedicationFields } from './rmdMapper';
 import { mapSummaryToSeafarerFields } from './seafarerMapper';
+import { mapSummaryToGermanFields } from './germanMapper';
 import { fillSeafarerForm } from './seafarerPdf';
 import * as fs from 'fs';
 
-export type PdfTemplate = 'rmd' | 'marina';
+export type PdfTemplate = 'rmd' | 'marina' | 'german';
 
 // ---------------------------------------------------------------------------
 // Job types
@@ -87,6 +88,8 @@ export function createEmailWorker(): Worker<EmailJobData> {
       try {
         if (template === 'marina') {
           pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(data.summary), outputPath);
+        } else if (template === 'german') {
+          pdfBuffer = await fillGermanFormPdftk(mapSummaryToGermanFields(data.summary), outputPath);
         } else {
           const medFields = extractMedicationFields(data.summary.currentMedications);
           const rmdFields = mapSummaryToRmdFields({ ...data.summary, ...medFields });
@@ -96,8 +99,9 @@ export function createEmailWorker(): Worker<EmailJobData> {
         try { if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath); } catch { /* ignore */ }
       }
 
-      const filename = template === 'marina'
-        ? 'marina-seafarer-medical-report.pdf'
+      const filename =
+        template === 'marina' ? 'marina-seafarer-medical-report.pdf'
+        : template === 'german' ? 'tmas-germany-medical-report.pdf'
         : 'rmd-maritime-medical-report.pdf';
       const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       const emailContent = buildPdfReportEmail(dateStr);

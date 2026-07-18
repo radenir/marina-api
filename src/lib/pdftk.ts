@@ -131,6 +131,15 @@ export function fillRmdFormPdftk(
   return fillFormPdftk(templatePath, data, outputPath);
 }
 
+/** Fill the TMAS Germany "Radio Medical Advice Form - Primary". */
+export function fillGermanFormPdftk(
+  data: Record<string, unknown>,
+  outputPath: string
+): Promise<Buffer> {
+  const templatePath = path.join(process.cwd(), 'public/templates/german_rm_form.pdf');
+  return fillFormPdftk(templatePath, data, outputPath);
+}
+
 export async function checkPdftkAvailable(): Promise<boolean> {
   try {
     await execFileAsync('pdftk', ['--version']);

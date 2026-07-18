@@ -17,9 +17,10 @@ import { cortiTranscribe, isCortiConfigured } from '../lib/corti.js';
 import { parallelExtract } from '../lib/medicalExtract.js';
 import type { UserProfile } from '../lib/medicalExtract.js';
 import { parallelExtractV2 } from '../lib/medicalExtractV2.js';
-import { fillRmdFormPdftk, checkPdftkAvailable } from '../lib/pdftk.js';
+import { fillRmdFormPdftk, fillGermanFormPdftk, checkPdftkAvailable } from '../lib/pdftk.js';
 import { mapSummaryToRmdFields, extractMedicationFields } from '../lib/rmdMapper.js';
 import { mapSummaryToSeafarerFields } from '../lib/seafarerMapper.js';
+import { mapSummaryToGermanFields } from '../lib/germanMapper.js';
 import { fillSeafarerForm } from '../lib/seafarerPdf.js';
 import * as fs from 'fs';
 import { query } from '../lib/db.js';
@@ -973,7 +974,7 @@ aiRouter.post(
 const GeneratePdfSchema = z.object({
   summary: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])),
   // Which PDF template to fill. Defaults to the RMD form for backward compatibility.
-  template: z.enum(['rmd', 'marina']).optional().default('rmd'),
+  template: z.enum(['rmd', 'marina', 'german']).optional().default('rmd'),
 });
 
 aiRouter.post(
@@ -991,8 +992,9 @@ aiRouter.post(
 
     const { summary, template } = parsed.data;
 
-    // The Marina form is filled in-process with pdf-lib; only the RMD form needs pdftk.
-    if (template === 'rmd' && !(await checkPdftkAvailable())) {
+    // The Marina form is filled in-process with pdf-lib; the RMD and German
+    // authority forms both need pdftk.
+    if (template !== 'marina' && !(await checkPdftkAvailable())) {
       res.status(503).json({ error: 'pdftk not available on this server' });
       return;
     }
@@ -1002,6 +1004,8 @@ aiRouter.post(
     try {
       if (template === 'marina') {
         pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(summary), outputPath);
+      } else if (template === 'german') {
+        pdfBuffer = await fillGermanFormPdftk(mapSummaryToGermanFields(summary), outputPath);
       } else {
         const medFields = extractMedicationFields(summary.currentMedications);
         const rmdFields = mapSummaryToRmdFields({ ...summary, ...medFields });
