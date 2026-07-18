@@ -309,7 +309,7 @@ const LANG_MAP: Record<string, string> = {
   ko: 'Korean',  vi: 'Vietnamese', th: 'Thai',        id: 'Indonesian',
   uk: 'Ukrainian', el: 'Greek',    bg: 'Bulgarian',   hr: 'Croatian',
   cs: 'Czech',   sk: 'Slovak',     ro: 'Romanian',    hu: 'Hungarian',
-  ms: 'Malay',   ta: 'Tamil',      tl: 'Filipino',
+  ms: 'Malay',   ta: 'Tamil',      tl: 'Filipino',   hy: 'Armenian',
 };
 const LANG_CODES = Object.keys(LANG_MAP) as [string, ...string[]];
 
