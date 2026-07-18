@@ -117,6 +117,31 @@ function avpuFromSelection(value: unknown): {
 }
 
 /**
+ * The vitals as one line, for the performed-actions box.
+ *
+ * They also have dedicated boxes of their own in sections B, C and E, but those
+ * are scattered across the form — repeating them here puts the numbers next to
+ * the M-EWS score they produced, so the doctor can see what the score is made
+ * of without reading back up the page.
+ */
+function vitalSignsLine(summary: MedicalSummary, vitals: ReturnType<typeof parseVitals>): string {
+  const val = (v: unknown, fallback?: string): string => String(v ?? fallback ?? '').trim();
+  const bp = [val(summary.circulation_systole, vitals.systole),
+              val(summary.circulation_diastole, vitals.diastole)].filter(Boolean).join('/');
+  return [
+    ['Pulse', val(summary.circulation_pulse_per_min, vitals.pulse), '/min'],
+    ['BP', bp, ' mmHg'],
+    ['Resp', val(summary.breathing_num_breaths_per_min, vitals.respiratoryRate), '/min'],
+    ['SpO2', val(summary.breathing_oxygen_saturation, vitals.oxygenSaturation), '%'],
+    ['Temp', val(summary.expose_temperature_measured_mouth, vitals.temperature), '°C'],
+    ['AVPU', val(summary.avpu), ''],
+  ]
+    .filter(([, value]) => value !== '')
+    .map(([label, value, unit]) => `${label} ${value}${unit}`)
+    .join(', ');
+}
+
+/**
  * Join the parts of a section under their headings, dropping the blanks.
  * The RMD form has one free-text box where the app has several fields, so the
  * headings are what keeps them legible once concatenated.
@@ -198,7 +223,6 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
       ['', summary.problemDescription],
       ['Associated symptoms', summary.associatedSymptoms],
       ['Past medical history', summary.pastHistory],
-      ['M-EWS', mewsScore(summary, vitals)],
     ]),
 
     // Airway assessment.
@@ -270,12 +294,15 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
     // Time of actions = the report's Time (incidentTime). Keep performed_actions_time
     // as a fallback for older/partner clients, then the computed time.
     'Kl': summary.incidentTime || summary.performed_actions_time || dateTime.time,
-    // Performed actions. v1 lumps investigation results into `performedActions`;
-    // v2 splits them into `investigations` and `exam`, which have no field of
-    // their own on this form — so carry both here under headings.
+    // Performed actions. The form has one box here and several things that need
+    // to reach the doctor: the vitals and the M-EWS they produce lead, then the
+    // investigations and the examination, which v2 splits into `investigations`
+    // and `exam` and which have no field of their own on this form.
     'Text Field 41': summary.performedActions
       ? String(summary.performedActions)
       : joinSections([
+          ['Vital signs', vitalSignsLine(summary, vitals)],
+          ['M-EWS', mewsScore(summary, vitals)],
           ['Investigations', summary.investigations],
           ['Physical examination', summary.exam],
         ]),
