@@ -55,6 +55,55 @@ function extractAvpuFromExam(exam: string): {
   };
 }
 
+/**
+ * The officer's AVPU selection, mapped to the form's four D-section radios
+ * (Vågen / Uklar / Svarer ikke på tiltale / Bevidstløs).
+ *
+ * Preferred over [extractAvpuFromExam]: the app offers AVPU as a dropdown, so a
+ * deliberate "Voice" used to leave the section blank unless the exam prose
+ * happened to contain the words the regex looks for — and a blank consciousness
+ * section reads to the doctor as "not assessed", not "responds to voice only".
+ */
+function avpuFromSelection(value: unknown): {
+  awake?: boolean;
+  respondsToVoice?: boolean;
+  respondsToPain?: boolean;
+  unresponsive?: boolean;
+} | null {
+  const v = String(value ?? '').trim().toLowerCase();
+  if (!v) return null;
+  return {
+    awake: v === 'alert',
+    respondsToVoice: v === 'voice',
+    respondsToPain: v === 'pain',
+    unresponsive: v === 'unresponsive',
+  };
+}
+
+/**
+ * Join the parts of a section under their headings, dropping the blanks.
+ * The RMD form has one free-text box where the app has several fields, so the
+ * headings are what keeps them legible once concatenated.
+ */
+function joinSections(parts: Array<[string, unknown]>): string {
+  return parts
+    .map(([label, value]) => [label, String(value ?? '').trim()] as const)
+    .filter(([, value]) => value !== '')
+    .map(([label, value]) => (label ? `${label}: ${value}` : value))
+    .join('\n\n');
+}
+
+/**
+ * A port and its ETA in one field. The RMD form has no ETA column, so the app's
+ * separate ETA would otherwise never reach the doctor.
+ */
+function portWithEta(port: unknown, eta: unknown): string {
+  const name = String(port ?? '').trim();
+  const arrival = String(eta ?? '').trim();
+  if (!name) return arrival ? `ETA ${arrival}` : '';
+  return arrival ? `${name} (ETA ${arrival})` : name;
+}
+
 function getCurrentDateTime(): { date: string; time: string; utc: string } {
   const now = new Date();
   return {
@@ -66,7 +115,7 @@ function getCurrentDateTime(): { date: string; time: string; utc: string } {
 
 export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, unknown> {
   const vitals = parseVitals(String(summary.vitals || ''));
-  const avpu = extractAvpuFromExam(String(summary.exam || ''));
+  const avpu = avpuFromSelection(summary.avpu) ?? extractAvpuFromExam(String(summary.exam || ''));
   const dateTime = getCurrentDateTime();
 
   return {
@@ -85,8 +134,8 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
     'Text Field 16': summary.shipSatellitePhone || '',
     'Text Field 17': summary.shipCallSign || '',
     'Text Field 18': summary.location || '',
-    'Text Field 19': summary.destination || '',
-    'Text Field 20': summary.nearestPort || '',
+    'Text Field 19': portWithEta(summary.destination, summary.etaDestination),
+    'Text Field 20': portWithEta(summary.nearestPort, summary.etaNearestPort),
     'Text Field 21': summary.medicineChestType || '',
     'Text Field 22': '1 of 1',
 
@@ -98,8 +147,19 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
     'Check Box 1791': summary.no_allergies || false,
     'Check Box 1792': summary.dont_know_allergies || false,
 
-    // Chief complaint
-    'Text Field 25': summary.problemDescription || '',
+    // Chief complaint.
+    //
+    // The RMD form has one free-text box where the app collects four things.
+    // Associated symptoms, past medical history and the M-EWS score have no
+    // field of their own on this form, so without folding them in here they are
+    // collected, shown in the Marina report, and then dropped on the way to the
+    // Danish doctor. M-EWS goes last so the narrative reads first.
+    'Text Field 25': joinSections([
+      ['', summary.problemDescription],
+      ['Associated symptoms', summary.associatedSymptoms],
+      ['Past medical history', summary.pastHistory],
+      ['M-EWS', summary.mewsScore],
+    ]),
 
     // Airway assessment
     'Text Field 325': summary.airway_cpr_start || summary.incidentTime || '',
