@@ -289,7 +289,10 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
     // Exposure assessment
     'Check Box 1034': summary.expose_top_to_toe_examination_performed_yes || false,
     'Check Box 1035': summary.expose_top_to_toe_examination_performed_no || false,
-    'Text Field 36': summary.expose_top_to_toe_examination_description || summary.exam || '',
+    // Only a top-to-toe description recorded against this box. `exam` used to
+    // fall through to here as well as into performed actions, printing the same
+    // findings twice on one form.
+    'Text Field 36': summary.expose_top_to_toe_examination_description || '',
     'Check Box 1036': summary.expose_hypothermia_overheating_performed_yes || false,
     'Check Box 1037': summary.expose_hypothermia_overheating_performed_no || false,
     'Text Field 37': summary.expose_hypothermia_overheating_description || '',
