@@ -165,8 +165,14 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
       ['M-EWS', summary.mewsScore],
     ]),
 
-    // Airway assessment
-    'Text Field 325': summary.airway_cpr_start || summary.incidentTime || '',
+    // Airway assessment.
+    //
+    // Only a real CPR start time goes here. This used to fall back to the
+    // report's own time, so every report claimed CPR had been initiated —
+    // the box reads "If no breathing, or insufficient gasping for air, CPR
+    // initiated at:", and a time in it asserts a resuscitation that never
+    // happened. Blank is the honest answer when nobody recorded one.
+    'Text Field 325': summary.airway_cpr_start || '',
     'Givet ilt liter min': summary.airway_admin_oxygen_liters_per_min || '',
     'Check Box 1': summary.checkbox_airway_clear_yes || false,
     'Check Box 71': summary.checkbox_airway_clear_no || false,
@@ -228,9 +234,15 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
     // Time of actions = the report's Time (incidentTime). Keep performed_actions_time
     // as a fallback for older/partner clients, then the computed time.
     'Kl': summary.incidentTime || summary.performed_actions_time || dateTime.time,
-    // v1 lumps investigation results into `performedActions`; v2 splits them into
-    // a dedicated `investigations` field — read whichever the summary carries.
-    'Text Field 41': summary.performedActions || summary.investigations || '',
+    // Performed actions. v1 lumps investigation results into `performedActions`;
+    // v2 splits them into `investigations` and `exam`, which have no field of
+    // their own on this form — so carry both here under headings.
+    'Text Field 41': summary.performedActions
+      ? String(summary.performedActions)
+      : joinSections([
+          ['Investigations', summary.investigations],
+          ['Physical examination', summary.exam],
+        ]),
     'Medicin1': summary.medications_field1 || '',
     'medicin2': summary.medications_field2 || '',
     'medicin3': summary.medications_field3 || '',
