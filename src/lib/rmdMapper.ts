@@ -4,7 +4,43 @@
  * RMD (Radio Medical) is a standardized Danish maritime medical form.
  */
 
+import { calculateMEWS } from './mewsCalculator.js';
+
 export type MedicalSummary = Record<string, string | boolean | null | undefined>;
+
+/**
+ * The M-EWS score for this report.
+ *
+ * Recomputed from the vitals on the summary rather than trusting
+ * `summary.mewsScore`. The extractor calculates the score once, at extract
+ * time, from whatever the transcript happened to contain — but the officer then
+ * corrects the vitals by hand in the report, and nothing recalculates. A score
+ * carried over from the pre-correction numbers is worse than none, because it
+ * disagrees with the vitals printed beside it on the same page.
+ *
+ * Falls back to the stored value when the report carries no vitals at all.
+ */
+function mewsScore(summary: MedicalSummary, vitals: ReturnType<typeof parseVitals>): string {
+  const num = (v: unknown, fallback?: string): number | null => {
+    const n = parseFloat(String(v ?? fallback ?? '').replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  };
+  const input = {
+    pulse_per_min: num(summary.circulation_pulse_per_min, vitals.pulse),
+    respiration_per_min: num(summary.breathing_num_breaths_per_min, vitals.respiratoryRate),
+    temperature_celsius: num(summary.expose_temperature_measured_mouth, vitals.temperature),
+    blood_pressure_systolic: num(summary.circulation_systole, vitals.systole),
+    oxygen_saturation_percent: num(summary.breathing_oxygen_saturation, vitals.oxygenSaturation),
+    oxygen_requirements: null,
+    avpu: (['Alert', 'Voice', 'Pain', 'Unresponsive'].includes(String(summary.avpu))
+      ? String(summary.avpu)
+      : null) as 'Alert' | 'Voice' | 'Pain' | 'Unresponsive' | null,
+  };
+  if (Object.values(input).some((v) => v !== null)) {
+    return String(calculateMEWS(input).total_score);
+  }
+  return String(summary.mewsScore ?? '').trim();
+}
 
 export function parseVitals(vitals: string): {
   temperature?: string;
@@ -162,7 +198,7 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
       ['', summary.problemDescription],
       ['Associated symptoms', summary.associatedSymptoms],
       ['Past medical history', summary.pastHistory],
-      ['M-EWS', summary.mewsScore],
+      ['M-EWS', mewsScore(summary, vitals)],
     ]),
 
     // Airway assessment.
