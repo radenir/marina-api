@@ -94,14 +94,18 @@ function joinSections(parts: Array<[string, unknown]>): string {
 }
 
 /**
- * A port and its ETA in one field. The RMD form has no ETA column, so the app's
- * separate ETA would otherwise never reach the doctor.
+ * A port and its ETA in one field, as `THBKK/13 days`.
+ *
+ * The RMD form has no ETA column, so the app's separate ETA would otherwise
+ * never reach the doctor. The box is narrow and its printed label already reads
+ * "Destination/ETA", so the value carries no prefix or brackets of its own —
+ * spelling out "(ETA ...)" only pushed the text past the edge of the field.
  */
 function portWithEta(port: unknown, eta: unknown): string {
   const name = String(port ?? '').trim();
   const arrival = String(eta ?? '').trim();
-  if (!name) return arrival ? `ETA ${arrival}` : '';
-  return arrival ? `${name} (ETA ${arrival})` : name;
+  if (!name) return arrival;
+  return arrival ? `${name}/${arrival}` : name;
 }
 
 function getCurrentDateTime(): { date: string; time: string; utc: string } {
