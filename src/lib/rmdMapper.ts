@@ -117,19 +117,25 @@ function avpuFromSelection(value: unknown): {
 }
 
 /**
- * The vitals as one line, for the performed-actions box.
+ * The M-EWS score and the vitals behind it, as one line:
  *
- * They also have dedicated boxes of their own in sections B, C and E, but those
- * are scattered across the form — repeating them here puts the numbers next to
- * the M-EWS score they produced, so the doctor can see what the score is made
- * of without reading back up the page.
+ *   M-EWS: 12; Pulse 118 bpm, BP 95/60 mmHg, Resp 24/min, SpO2 92%, Temp 38.4°C, AVPU Voice
+ *
+ * The vitals also have dedicated boxes of their own in sections B, C and E, but
+ * those are scattered across the form — repeating them beside the score puts
+ * the numbers next to what they produced, so the doctor can see what the score
+ * is made of without reading back up the page. Missing readings are dropped
+ * rather than printed empty.
  */
-function vitalSignsLine(summary: MedicalSummary, vitals: ReturnType<typeof parseVitals>): string {
+function mewsAndVitalsLine(
+  summary: MedicalSummary,
+  vitals: ReturnType<typeof parseVitals>,
+): string {
   const val = (v: unknown, fallback?: string): string => String(v ?? fallback ?? '').trim();
   const bp = [val(summary.circulation_systole, vitals.systole),
               val(summary.circulation_diastole, vitals.diastole)].filter(Boolean).join('/');
-  return [
-    ['Pulse', val(summary.circulation_pulse_per_min, vitals.pulse), '/min'],
+  const readings = [
+    ['Pulse', val(summary.circulation_pulse_per_min, vitals.pulse), ' bpm'],
     ['BP', bp, ' mmHg'],
     ['Resp', val(summary.breathing_num_breaths_per_min, vitals.respiratoryRate), '/min'],
     ['SpO2', val(summary.breathing_oxygen_saturation, vitals.oxygenSaturation), '%'],
@@ -139,6 +145,10 @@ function vitalSignsLine(summary: MedicalSummary, vitals: ReturnType<typeof parse
     .filter(([, value]) => value !== '')
     .map(([label, value, unit]) => `${label} ${value}${unit}`)
     .join(', ');
+
+  const score = mewsScore(summary, vitals);
+  if (!score) return readings;
+  return readings ? `M-EWS: ${score}; ${readings}` : `M-EWS: ${score}`;
 }
 
 /**
@@ -301,8 +311,7 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
     'Text Field 41': summary.performedActions
       ? String(summary.performedActions)
       : joinSections([
-          ['Vital signs', vitalSignsLine(summary, vitals)],
-          ['M-EWS', mewsScore(summary, vitals)],
+          ['', mewsAndVitalsLine(summary, vitals)],
           ['Investigations', summary.investigations],
           ['Physical examination', summary.exam],
         ]),
