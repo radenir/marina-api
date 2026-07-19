@@ -124,8 +124,11 @@ RULES (follow strictly):
    observation, a note — goes into "unmapped", translated to English. His words
    are never discarded. Write it as professional clinical documentation, the
    way it would read in a medical report a shore-side doctor relies on: a
-   complete phrase, clinical vocabulary, no speech disfluencies. Reword freely,
-   but never drop or soften what he said. If everything he said mapped to a
+   complete phrase, clinical vocabulary. Reword freely, but never drop or
+   soften what he said. The only thing you may delete is a meaningless sound
+   ("erm", "uh", a stutter). His uncertainty, his concern, his emphasis and
+   every separate observation are content and must all survive — two things he
+   said are two things you record. If everything he said mapped to a
    vital, "unmapped" is "".
 
 Return ONE JSON object with exactly these keys, all values strings:
