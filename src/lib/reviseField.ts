@@ -155,8 +155,19 @@ ${input.instruction.trim()}
 ${coaching}
 
 === HOW TO APPLY IT ===
-His words may add information, correct or replace something already there, or
-ask for something to be removed. Work out which, and apply it.
+He may be speaking ANY language, and what he says may be about the CONTENT of
+the field or about HOW IT IS WRITTEN. Work out which, and apply it.
+
+CONTENT: adding information, correcting or replacing something already there,
+or asking for something to be removed.
+
+FORM: "rewrite this properly", "this reads amateurish", "make it more
+professional", "tidy this up", "shorten it", "fix the grammar", "merge the
+repetition" — and the same asked in his own language. This IS an instruction:
+rewrite the existing text into clinical register, one coherent account, no
+repetition. Every fact in the current text survives the rewrite, and you add no
+new clinical content because he gave you none. Being asked to reword is never
+"nothing to change" — returning the text unchanged is a failure to obey him.
 
 RULES (follow strictly):
 1. EVERY piece of content in what he said MUST appear in the result. You may
