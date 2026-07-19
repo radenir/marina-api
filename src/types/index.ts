@@ -70,6 +70,8 @@ export type AuditEventType =
   | 'investigation_score_generated'
   | 'physical_examination_score_generated'
   | 'vital_signs_score_generated'
+  | 'field_revised_by_voice'
+  | 'vitals_revised_by_voice'
   | 'pdf_generated'
   | 'pdf_emailed'
   | 'interview_message_sent'

@@ -42,6 +42,8 @@ import { scorePastMedicalHistory } from '../lib/pastMedicalHistoryScore.js';
 import { scoreInvestigations } from '../lib/investigationScore.js';
 import { scorePhysicalExamination } from '../lib/physicalExaminationScore.js';
 import { scoreVitalSigns } from '../lib/vitalSignsScore.js';
+import { reviseField, REVISABLE_FIELDS } from '../lib/reviseField.js';
+import { reviseVitals } from '../lib/reviseVitals.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -271,6 +273,20 @@ const physicalExamScoreRateLimit = rateLimit({
 
 const vitalSignsScoreRateLimit = rateLimit({
   prefix: 'ai-vital-signs-score',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const reviseFieldRateLimit = rateLimit({
+  prefix: 'ai-revise-field',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const reviseVitalsRateLimit = rateLimit({
+  prefix: 'ai-revise-vitals',
   limit: 500,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
@@ -1877,6 +1893,147 @@ aiRouter.post(
     await auditLog('vital_signs_score_generated', req, attributionFromPrincipal(req), {
       scorable: result.scorable,
       score: result.score,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /v2/ai/revise-field
+// Applies a spoken instruction to ONE free-text report field and returns the
+// field's complete new text. Unlike /v2/ai/extract this treats the officer as
+// the author rather than the transcript as evidence: everything he says must
+// survive into the field, and content is removed only where he asked for it.
+// The coaching suggestion shown in the report's yellow box is passed in so a
+// bare "yes" or "he doesn't" can be resolved against the question that
+// prompted it. See src/lib/reviseField.ts.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const ReviseFieldSchema = z.object({
+  field: z.enum(REVISABLE_FIELDS),
+  currentText: z.string().max(10000),
+  instruction: z.string().min(1).max(5000),
+  suggestion: z.string().max(2000).nullish(),
+  suggestionShown: z.string().max(2000).nullish(),
+  chiefComplaint: z.string().max(200).nullish(),
+  pathway: z.string().max(200).nullish(),
+});
+
+aiV2Router.post(
+  '/revise-field',
+  authenticate,
+  requireScope('extract:write'),
+  reviseFieldRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ReviseFieldSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const d = parsed.data;
+    let result;
+    try {
+      result = await reviseField({
+        field: d.field,
+        currentText: d.currentText,
+        instruction: d.instruction,
+        suggestion: d.suggestion ?? undefined,
+        suggestionShown: d.suggestionShown ?? undefined,
+        chiefComplaint: d.chiefComplaint ?? undefined,
+        pathway: d.pathway ?? undefined,
+      });
+    } catch (err) {
+      console.error('[v2/ai/revise-field] revision error:', (err as Error).message);
+      res.status(502).json({ error: 'Field revision service unavailable' });
+      return;
+    }
+
+    // Field text is patient data — log that a revision happened and its shape,
+    // never the text itself.
+    await auditLog('field_revised_by_voice', req, attributionFromPrincipal(req), {
+      field: d.field,
+      changed: result.changed,
+      had_suggestion: Boolean(d.suggestion || d.suggestionShown),
+      instruction_chars: d.instruction.length,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /v2/ai/revise-vitals
+// The Vital Signs counterpart of /v2/ai/revise-field. The section is seven
+// discrete typed values under one judge, so the officer dictates the whole
+// section at once ("pulse 88, BP 130 over 85, he's alert") and every vital he
+// named is set together; the rest are copied through untouched. Anything he
+// said that is not a vital comes back in `unmapped` rather than being dropped.
+// Accepts user JWT or partner API key (requires extract:write scope).
+// ---------------------------------------------------------------------------
+
+const vitalString = z.string().max(50).nullish();
+
+const ReviseVitalsSchema = z.object({
+  current: z.object({
+    pulse: vitalString,
+    systolic: vitalString,
+    diastolic: vitalString,
+    respiratoryRate: vitalString,
+    spo2: vitalString,
+    temperatureCelsius: vitalString,
+    avpu: vitalString,
+  }),
+  instruction: z.string().min(1).max(5000),
+  suggestion: z.string().max(2000).nullish(),
+  suggestionShown: z.string().max(2000).nullish(),
+});
+
+aiV2Router.post(
+  '/revise-vitals',
+  authenticate,
+  requireScope('extract:write'),
+  reviseVitalsRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ReviseVitalsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const d = parsed.data;
+    let result;
+    try {
+      result = await reviseVitals({
+        current: {
+          pulse: d.current.pulse ?? '',
+          systolic: d.current.systolic ?? '',
+          diastolic: d.current.diastolic ?? '',
+          respiratoryRate: d.current.respiratoryRate ?? '',
+          spo2: d.current.spo2 ?? '',
+          temperatureCelsius: d.current.temperatureCelsius ?? '',
+          avpu: d.current.avpu ?? '',
+        },
+        instruction: d.instruction,
+        suggestion: d.suggestion ?? undefined,
+        suggestionShown: d.suggestionShown ?? undefined,
+      });
+    } catch (err) {
+      console.error('[v2/ai/revise-vitals] revision error:', (err as Error).message);
+      res.status(502).json({ error: 'Vitals revision service unavailable' });
+      return;
+    }
+
+    // Which vitals changed is safe to log; the values themselves are not.
+    await auditLog('vitals_revised_by_voice', req, attributionFromPrincipal(req), {
+      changed: result.changed,
+      had_unmapped: Boolean(result.unmapped),
+      warnings: result.warnings.length,
+      instruction_chars: d.instruction.length,
     });
 
     res.json(result);
