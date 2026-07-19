@@ -35,7 +35,7 @@ import {
 const PATHWAY_BY_LC = new Map(
   Object.keys(_symptomGuidelines as Record<string, unknown>).map((k) => [k.toLowerCase(), k]),
 );
-function canonicalPathway(s: string): string | null {
+export function canonicalPathway(s: string): string | null {
   const lc = s.trim().toLowerCase();
   if (!lc) return null;
   // 1. Exact pathway name.

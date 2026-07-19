@@ -16,6 +16,13 @@
 import { ovh } from './ovh.js';
 import { chatWithFallback, type FallbackOpts } from './llmFallback.js';
 import { config } from '../config.js';
+import { canonicalPathway } from './medicalExtractV2.js';
+import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
+
+// The closed SYBRA list the report's Chief Complaint dropdown offers. Dictating
+// the problem should set it too — the officer describes the complaint in prose
+// and shouldn't then have to hunt for the matching entry in a 40-item picker.
+const PATHWAYS: string[] = Object.keys(_symptomGuidelines as Record<string, unknown>);
 
 // Same pinned judge stack the score endpoints use: Nebius gpt-oss-120b primary,
 // OVH gpt-oss-120b backup on a 10s timeout. Revision is a mechanical rewrite,
@@ -54,6 +61,12 @@ export interface ReviseFieldInput {
 export interface ReviseFieldResult {
   revisedText: string;
   changed: boolean;
+  /**
+   * The chief complaint implied by the revised Problem Description, snapped to a
+   * SYBRA pathway. Only ever set for `problemDescription`; null when nothing in
+   * the text identifies one, or when it already matches what the report holds.
+   */
+  chiefComplaint?: string | null;
 }
 
 // How each field is written, so dictated text reads like extracted text.
@@ -115,6 +128,21 @@ yourself: if his dictation does not address it, the field simply does not gain
 that information.`;
   }
 
+  const wantsPathway = input.field === 'problemDescription';
+  const pathwayTask = wantsPathway
+    ? `
+
+=== ALSO IDENTIFY THE CHIEF COMPLAINT ===
+From the RESULTING field text, pick the one entry below that best names the
+patient's main problem. This fills the report's Chief Complaint dropdown, which
+accepts nothing else, so return the entry EXACTLY as written here or "".
+${PATHWAYS.map((p) => `- ${p}`).join('\n')}
+
+Current Chief Complaint: ${input.chiefComplaint?.trim() || '(none)'}
+If the current one still fits, return it unchanged. If the text does not clearly
+identify one, return "" — never guess between two plausible entries.`
+    : '';
+
   return `You are editing the "${label}" field of a maritime medical report, on behalf of the ship's medical officer who is dictating changes to it by voice. He is the author of this field and has complete freedom over its contents.
 
 FIELD STYLE: ${FIELD_STYLE[input.field]}${ctx}
@@ -162,7 +190,11 @@ RULES (follow strictly):
    saturation) belong to the Vital Signs section. If he dictates one here,
    still keep it — never silently discard it.
 
-Return ONE JSON object: {"revisedText": "<the full new field text>"}
+${pathwayTask}
+
+Return ONE JSON object: {"revisedText": "<the full new field text>"${
+    wantsPathway ? ', "chiefComplaint": "<exact list entry, or empty>"' : ''
+  }}
 Return the COMPLETE field, not a diff and not only the changed part. If his
 words turn out to change nothing, return the current text unchanged.`;
 }
@@ -181,9 +213,11 @@ export async function reviseField(input: ReviseFieldInput): Promise<ReviseFieldR
 
   const raw = completion.choices[0]?.message?.content ?? '';
   let revisedText: string;
+  let rawPathway = '';
   try {
-    const parsed = JSON.parse(raw) as { revisedText?: unknown };
+    const parsed = JSON.parse(raw) as { revisedText?: unknown; chiefComplaint?: unknown };
     revisedText = typeof parsed.revisedText === 'string' ? parsed.revisedText : '';
+    rawPathway = typeof parsed.chiefComplaint === 'string' ? parsed.chiefComplaint : '';
     // gpt-oss likes U+2011 (non-breaking hyphen) in words like "non-tender";
     // the PDF templates' font has no glyph for it. Fold to a plain hyphen.
     revisedText = revisedText.replace(/‑/g, '-');
@@ -200,8 +234,15 @@ export async function reviseField(input: ReviseFieldInput): Promise<ReviseFieldR
     return { revisedText: input.currentText, changed: false };
   }
 
+  // Snap to a real pathway — a near-miss ("Headaches") would not match the
+  // dropdown and would render as an empty selection.
+  const pathway = input.field === 'problemDescription' ? canonicalPathway(rawPathway) : null;
+  const chiefComplaint =
+    pathway && pathway !== input.chiefComplaint?.trim() ? pathway : null;
+
   return {
     revisedText,
-    changed: revisedText.trim() !== input.currentText.trim(),
+    changed: revisedText.trim() !== input.currentText.trim() || chiefComplaint !== null,
+    chiefComplaint,
   };
 }
