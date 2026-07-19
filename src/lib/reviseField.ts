@@ -145,6 +145,13 @@ identify one, return "" — never guess between two plausible entries.`
 
   return `You are editing the "${label}" field of a maritime medical report, on behalf of the ship's medical officer who is dictating changes to it by voice. He is the author of this field and has complete freedom over its contents.
 
+REGISTER: whatever you write ends up in a medical report that a shore-side
+doctor reads to make treatment decisions, and that may become a legal record.
+Everything you produce must read as professional clinical documentation —
+complete sentences, clinical vocabulary, no filler, no chat, no speech
+disfluencies ("erm", "you know", "let me think"), no addressing anyone. He is
+dictating, so his words arrive as speech; your output is written prose.
+
 FIELD STYLE: ${FIELD_STYLE[input.field]}${ctx}
 
 === CURRENT FIELD TEXT ===
@@ -193,11 +200,17 @@ RULES (follow strictly):
 6. If part of what he said is garbled or you cannot tell how it should be
    applied, append it to the field verbatim on its own line rather than
    dropping it. Losing his words is worse than an untidy field.
-7. OUTPUT LANGUAGE: English. If he spoke another language, translate. Expand a
+7. Raising the register is about WORDING, never about content. Tidying his
+   phrasing must not drop a detail, soften a finding, or discard an
+   observation for being informally put. "I don't like how he looks" becomes
+   "Officer notes the patient appears unwell" — reworded, never deleted. If
+   professional phrasing and keeping his content ever conflict, keep the
+   content.
+8. OUTPUT LANGUAGE: English. If he spoke another language, translate. Expand a
    medical abbreviation only when its meaning is unambiguous ("SOB on exertion"
    → "shortness of breath on exertion"); otherwise keep his term verbatim.
    Never drop a term because you could not expand it.
-8. Vital signs (temperature, pulse, blood pressure, breathing rate, oxygen
+9. Vital signs (temperature, pulse, blood pressure, breathing rate, oxygen
    saturation) belong to the Vital Signs section. If he dictates one here,
    still keep it — never silently discard it.
 
@@ -208,6 +221,34 @@ Return ONE JSON object: {"revisedText": "<the full new field text>"${
   }}
 Return the COMPLETE field, not a diff and not only the changed part. If his
 words turn out to change nothing, return the current text unchanged.`;
+}
+
+
+/**
+ * Parse the model's JSON object, tolerating the wrappers gpt-oss occasionally
+ * emits around it — a ```json fence, or a sentence before the brace. A hard
+ * failure here surfaces to the officer as "couldn't reach Marina" and loses a
+ * recording he already made, so it is worth digging the object out.
+ */
+function parseLooseJson(raw: string): Record<string, unknown> | null {
+  const attempts = [raw.trim()];
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) attempts.push(fenced[1].trim());
+  const first = raw.indexOf('{');
+  const last = raw.lastIndexOf('}');
+  if (first !== -1 && last > first) attempts.push(raw.slice(first, last + 1));
+
+  for (const a of attempts) {
+    try {
+      const parsed = JSON.parse(a);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      // try the next shape
+    }
+  }
+  return null;
 }
 
 export async function reviseField(input: ReviseFieldInput): Promise<ReviseFieldResult> {
@@ -223,19 +264,16 @@ export async function reviseField(input: ReviseFieldInput): Promise<ReviseFieldR
   );
 
   const raw = completion.choices[0]?.message?.content ?? '';
-  let revisedText: string;
-  let rawPathway = '';
-  try {
-    const parsed = JSON.parse(raw) as { revisedText?: unknown; chiefComplaint?: unknown };
-    revisedText = typeof parsed.revisedText === 'string' ? parsed.revisedText : '';
-    rawPathway = typeof parsed.chiefComplaint === 'string' ? parsed.chiefComplaint : '';
-    // gpt-oss likes U+2011 (non-breaking hyphen) in words like "non-tender";
-    // the PDF templates' font has no glyph for it. Fold to a plain hyphen.
-    revisedText = revisedText.replace(/‑/g, '-');
-  } catch {
-    console.error('[reviseField] non-JSON response for field=%s', input.field);
+  const parsed = parseLooseJson(raw);
+  if (!parsed) {
+    console.error('[reviseField] non-JSON response for field=%s: %s', input.field, raw.slice(0, 200));
     throw new Error('Revision returned malformed output');
   }
+  let revisedText = typeof parsed.revisedText === 'string' ? parsed.revisedText : '';
+  const rawPathway = typeof parsed.chiefComplaint === 'string' ? parsed.chiefComplaint : '';
+  // gpt-oss likes U+2011 (non-breaking hyphen) in words like "non-tender";
+  // the PDF templates' font has no glyph for it. Fold to a plain hyphen.
+  revisedText = revisedText.replace(/‑/g, '-');
 
   // A model that answers with an empty field would silently wipe the officer's
   // work. Only he can empty a field, and an explicit delete still produces a

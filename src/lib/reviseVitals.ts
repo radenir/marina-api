@@ -121,9 +121,12 @@ RULES (follow strictly):
 6. To clear a vital he explicitly retracted, set it to "". Never clear a vital
    he did not mention.
 7. ANYTHING he said that is not one of these seven vitals — a symptom, an
-   observation, a note — goes into "unmapped", verbatim, translated to English.
-   His words are never discarded. If everything he said mapped to a vital,
-   "unmapped" is "".
+   observation, a note — goes into "unmapped", translated to English. His words
+   are never discarded. Write it as professional clinical documentation, the
+   way it would read in a medical report a shore-side doctor relies on: a
+   complete phrase, clinical vocabulary, no speech disfluencies. Reword freely,
+   but never drop or soften what he said. If everything he said mapped to a
+   vital, "unmapped" is "".
 
 Return ONE JSON object with exactly these keys, all values strings:
 {"pulse": "", "systolic": "", "diastolic": "", "respiratoryRate": "", "spo2": "", "temperatureCelsius": "", "avpu": "", "unmapped": ""}`;
@@ -131,6 +134,34 @@ Return ONE JSON object with exactly these keys, all values strings:
 
 function asString(v: unknown): string {
   return typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '';
+}
+
+
+/**
+ * Parse the model's JSON object, tolerating the wrappers gpt-oss occasionally
+ * emits around it — a ```json fence, or a sentence before the brace. A hard
+ * failure here surfaces to the officer as "couldn't reach Marina" and loses a
+ * recording he already made, so it is worth digging the object out.
+ */
+function parseLooseJson(raw: string): Record<string, unknown> | null {
+  const attempts = [raw.trim()];
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) attempts.push(fenced[1].trim());
+  const first = raw.indexOf('{');
+  const last = raw.lastIndexOf('}');
+  if (first !== -1 && last > first) attempts.push(raw.slice(first, last + 1));
+
+  for (const a of attempts) {
+    try {
+      const parsed = JSON.parse(a);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      // try the next shape
+    }
+  }
+  return null;
 }
 
 export async function reviseVitals(input: ReviseVitalsInput): Promise<ReviseVitalsResult> {
@@ -146,11 +177,9 @@ export async function reviseVitals(input: ReviseVitalsInput): Promise<ReviseVita
   );
 
   const raw = completion.choices[0]?.message?.content ?? '';
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(raw) as Record<string, unknown>;
-  } catch {
-    console.error('[reviseVitals] non-JSON response');
+  const parsed = parseLooseJson(raw);
+  if (!parsed) {
+    console.error('[reviseVitals] non-JSON response: %s', raw.slice(0, 200));
     throw new Error('Revision returned malformed output');
   }
 
