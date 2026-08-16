@@ -1,4 +1,5 @@
 import type { PoolClient } from 'pg';
+import { query } from './db.js';
 
 /**
  * The Case File.
@@ -126,6 +127,31 @@ export async function resolveCase(
   const newCaseId = created.rows[0].id;
   await logCaseEvent(client, newCaseId, 'case_created', { owner });
   return newCaseId;
+}
+
+/**
+ * Record which company a case belongs to.
+ *
+ * Deliberately its own statement outside the case transaction. Folding
+ * `org_id` into the INSERT would mean that on a database where migration 016
+ * has not run yet, creating a case fails — and with it the encounter link.
+ * A case with no organisation is merely invisible to a fleet board that does
+ * not exist yet; a case that was never created is lost.
+ *
+ * Frozen at creation for the same reason ship_name is: moving an account
+ * between fleets must not rewrite which fleet a closed case belonged to.
+ */
+export async function stampCaseOrg(caseId: string, owner: CaseOwner): Promise<void> {
+  try {
+    await query(
+      `UPDATE cases
+          SET org_id = COALESCE((SELECT org_id FROM users WHERE id = $2), $3)
+        WHERE id = $1 AND org_id IS NULL`,
+      [caseId, owner.userId ?? null, owner.partnerId ?? null],
+    );
+  } catch (err) {
+    console.error(`[caseStore] org stamp skipped for case ${caseId}: ${(err as Error).message}`);
+  }
 }
 
 /**

@@ -9,6 +9,7 @@ import { config } from './config';
 import { authRouter } from './routes/auth';
 import { aiRouter, aiV2Router } from './routes/ai';
 import { casesRouter } from './routes/cases';
+import { fleetRouter } from './routes/fleet';
 import { conversationsRouter } from './routes/conversations';
 import { maritimeRouter } from './routes/maritime';
 import { pool } from './lib/db';
@@ -120,6 +121,7 @@ app.use('/ai', aiRouter);
 app.use('/v2/ai', aiV2Router);
 app.use('/conversations', conversationsRouter);
 app.use('/cases', casesRouter);
+app.use('/fleet', fleetRouter);
 app.use('/maritime', maritimeRouter);
 
 // ---------------------------------------------------------------------------

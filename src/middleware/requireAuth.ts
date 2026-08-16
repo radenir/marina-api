@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../lib/jwt';
+import { touchLastSeen } from './requireRole';
 
 export async function requireAuth(
   req: Request,
@@ -22,6 +23,9 @@ export async function requireAuth(
     req.user = { id: payload.sub, role };
     req.jti = payload.jti;
     req.principal = { type: 'user', userId: payload.sub, role };
+    // Fire-and-forget, throttled to once per five minutes. Never awaited:
+    // the fleet board's honesty is not worth delaying a ship's request for.
+    touchLastSeen(payload.sub);
     next();
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Invalid token';

@@ -1,5 +1,5 @@
 import { query, transaction } from './db.js';
-import { attachEncounter, resolveCase, type CaseOwner } from './caseStore.js';
+import { attachEncounter, resolveCase, stampCaseOrg, type CaseOwner } from './caseStore.js';
 import type { InterviewState } from './interviewTypes.js';
 
 function deriveChiefSymptom(state: InterviewState): string | null {
@@ -45,11 +45,14 @@ async function attachCaseBestEffort(
   caseId?: string | null,
 ): Promise<string | null> {
   try {
-    return await transaction(async (client) => {
-      const resolved = await resolveCase(client, owner, caseId);
-      await attachEncounter(client, resolved, conversationId, owner);
-      return resolved;
+    const resolved = await transaction(async (client) => {
+      const inner = await resolveCase(client, owner, caseId);
+      await attachEncounter(client, inner, conversationId, owner);
+      return inner;
     });
+    // Separate statement, after the case is safely committed.
+    await stampCaseOrg(resolved, owner);
+    return resolved;
   } catch (err) {
     console.error(
       `[conversationStore] case attach failed for conversation ${conversationId} ` +
