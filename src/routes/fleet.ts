@@ -66,9 +66,18 @@ fleetRouter.get('/board', ...guard, async (req: Request, res: Response): Promise
             (SELECT MAX(u.last_seen_at) FROM users u
               WHERE u.vessel_id = v.id) AS vessel_last_seen_at
        FROM v_fleet_cases c
-       LEFT JOIN vessels v
-              ON v.org_id = c.org_id
-             AND (v.call_sign = c.call_sign OR v.name = c.ship_name)
+       -- LATERAL with LIMIT 1: real fleets contain the same ship name twice
+       -- (a vessel re-registered under a new call sign, a name reused). A
+       -- plain join would then show the case once per match. Call sign wins
+       -- over name because it is the more specific identifier.
+       LEFT JOIN LATERAL (
+         SELECT vv.id, vv.name
+           FROM vessels vv
+          WHERE vv.org_id = c.org_id
+            AND (vv.call_sign = c.call_sign OR vv.name = c.ship_name)
+          ORDER BY (vv.call_sign IS NOT DISTINCT FROM c.call_sign) DESC, vv.created_at
+          LIMIT 1
+       ) v ON TRUE
       WHERE c.org_id = $1
         AND c.status = ANY($2::varchar[])
       ORDER BY c.is_overdue DESC,
@@ -92,13 +101,19 @@ fleetRouter.get('/vessels', ...guard, async (req: Request, res: Response): Promi
             v.call_sign,
             v.imo,
             (SELECT MAX(u.last_seen_at) FROM users u WHERE u.vessel_id = v.id) AS last_seen_at,
+            -- Match on call sign when the vessel has one, otherwise on name.
+            -- Without this a case counts against every same-named vessel.
             (SELECT COUNT(*)::int FROM v_fleet_cases c
               WHERE c.org_id = v.org_id
-                AND (c.call_sign = v.call_sign OR c.ship_name = v.name)
+                AND (CASE WHEN v.call_sign IS NOT NULL
+                          THEN c.call_sign = v.call_sign
+                          ELSE c.ship_name = v.name END)
                 AND c.status = ANY($2::varchar[])) AS open_cases,
             (SELECT COUNT(*)::int FROM v_fleet_cases c
               WHERE c.org_id = v.org_id
-                AND (c.call_sign = v.call_sign OR c.ship_name = v.name)
+                AND (CASE WHEN v.call_sign IS NOT NULL
+                          THEN c.call_sign = v.call_sign
+                          ELSE c.ship_name = v.name END)
                 AND c.status = 'closed') AS closed_cases
        FROM vessels v
       WHERE v.org_id = $1
