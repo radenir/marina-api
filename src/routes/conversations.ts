@@ -23,6 +23,8 @@ interface ConversationSummaryRow {
   has_summary: boolean;
   has_state: boolean;
   mode: 'marina' | 'note_taker' | 'translator';
+  case_id: string | null;
+  encounter_seq: number | null;
   created_at: Date;
   updated_at: Date;
   last_message_at: Date;
@@ -60,6 +62,8 @@ conversationsRouter.get('/', requireAuth, async (req: Request, res: Response): P
             (extracted_summary IS NOT NULL) AS has_summary,
             (state IS NOT NULL) AS has_state,
             mode,
+            case_id,
+            encounter_seq,
             created_at,
             updated_at,
             last_message_at
@@ -93,6 +97,7 @@ conversationsRouter.get('/:id', requireAuth, async (req: Request, res: Response)
             vital_signs, interview_stage, examination_progress, extracted_summary,
             patient_language, medical_officer_language,
             state, state_version, mode,
+            case_id, encounter_seq,
             created_at, updated_at, last_message_at
        FROM conversations
       WHERE id = $1 AND user_id = $2`,

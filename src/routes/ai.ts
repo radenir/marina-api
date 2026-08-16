@@ -382,6 +382,9 @@ const ExtractSchema = z.object({
   }).optional(),
   mewsScore: z.number().nullable().optional(),
   conversationId: z.string().uuid().optional(),
+  // Set when the officer started this session from a case in their list;
+  // omitted for a fresh session, which mints a new case.
+  caseId: z.string().uuid().optional(),
   patientLanguage: z.string().max(20).optional(),
   medicalOfficerLanguage: z.string().max(20).optional(),
 });
@@ -767,6 +770,7 @@ aiRouter.post(
       userProfile,
       mewsScore,
       conversationId,
+      caseId,
       patientLanguage,
       medicalOfficerLanguage,
     } = parsed.data;
@@ -797,9 +801,10 @@ aiRouter.post(
     //   - conversationId missing  → note-taker, mint a new row now (owner is
     //                                either the calling user or the partner).
     let persistedId = conversationId ?? null;
+    let resolvedCaseId: string | null = null;
     if (conversationId && principal.type === 'user') {
       try {
-        await updateFromExtract(conversationId, principal.userId, summary);
+        resolvedCaseId = await updateFromExtract(conversationId, principal.userId, summary);
       } catch (err) {
         console.error('[ai/extract] conversation persist failed:', (err as Error).message);
       }
@@ -813,13 +818,19 @@ aiRouter.post(
         const owner = principal.type === 'partner'
           ? { partnerId: principal.partnerId, partnerUserRef: principal.partnerUserRef ?? null }
           : { userId: principal.userId };
-        persistedId = await createNoteTakerConversation(owner, {
-          messages: conversation,
-          summary,
-          patientLanguage: patientLanguage ?? 'en',
-          medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
-          chiefSymptom: chiefSymptomRaw ? chiefSymptomRaw.slice(0, 200) : null,
-        });
+        const persisted = await createNoteTakerConversation(
+          owner,
+          {
+            messages: conversation,
+            summary,
+            patientLanguage: patientLanguage ?? 'en',
+            medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
+            chiefSymptom: chiefSymptomRaw ? chiefSymptomRaw.slice(0, 200) : null,
+          },
+          caseId,
+        );
+        persistedId = persisted.conversationId;
+        resolvedCaseId = persisted.caseId;
       } catch (err) {
         console.error('[ai/extract] note-taker persist failed:', (err as Error).message);
       }
@@ -832,7 +843,7 @@ aiRouter.post(
       mode: conversationId ? 'marina' : 'note_taker',
     });
 
-    res.json({ summary, conversationId: persistedId });
+    res.json({ summary, conversationId: persistedId, caseId: resolvedCaseId });
   }
 );
 
@@ -864,6 +875,7 @@ aiV2Router.post(
       userProfile,
       mewsScore,
       conversationId,
+      caseId,
       patientLanguage,
       medicalOfficerLanguage,
     } = parsed.data;
@@ -888,9 +900,10 @@ aiV2Router.post(
     const fieldsPopulated = Object.values(summary).filter(v => v !== '' && v !== false && v !== null && v !== undefined).length;
 
     let persistedId = conversationId ?? null;
+    let resolvedCaseId: string | null = null;
     if (conversationId && principal.type === 'user') {
       try {
-        await updateFromExtract(conversationId, principal.userId, summary);
+        resolvedCaseId = await updateFromExtract(conversationId, principal.userId, summary);
       } catch (err) {
         console.error('[v2/ai/extract] conversation persist failed:', (err as Error).message);
       }
@@ -904,13 +917,19 @@ aiV2Router.post(
         const owner = principal.type === 'partner'
           ? { partnerId: principal.partnerId, partnerUserRef: principal.partnerUserRef ?? null }
           : { userId: principal.userId };
-        persistedId = await createNoteTakerConversation(owner, {
-          messages: conversation,
-          summary,
-          patientLanguage: patientLanguage ?? 'en',
-          medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
-          chiefSymptom: chiefSymptomRaw ? chiefSymptomRaw.slice(0, 200) : null,
-        });
+        const persisted = await createNoteTakerConversation(
+          owner,
+          {
+            messages: conversation,
+            summary,
+            patientLanguage: patientLanguage ?? 'en',
+            medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
+            chiefSymptom: chiefSymptomRaw ? chiefSymptomRaw.slice(0, 200) : null,
+          },
+          caseId,
+        );
+        persistedId = persisted.conversationId;
+        resolvedCaseId = persisted.caseId;
       } catch (err) {
         console.error('[v2/ai/extract] note-taker persist failed:', (err as Error).message);
       }
@@ -923,7 +942,7 @@ aiV2Router.post(
       mode: conversationId ? 'marina' : 'note_taker',
     });
 
-    res.json({ summary, conversationId: persistedId });
+    res.json({ summary, conversationId: persistedId, caseId: resolvedCaseId });
   }
 );
 
@@ -937,6 +956,7 @@ aiV2Router.post(
 
 const NoteTakerSaveSchema = z.object({
   conversationId: z.string().uuid().optional(),
+  caseId: z.string().uuid().optional(),
   messages: z.array(
     z.object({
       role: z.enum(['user', 'assistant']),
@@ -961,23 +981,29 @@ aiRouter.post(
       return;
     }
 
-    const { conversationId, messages, patientLanguage, medicalOfficerLanguage, mode } = parsed.data;
+    const { conversationId, caseId, messages, patientLanguage, medicalOfficerLanguage, mode } =
+      parsed.data;
 
-    let persistedId: string;
+    let persisted: { conversationId: string; caseId: string | null };
     try {
-      persistedId = await saveNoteTaker(req.user!.id, conversationId ?? null, {
-        messages,
-        patientLanguage: patientLanguage ?? 'en',
-        medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
-        mode,
-      });
+      persisted = await saveNoteTaker(
+        req.user!.id,
+        conversationId ?? null,
+        {
+          messages,
+          patientLanguage: patientLanguage ?? 'en',
+          medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
+          mode,
+        },
+        caseId,
+      );
     } catch (err) {
       console.error('[ai/note-taker/save] persist failed:', (err as Error).message);
       res.status(500).json({ error: 'Failed to save note-taker conversation' });
       return;
     }
 
-    res.json({ conversationId: persistedId });
+    res.json({ conversationId: persisted.conversationId, caseId: persisted.caseId });
   },
 );
 
@@ -1178,6 +1204,7 @@ const InterviewStateSchema = z.object({
 
 const InterviewChatSchema = z.object({
   state: InterviewStateSchema.nullable().optional(),
+  caseId: z.string().uuid().optional(),
   message: z.string().min(1).max(2000).nullable().optional(),
   patientLanguage: z.string().max(50).optional(),
   medicalOfficerLanguage: z.string().max(50).optional(),
@@ -1197,7 +1224,8 @@ aiRouter.post(
       return;
     }
 
-    const { state, message, patientLanguage, medicalOfficerLanguage, skipStage } = parsed.data;
+    const { state, message, patientLanguage, medicalOfficerLanguage, skipStage, caseId } =
+      parsed.data;
 
     // Validate call combinations
     if (state == null && message) {
@@ -1294,11 +1322,14 @@ aiRouter.post(
     // Persist conversation to DB so reports.marinahealth.eu can read it.
     // Failures here must never break the chat response — log and continue.
     let conversationId = state?.conversationId;
+    let resolvedCaseId: string | null = null;
     try {
       if (!conversationId) {
-        conversationId = await createConversation(req.user!.id, newState);
+        const persisted = await createConversation(req.user!.id, newState, caseId);
+        conversationId = persisted.conversationId;
+        resolvedCaseId = persisted.caseId;
       } else {
-        await updateFromChat(conversationId, req.user!.id, newState);
+        resolvedCaseId = await updateFromChat(conversationId, req.user!.id, newState);
       }
       (newState as typeof newState & { conversationId: string }).conversationId = conversationId;
     } catch (err) {
@@ -1315,6 +1346,7 @@ aiRouter.post(
       state: newState,
       reply,
       done: newState.done,
+      caseId: resolvedCaseId,
       ...(newState.done && newState.report ? { report: newState.report } : {}),
     });
   }
