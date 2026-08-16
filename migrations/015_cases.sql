@@ -18,6 +18,13 @@
 -- build — negligible at the current row count, worth revisiting if
 -- conversations ever grows past a few hundred thousand rows.
 
+-- Fail fast rather than form a queue. The ALTER TABLE below takes an
+-- ACCESS EXCLUSIVE lock on `conversations`, and because run.ts wraps this file
+-- in one transaction that lock is held until COMMIT. If something long-running
+-- already holds a lock, waiting for it would block every read and write to
+-- `conversations` behind us. Better to roll back and retry when it is quiet.
+SET LOCAL lock_timeout = '5s';
+
 -- ---------------------------------------------------------------------------
 -- cases
 -- ---------------------------------------------------------------------------

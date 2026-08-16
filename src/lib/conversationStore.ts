@@ -1,5 +1,5 @@
 import { query, transaction } from './db.js';
-import { attachEncounter, resolveCase } from './caseStore.js';
+import { attachEncounter, resolveCase, type CaseOwner } from './caseStore.js';
 import type { InterviewState } from './interviewTypes.js';
 
 function deriveChiefSymptom(state: InterviewState): string | null {
@@ -25,6 +25,54 @@ export interface PersistResult {
   caseId: string | null;
 }
 
+/**
+ * Attach a conversation to a case, and never let that failure reach the
+ * caller.
+ *
+ * The conversation row is written and committed *before* this runs. Cases are
+ * new; the endpoints that persist conversations are not, and three live apps
+ * depend on them. Wrapping the case work in its own transaction and swallowing
+ * its errors means a fault anywhere in the case code — a missing table on a
+ * half-finished deploy, a constraint we did not anticipate — costs a case
+ * link, never the clinical record of what was said.
+ *
+ * A conversation with case_id IS NULL is the state every historical row is
+ * already in, and scripts/backfill-cases.ts repairs exactly that.
+ */
+async function attachCaseBestEffort(
+  owner: CaseOwner,
+  conversationId: string,
+  caseId?: string | null,
+): Promise<string | null> {
+  try {
+    return await transaction(async (client) => {
+      const resolved = await resolveCase(client, owner, caseId);
+      await attachEncounter(client, resolved, conversationId, owner);
+      return resolved;
+    });
+  } catch (err) {
+    console.error(
+      `[conversationStore] case attach failed for conversation ${conversationId} ` +
+        `(the conversation itself is saved): ${(err as Error).message}`,
+    );
+    return null;
+  }
+}
+
+/** Read a conversation's case, returning null rather than throwing. */
+async function lookupCaseId(conversationId: string): Promise<string | null> {
+  try {
+    const result = await query<{ case_id: string | null }>(
+      'SELECT case_id FROM conversations WHERE id = $1',
+      [conversationId],
+    );
+    return result.rows[0]?.case_id ?? null;
+  } catch (err) {
+    console.error('[conversationStore] case lookup failed:', (err as Error).message);
+    return null;
+  }
+}
+
 function projectFromState(state: InterviewState) {
   return {
     messages: JSON.stringify(state.conversationHistory),
@@ -40,7 +88,10 @@ function projectFromState(state: InterviewState) {
 /**
  * `caseId` is passed when the officer started this session from an existing
  * case in their list; omitted for a fresh session, in which case a new
- * 'recording' case is minted. The case and the conversation commit together.
+ * 'recording' case is minted.
+ *
+ * The conversation INSERT is unchanged and commits on its own; the case is
+ * attached afterwards, best-effort. See attachCaseBestEffort.
  */
 export async function createConversation(
   userId: string,
@@ -50,34 +101,31 @@ export async function createConversation(
   const p = projectFromState(state);
   const fullState = JSON.stringify(state);
 
-  return transaction(async (client) => {
-    const result = await client.query<{ id: string }>(
-      `INSERT INTO conversations (
-         user_id, chief_symptom, messages, vital_signs, examination_progress,
-         interview_stage, patient_language, medical_officer_language,
-         state, mode, last_message_at
-       ) VALUES ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6, $7, $8, $9::jsonb, 'marina', NOW())
-       RETURNING id`,
-      [
-        userId,
-        p.chief_symptom,
-        p.messages,
-        p.vital_signs,
-        p.examination_progress,
-        p.interview_stage,
-        p.patient_language,
-        p.medical_officer_language,
-        fullState,
-      ],
-    );
+  const result = await query<{ id: string }>(
+    `INSERT INTO conversations (
+       user_id, chief_symptom, messages, vital_signs, examination_progress,
+       interview_stage, patient_language, medical_officer_language,
+       state, mode, last_message_at
+     ) VALUES ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6, $7, $8, $9::jsonb, 'marina', NOW())
+     RETURNING id`,
+    [
+      userId,
+      p.chief_symptom,
+      p.messages,
+      p.vital_signs,
+      p.examination_progress,
+      p.interview_stage,
+      p.patient_language,
+      p.medical_officer_language,
+      fullState,
+    ],
+  );
 
-    const conversationId = result.rows[0].id;
-    const owner = { userId };
-    const resolvedCaseId = await resolveCase(client, owner, caseId);
-    await attachEncounter(client, resolvedCaseId, conversationId, owner);
-
-    return { conversationId, caseId: resolvedCaseId };
-  });
+  const conversationId = result.rows[0].id;
+  return {
+    conversationId,
+    caseId: await attachCaseBestEffort({ userId }, conversationId, caseId),
+  };
 }
 
 export interface NoteTakerInsert {
@@ -105,33 +153,31 @@ export async function createNoteTakerConversation(
   input: NoteTakerInsert,
   caseId?: string | null,
 ): Promise<PersistResult> {
-  return transaction(async (client) => {
-    const result = await client.query<{ id: string }>(
-      `INSERT INTO conversations (
-         user_id, partner_id, partner_user_ref,
-         chief_symptom, messages, extracted_summary,
-         patient_language, medical_officer_language,
-         mode, last_message_at
-       ) VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, 'note_taker', NOW())
-       RETURNING id`,
-      [
-        owner.userId ?? null,
-        owner.partnerId ?? null,
-        owner.partnerUserRef ?? null,
-        input.chiefSymptom,
-        JSON.stringify(input.messages),
-        JSON.stringify(input.summary),
-        input.patientLanguage,
-        input.medicalOfficerLanguage,
-      ],
-    );
+  const result = await query<{ id: string }>(
+    `INSERT INTO conversations (
+       user_id, partner_id, partner_user_ref,
+       chief_symptom, messages, extracted_summary,
+       patient_language, medical_officer_language,
+       mode, last_message_at
+     ) VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, 'note_taker', NOW())
+     RETURNING id`,
+    [
+      owner.userId ?? null,
+      owner.partnerId ?? null,
+      owner.partnerUserRef ?? null,
+      input.chiefSymptom,
+      JSON.stringify(input.messages),
+      JSON.stringify(input.summary),
+      input.patientLanguage,
+      input.medicalOfficerLanguage,
+    ],
+  );
 
-    const conversationId = result.rows[0].id;
-    const resolvedCaseId = await resolveCase(client, owner, caseId);
-    await attachEncounter(client, resolvedCaseId, conversationId, owner);
-
-    return { conversationId, caseId: resolvedCaseId };
-  });
+  const conversationId = result.rows[0].id;
+  return {
+    conversationId,
+    caseId: await attachCaseBestEffort(owner, conversationId, caseId),
+  };
 }
 
 export type TranscriptionMode = 'note_taker' | 'translator';
@@ -167,47 +213,43 @@ export async function saveNoteTaker(
   const mode: TranscriptionMode = input.mode ?? 'note_taker';
 
   if (!conversationId) {
-    return transaction(async (client) => {
-      const result = await client.query<{ id: string }>(
-        `INSERT INTO conversations (
-           user_id, chief_symptom, messages,
-           patient_language, medical_officer_language,
-           mode, last_message_at
-         ) VALUES ($1, $2, $3::jsonb, $4, $5, $6, NOW())
-         RETURNING id`,
-        [
-          userId,
-          chiefSymptom,
-          messagesJson,
-          input.patientLanguage,
-          input.medicalOfficerLanguage,
-          mode,
-        ],
-      );
+    const result = await query<{ id: string }>(
+      `INSERT INTO conversations (
+         user_id, chief_symptom, messages,
+         patient_language, medical_officer_language,
+         mode, last_message_at
+       ) VALUES ($1, $2, $3::jsonb, $4, $5, $6, NOW())
+       RETURNING id`,
+      [
+        userId,
+        chiefSymptom,
+        messagesJson,
+        input.patientLanguage,
+        input.medicalOfficerLanguage,
+        mode,
+      ],
+    );
 
-      const newId = result.rows[0].id;
+    const newId = result.rows[0].id;
 
-      // A translator session is two people talking through the app, not a
-      // patient being worked up. It never becomes a case.
-      if (mode === 'translator') return { conversationId: newId, caseId: null };
+    // A translator session is two people talking through the app, not a
+    // patient being worked up. It never becomes a case.
+    if (mode === 'translator') return { conversationId: newId, caseId: null };
 
-      const owner = { userId };
-      const resolvedCaseId = await resolveCase(client, owner, caseId);
-      await attachEncounter(client, resolvedCaseId, newId, owner);
-
-      return { conversationId: newId, caseId: resolvedCaseId };
-    });
+    return {
+      conversationId: newId,
+      caseId: await attachCaseBestEffort({ userId }, newId, caseId),
+    };
   }
 
-  const updated = await query<{ case_id: string | null }>(
+  await query(
     `UPDATE conversations
         SET messages              = $1::jsonb,
             chief_symptom         = COALESCE(chief_symptom, $2),
             patient_language      = $3,
             medical_officer_language = $4,
             last_message_at       = NOW()
-      WHERE id = $5 AND user_id = $6 AND mode = $7
-    RETURNING case_id`,
+      WHERE id = $5 AND user_id = $6 AND mode = $7`,
     [
       messagesJson,
       chiefSymptom,
@@ -218,7 +260,7 @@ export async function saveNoteTaker(
       mode,
     ],
   );
-  return { conversationId, caseId: updated.rows[0]?.case_id ?? null };
+  return { conversationId, caseId: await lookupCaseId(conversationId) };
 }
 
 export async function updateFromChat(
@@ -228,7 +270,7 @@ export async function updateFromChat(
 ): Promise<string | null> {
   const p = projectFromState(state);
   const fullState = JSON.stringify(state);
-  const updated = await query<{ case_id: string | null }>(
+  await query(
     `UPDATE conversations
         SET messages              = $1::jsonb,
             vital_signs           = $2::jsonb,
@@ -239,8 +281,7 @@ export async function updateFromChat(
             medical_officer_language = $7,
             state                 = $8::jsonb,
             last_message_at       = NOW()
-      WHERE id = $9 AND user_id = $10
-    RETURNING case_id`,
+      WHERE id = $9 AND user_id = $10`,
     [
       p.messages,
       p.vital_signs,
@@ -254,7 +295,7 @@ export async function updateFromChat(
       userId,
     ],
   );
-  return updated.rows[0]?.case_id ?? null;
+  return lookupCaseId(conversationId);
 }
 
 export async function updateFromExtract(
@@ -262,13 +303,12 @@ export async function updateFromExtract(
   userId: string,
   summary: unknown,
 ): Promise<string | null> {
-  const updated = await query<{ case_id: string | null }>(
+  await query(
     `UPDATE conversations
         SET extracted_summary = $1::jsonb,
             last_message_at   = NOW()
-      WHERE id = $2 AND user_id = $3
-    RETURNING case_id`,
+      WHERE id = $2 AND user_id = $3`,
     [JSON.stringify(summary), conversationId, userId],
   );
-  return updated.rows[0]?.case_id ?? null;
+  return lookupCaseId(conversationId);
 }
