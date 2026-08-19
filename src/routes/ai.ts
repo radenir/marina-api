@@ -369,16 +369,18 @@ const ExtractSchema = z.object({
     })
   ).min(0).max(500),
   userProfile: z.object({
-    ship_name:       z.string().optional(),
-    call_sign:       z.string().optional(),
-    satellite_phone: z.string().optional(),
-    company:         z.string().optional(),
-    email:           z.string().optional(),
-    first_name:      z.string().optional(),
-    last_name:       z.string().optional(),
-    date_of_birth:   z.string().optional(),
-    gender:          z.string().optional(),
-    nationality:     z.string().optional(),
+    // /auth/me returns unset profile columns as null (not omitted), so every
+    // field must accept null as well as undefined or a real user hits 400.
+    ship_name:       z.string().nullable().optional(),
+    call_sign:       z.string().nullable().optional(),
+    satellite_phone: z.string().nullable().optional(),
+    company:         z.string().nullable().optional(),
+    email:           z.string().nullable().optional(),
+    first_name:      z.string().nullable().optional(),
+    last_name:       z.string().nullable().optional(),
+    date_of_birth:   z.string().nullable().optional(),
+    gender:          z.string().nullable().optional(),
+    nationality:     z.string().nullable().optional(),
   }).optional(),
   mewsScore: z.number().nullable().optional(),
   conversationId: z.string().uuid().optional(),
