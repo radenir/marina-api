@@ -8,6 +8,7 @@ import { requireVerifiedEmail } from '../middleware/requireVerifiedEmail.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { requireScope } from '../middleware/requireScope.js';
 import { requireVerifiedActiveUser } from '../middleware/requireVerifiedActiveUser.js';
+import { allowAnonymous } from '../middleware/anonymous.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
 import { chatWithFallback } from '../lib/llmFallback.js';
@@ -58,6 +59,13 @@ export const aiRouter = Router();
 // diverges from the frozen v1 surface (e.g. the clean-split extract).
 export const aiV2Router = Router();
 
+// Router mounted at /free/ai for the free, no-login "basic" Note Taker: a small,
+// tightly rate-limited subset (transcribe, extract, voice edits) reachable by a
+// signed-out client. Nothing is persisted to any account and no premium
+// features (judging, suggestions, port/ETA) are exposed here. See the route
+// definitions near the bottom of this file.
+export const aiFreeRouter = Router();
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -88,14 +96,16 @@ function attributionFromPrincipal(req: Request): Attribution {
   const p = req.principal;
   if (!p) return {};
   if (p.type === 'user') return { userId: p.userId };
-  return { partnerId: p.partnerId, apiClientId: p.apiClientId };
+  if (p.type === 'partner') return { partnerId: p.partnerId, apiClientId: p.apiClientId };
+  return {}; // anonymous — no user/partner attribution
 }
 
-/** Rate-limit key that works for both user and partner principals. */
+/** Rate-limit key that works for user, partner and anonymous principals. */
 function principalRateLimitKey(req: Request): string {
   const p = req.principal;
   if (!p) return getIp(req);
   if (p.type === 'user') return `u:${p.userId}`;
+  if (p.type === 'anonymous') return `a:${p.deviceId}`;
   if (p.partnerUserRef) return `p:${p.apiClientId}:${p.partnerUserRef}`;
   return `p:${p.apiClientId}`;
 }
@@ -288,6 +298,31 @@ const reviseFieldRateLimit = rateLimit({
 const reviseVitalsRateLimit = rateLimit({
   prefix: 'ai-revise-vitals',
   limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+// Free (no-login) tiers. Keyed by anonymous device id (falling back to IP via
+// principalRateLimitKey), and set well below the authenticated limits: enough
+// for a signed-out officer to try a real consultation, low enough to blunt
+// abuse of the paid transcription/LLM backend by an un-authenticated caller.
+const freeTranscribeRateLimit = rateLimit({
+  prefix: 'ai-free-transcribe',
+  limit: 60,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const freeExtractRateLimit = rateLimit({
+  prefix: 'ai-free-extract',
+  limit: 60,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const freeReviseRateLimit = rateLimit({
+  prefix: 'ai-free-revise',
+  limit: 120,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
 });
@@ -778,6 +813,7 @@ aiRouter.post(
     } = parsed.data;
 
     const principal = req.principal!;
+    if (principal.type === 'anonymous') { res.status(401).json({ error: 'Unauthorized' }); return; }
     const isPartner = principal.type === 'partner';
 
     // Partners can't update existing marina-interview rows (those belong to
@@ -883,6 +919,7 @@ aiV2Router.post(
     } = parsed.data;
 
     const principal = req.principal!;
+    if (principal.type === 'anonymous') { res.status(401).json({ error: 'Unauthorized' }); return; }
     const isPartner = principal.type === 'partner';
 
     if (isPartner && conversationId) {
@@ -1118,6 +1155,7 @@ aiRouter.post(
     }
 
     const principal = req.principal!;
+    if (principal.type === 'anonymous') { res.status(401).json({ error: 'Unauthorized' }); return; }
     let recipient: string;
     if (principal.type === 'user') {
       const { rows } = await query('SELECT email FROM users WHERE id = $1', [principal.userId]);
@@ -2079,6 +2117,220 @@ aiV2Router.post(
 // ---------------------------------------------------------------------------
 
 aiRouter.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'Audio file too large (max 25MB)' });
+  }
+  if (err.status === 400) {
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});
+
+// ===========================================================================
+// FREE, NO-LOGIN NOTE TAKER  (mounted at /free/ai)
+// ---------------------------------------------------------------------------
+// A signed-out client (the app's "basic" Note Taker) can record → transcribe →
+// extract → edit fields by voice, with nothing persisted to any account. These
+// mirror the authenticated handlers but:
+//   • use `allowAnonymous` instead of `authenticate` (no 401 for missing auth),
+//   • use their own, much lower free-tier rate limits keyed by device id / IP,
+//   • never touch requireScope / requireVerifiedActiveUser (user/partner only),
+//   • never persist (no conversation/case owner exists for an anonymous caller).
+// The authenticated /ai and /v2/ai routes above are untouched.
+// ===========================================================================
+
+// POST /free/ai/transcribe
+aiFreeRouter.post(
+  '/transcribe',
+  allowAnonymous,
+  freeTranscribeRateLimit,
+  upload.single('audio'),
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.file) {
+      res.status(400).json({ error: 'No audio file provided' });
+      return;
+    }
+
+    const language = typeof req.body.language === 'string' && req.body.language.length === 2
+      ? req.body.language
+      : undefined;
+
+    const provider = config.transcriptionProvider;
+
+    if (provider === 'elevenlabs' && !config.elevenlabs.apiKey) {
+      res.status(503).json({ error: 'ElevenLabs not configured' });
+      return;
+    }
+
+    let transcription: string;
+    try {
+      if (provider === 'elevenlabs') {
+        transcription = await elevenLabsTranscribe(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype,
+          language,
+        );
+      } else {
+        const file = await toFile(req.file.buffer, req.file.originalname, {
+          type: req.file.mimetype,
+        });
+        const result = await whisper.audio.transcriptions.create({
+          model: config.whisper.model,
+          file,
+          ...(language ? { language } : {}),
+        });
+        if (!result.text) {
+          res.status(502).json({ error: 'Transcription service unavailable' });
+          return;
+        }
+        transcription = result.text;
+      }
+    } catch (err) {
+      console.error(`[free/ai/transcribe] ${provider} error:`, (err as Error).message);
+      res.status(502).json({ error: 'Transcription service unavailable' });
+      return;
+    }
+
+    await auditLog('audio_transcribed', req, attributionFromPrincipal(req), {
+      size_bytes: req.file.size,
+      language: language ?? 'auto',
+      provider,
+      free: true,
+    });
+
+    res.json({ transcription });
+  }
+);
+
+// POST /free/ai/extract — builds the report, persists nothing.
+aiFreeRouter.post(
+  '/extract',
+  allowAnonymous,
+  freeExtractRateLimit,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ExtractSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { conversation, userProfile, mewsScore } = parsed.data;
+
+    let summary: Record<string, string | boolean>;
+    try {
+      summary = await parallelExtractV2(conversation, userProfile as UserProfile | undefined, mewsScore ?? null);
+    } catch (err) {
+      console.error('[free/ai/extract] extraction error:', (err as Error).message);
+      res.status(502).json({ error: 'Extraction service unavailable' });
+      return;
+    }
+
+    const fieldsPopulated = Object.values(summary).filter(v => v !== '' && v !== false && v !== null && v !== undefined).length;
+
+    await auditLog('medical_record_extracted', req, attributionFromPrincipal(req), {
+      message_count: conversation.length,
+      fields_populated: fieldsPopulated,
+      mode: 'note_taker',
+      free: true,
+    });
+
+    // No conversationId/caseId — the free flow is ephemeral.
+    res.json({ summary, conversationId: null, caseId: null });
+  }
+);
+
+// POST /free/ai/revise-field — edit one report field by voice.
+aiFreeRouter.post(
+  '/revise-field',
+  allowAnonymous,
+  freeReviseRateLimit,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ReviseFieldSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const d = parsed.data;
+    let result;
+    try {
+      result = await reviseField({
+        field: d.field,
+        currentText: d.currentText,
+        instruction: d.instruction,
+        suggestion: d.suggestion ?? undefined,
+        suggestionShown: d.suggestionShown ?? undefined,
+        chiefComplaint: d.chiefComplaint ?? undefined,
+        pathway: d.pathway ?? undefined,
+      });
+    } catch (err) {
+      console.error('[free/ai/revise-field] revision error:', (err as Error).message);
+      res.status(502).json({ error: 'Field revision service unavailable' });
+      return;
+    }
+
+    await auditLog('field_revised_by_voice', req, attributionFromPrincipal(req), {
+      field: d.field,
+      changed: result.changed,
+      had_suggestion: Boolean(d.suggestion || d.suggestionShown),
+      instruction_chars: d.instruction.length,
+      free: true,
+    });
+
+    res.json(result);
+  }
+);
+
+// POST /free/ai/revise-vitals — dictate the whole vitals section at once.
+aiFreeRouter.post(
+  '/revise-vitals',
+  allowAnonymous,
+  freeReviseRateLimit,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ReviseVitalsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const d = parsed.data;
+    let result;
+    try {
+      result = await reviseVitals({
+        current: {
+          pulse: d.current.pulse ?? '',
+          systolic: d.current.systolic ?? '',
+          diastolic: d.current.diastolic ?? '',
+          respiratoryRate: d.current.respiratoryRate ?? '',
+          spo2: d.current.spo2 ?? '',
+          temperatureCelsius: d.current.temperatureCelsius ?? '',
+          avpu: d.current.avpu ?? '',
+        },
+        instruction: d.instruction,
+        suggestion: d.suggestion ?? undefined,
+        suggestionShown: d.suggestionShown ?? undefined,
+      });
+    } catch (err) {
+      console.error('[free/ai/revise-vitals] revision error:', (err as Error).message);
+      res.status(502).json({ error: 'Vitals revision service unavailable' });
+      return;
+    }
+
+    await auditLog('vitals_revised_by_voice', req, attributionFromPrincipal(req), {
+      changed: result.changed,
+      had_unmapped: Boolean(result.unmapped),
+      warnings: result.warnings.length,
+      instruction_chars: d.instruction.length,
+      free: true,
+    });
+
+    res.json(result);
+  }
+);
+
+// Multer error handler for the free transcribe upload (4-arg, after routes).
+aiFreeRouter.use((err: any, _req: Request, res: Response, next: NextFunction) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ error: 'Audio file too large (max 25MB)' });
   }

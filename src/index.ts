@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { config } from './config';
 import { authRouter } from './routes/auth';
-import { aiRouter, aiV2Router } from './routes/ai';
+import { aiRouter, aiV2Router, aiFreeRouter } from './routes/ai';
 import { casesRouter } from './routes/cases';
 import { fleetRouter } from './routes/fleet';
 import { conversationsRouter } from './routes/conversations';
@@ -78,6 +78,10 @@ app.use('/v2/ai/extract', express.json({ limit: '1mb' }));
 // /v2/ai/revise-field — a long Investigations or Physical Examination draft
 //   plus the spoken instruction exceeds the 10kb default.
 app.use('/v2/ai/revise-field', express.json({ limit: '1mb' }));
+// Free, no-login Note Taker carries the same large extract/revise bodies.
+app.use('/free/ai/extract', express.json({ limit: '1mb' }));
+app.use('/free/ai/revise-field', express.json({ limit: '1mb' }));
+app.use('/free/ai/revise-vitals', express.json({ limit: '1mb' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 
@@ -119,6 +123,7 @@ app.use(
 app.use('/auth', authRouter);
 app.use('/ai', aiRouter);
 app.use('/v2/ai', aiV2Router);
+app.use('/free/ai', aiFreeRouter);
 app.use('/conversations', conversationsRouter);
 app.use('/cases', casesRouter);
 app.use('/fleet', fleetRouter);

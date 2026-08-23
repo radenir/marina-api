@@ -18,6 +18,10 @@ export async function requireVerifiedActiveUser(
     return;
   }
   if (principal.type === 'partner') return next();
+  if (principal.type === 'anonymous') {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
 
   try {
     const result = await query<{ email_verified: boolean; is_active: boolean }>(

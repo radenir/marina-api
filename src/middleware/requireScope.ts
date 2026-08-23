@@ -14,6 +14,10 @@ export function requireScope(scope: string) {
       return;
     }
     if (principal.type === 'user') return next();
+    if (principal.type === 'anonymous') {
+      res.status(403).json({ error: `Missing required scope: ${scope}` });
+      return;
+    }
     if (principal.scopes.includes(scope)) return next();
     res.status(403).json({ error: `Missing required scope: ${scope}` });
   };

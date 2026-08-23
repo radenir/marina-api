@@ -22,4 +22,16 @@ export type PartnerPrincipal = {
   partnerUserRef?: string;
 };
 
-export type Principal = UserPrincipal | PartnerPrincipal;
+/**
+ * Anonymous principal — a signed-out client using the free, no-login Note Taker
+ * (record → transcribe → extract → voice edits, nothing persisted). Set by the
+ * `allowAnonymous` middleware and accepted ONLY on the `/free/ai/*` routes.
+ * `deviceId` is a client-supplied per-install id used purely for rate limiting;
+ * it is not an identity and is never trusted for authorization.
+ */
+export type AnonymousPrincipal = {
+  type: 'anonymous';
+  deviceId: string;
+};
+
+export type Principal = UserPrincipal | PartnerPrincipal | AnonymousPrincipal;
