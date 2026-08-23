@@ -82,6 +82,7 @@ app.use('/v2/ai/revise-field', express.json({ limit: '1mb' }));
 app.use('/free/ai/extract', express.json({ limit: '1mb' }));
 app.use('/free/ai/revise-field', express.json({ limit: '1mb' }));
 app.use('/free/ai/revise-vitals', express.json({ limit: '1mb' }));
+app.use('/free/ai/generate-pdf', express.json({ limit: '1mb' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 

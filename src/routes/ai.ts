@@ -327,6 +327,13 @@ const freeReviseRateLimit = rateLimit({
   keyFn: principalRateLimitKey,
 });
 
+const freePdfRateLimit = rateLimit({
+  prefix: 'ai-free-pdf',
+  limit: 60,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
 // ---------------------------------------------------------------------------
 // Multer — memory storage, 25MB limit, audio MIME types only
 // ---------------------------------------------------------------------------
@@ -2326,6 +2333,67 @@ aiFreeRouter.post(
     });
 
     res.json(result);
+  }
+);
+
+// POST /free/ai/generate-pdf — fill the chosen PDF form and return the bytes.
+// Download only; there is deliberately no anonymous email-pdf (an open
+// "email to any address" endpoint is a spam vector), so signed-out users can
+// download their report but must sign in to email it.
+aiFreeRouter.post(
+  '/generate-pdf',
+  allowAnonymous,
+  freePdfRateLimit,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = GeneratePdfSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const { summary, template } = parsed.data;
+
+    if (template !== 'marina' && !(await checkPdftkAvailable())) {
+      res.status(503).json({ error: 'pdftk not available on this server' });
+      return;
+    }
+
+    const outputPath = `/tmp/marina_free_${template}_${Date.now()}.pdf`;
+    let pdfBuffer: Buffer;
+    try {
+      if (template === 'marina') {
+        pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(summary), outputPath);
+      } else if (template === 'german') {
+        pdfBuffer = await fillGermanFormPdftk(mapSummaryToGermanFields(summary), outputPath);
+      } else {
+        const medFields = extractMedicationFields(summary.currentMedications);
+        const rmdFields = mapSummaryToRmdFields({ ...summary, ...medFields });
+        pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
+      }
+    } catch (err) {
+      console.error(`[free/ai/generate-pdf] ${template} fill error:`, (err as Error).message);
+      res.status(502).json({ error: 'PDF generation failed' });
+      return;
+    } finally {
+      try {
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+      } catch { /* ignore cleanup errors */ }
+    }
+
+    await auditLog('pdf_generated', req, attributionFromPrincipal(req), {
+      file_size_bytes: pdfBuffer.length,
+      free: true,
+    });
+
+    const filename = template === 'marina'
+      ? 'marina-seafarer-medical-report.pdf'
+      : 'rmd-maritime-medical-report.pdf';
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
   }
 );
 
