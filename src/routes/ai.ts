@@ -313,9 +313,13 @@ const reviseVitalsRateLimit = rateLimit({
 // principalRateLimitKey), and set well below the authenticated limits: enough
 // for a signed-out officer to try a real consultation, low enough to blunt
 // abuse of the paid transcription/LLM backend by an un-authenticated caller.
+// 300/hr: the Note Taker transcribes 15-second segments (~4 req/min), so 60/hr
+// was only ~15 min of recording — a single real consultation exhausted it.
+// 300/hr is ~75 min of recording per device per hour, keyed per install so each
+// phone on a shared-IP vessel gets its own budget.
 const freeTranscribeRateLimit = rateLimit({
   prefix: 'ai-free-transcribe',
-  limit: 60,
+  limit: 300,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
 });
