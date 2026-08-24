@@ -66,6 +66,13 @@ export const aiV2Router = Router();
 // definitions near the bottom of this file.
 export const aiFreeRouter = Router();
 
+// The dedicated partner that owns anonymous (free) note-taker rows, so the
+// transcript + report can be persisted like the paid flow without a schema
+// change (conversations/cases require a user or partner owner). Seeded by
+// migration 017 with this fixed id; overridable via env for other environments.
+const FREE_ANON_PARTNER_ID =
+  process.env.FREE_ANON_PARTNER_ID ?? '11111111-1111-4111-8111-111111111111';
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -2137,12 +2144,14 @@ aiRouter.use((err: any, _req: Request, res: Response, next: NextFunction) => {
 // FREE, NO-LOGIN NOTE TAKER  (mounted at /free/ai)
 // ---------------------------------------------------------------------------
 // A signed-out client (the app's "basic" Note Taker) can record → transcribe →
-// extract → edit fields by voice, with nothing persisted to any account. These
-// mirror the authenticated handlers but:
+// extract → edit fields by voice. These mirror the authenticated handlers but:
 //   • use `allowAnonymous` instead of `authenticate` (no 401 for missing auth),
 //   • use their own, much lower free-tier rate limits keyed by device id / IP,
 //   • never touch requireScope / requireVerifiedActiveUser (user/partner only),
-//   • never persist (no conversation/case owner exists for an anonymous caller).
+//   • persist under the dedicated Free (Anonymous) partner rather than a user —
+//     /free/ai/extract writes the transcript + report (and mints a case) owned
+//     by FREE_ANON_PARTNER_ID, with the device id in partner_user_ref. The
+//     transcribe / revise / pdf routes remain stateless.
 // The authenticated /ai and /v2/ai routes above are untouched.
 // ===========================================================================
 
@@ -2210,7 +2219,8 @@ aiFreeRouter.post(
   }
 );
 
-// POST /free/ai/extract — builds the report, persists nothing.
+// POST /free/ai/extract — builds the report and persists it (transcript +
+// report + case) under the Free (Anonymous) partner. See section header above.
 aiFreeRouter.post(
   '/extract',
   allowAnonymous,
@@ -2222,7 +2232,7 @@ aiFreeRouter.post(
       return;
     }
 
-    const { conversation, userProfile, mewsScore } = parsed.data;
+    const { conversation, userProfile, mewsScore, patientLanguage, medicalOfficerLanguage } = parsed.data;
 
     let summary: Record<string, string | boolean>;
     try {
@@ -2234,16 +2244,56 @@ aiFreeRouter.post(
     }
 
     const fieldsPopulated = Object.values(summary).filter(v => v !== '' && v !== false && v !== null && v !== undefined).length;
+    const totalFields = Object.keys(summary).length;
+
+    // Persist the transcript + extracted report like the paid flow, owned by the
+    // dedicated Free (Anonymous) partner (no user account exists). The per-install
+    // device id rides in partner_user_ref so sessions stay distinguishable. This
+    // also mints a case, exactly as a paid note-taker session would. Fail-open: a
+    // persistence fault must never cost the caller their report.
+    const deviceId = req.principal?.type === 'anonymous' ? req.principal.deviceId : null;
+    let persistedId: string | null = null;
+    let resolvedCaseId: string | null = null;
+    try {
+      const chiefSymptomRaw =
+        (typeof summary.chiefSymptom === 'string' && summary.chiefSymptom.trim()) ||
+        (typeof summary.chiefComplaint === 'string' && summary.chiefComplaint.trim()) ||
+        conversation.find((m) => m.role === 'user')?.content?.split(/[.!?]/)[0] ||
+        null;
+      const persisted = await createNoteTakerConversation(
+        { partnerId: FREE_ANON_PARTNER_ID, partnerUserRef: deviceId },
+        {
+          messages: conversation,
+          summary,
+          patientLanguage: patientLanguage ?? 'en',
+          medicalOfficerLanguage: medicalOfficerLanguage ?? 'en',
+          chiefSymptom: chiefSymptomRaw ? chiefSymptomRaw.slice(0, 200) : null,
+        },
+      );
+      persistedId = persisted.conversationId;
+      resolvedCaseId = persisted.caseId;
+    } catch (err) {
+      console.error('[free/ai/extract] persist failed:', (err as Error).message);
+    }
+
+    // Aggregate analytics: the SYBRA chief-symptom *category* + completeness
+    // counts, alongside the persisted conversation id.
+    const chiefSymptom =
+      typeof summary.chiefSymptom === 'string' && summary.chiefSymptom.trim()
+        ? summary.chiefSymptom.trim().slice(0, 120)
+        : null;
 
     await auditLog('medical_record_extracted', req, attributionFromPrincipal(req), {
       message_count: conversation.length,
       fields_populated: fieldsPopulated,
+      total_fields: totalFields,
+      chief_symptom: chiefSymptom,
+      conversation_id: persistedId,
       mode: 'note_taker',
       free: true,
     });
 
-    // No conversationId/caseId — the free flow is ephemeral.
-    res.json({ summary, conversationId: null, caseId: null });
+    res.json({ summary, conversationId: persistedId, caseId: resolvedCaseId });
   }
 );
 
