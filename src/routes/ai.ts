@@ -2386,7 +2386,9 @@ aiFreeRouter.post(
   }
 );
 
-// POST /free/ai/generate-pdf — fill the chosen PDF form and return the bytes.
+// POST /free/ai/generate-pdf — fill the Marina template and return the bytes.
+// The free tier is Marina-only: the RMD (Danish) and German TMAS official forms
+// are never generated here (any `template` in the body is ignored).
 // Download only; there is deliberately no anonymous email-pdf (an open
 // "email to any address" endpoint is a spam vector), so signed-out users can
 // download their report but must sign in to email it.
@@ -2401,27 +2403,18 @@ aiFreeRouter.post(
       return;
     }
 
-    const { summary, template } = parsed.data;
+    const { summary } = parsed.data;
 
-    if (template !== 'marina' && !(await checkPdftkAvailable())) {
-      res.status(503).json({ error: 'pdftk not available on this server' });
-      return;
-    }
-
-    const outputPath = `/tmp/marina_free_${template}_${Date.now()}.pdf`;
+    // The free tier only ever produces the Marina template — never the RMD
+    // (Danish) or German TMAS official forms. Whatever `template` the client
+    // sends is deliberately ignored, so the free endpoint can't be used to fill
+    // the partner/official forms.
+    const outputPath = `/tmp/marina_free_${Date.now()}.pdf`;
     let pdfBuffer: Buffer;
     try {
-      if (template === 'marina') {
-        pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(summary), outputPath);
-      } else if (template === 'german') {
-        pdfBuffer = await fillGermanFormPdftk(mapSummaryToGermanFields(summary), outputPath);
-      } else {
-        const medFields = extractMedicationFields(summary.currentMedications);
-        const rmdFields = mapSummaryToRmdFields({ ...summary, ...medFields });
-        pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
-      }
+      pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(summary), outputPath);
     } catch (err) {
-      console.error(`[free/ai/generate-pdf] ${template} fill error:`, (err as Error).message);
+      console.error('[free/ai/generate-pdf] marina fill error:', (err as Error).message);
       res.status(502).json({ error: 'PDF generation failed' });
       return;
     } finally {
@@ -2432,15 +2425,13 @@ aiFreeRouter.post(
 
     await auditLog('pdf_generated', req, attributionFromPrincipal(req), {
       file_size_bytes: pdfBuffer.length,
+      template: 'marina',
       free: true,
     });
 
-    const filename = template === 'marina'
-      ? 'marina-seafarer-medical-report.pdf'
-      : 'rmd-maritime-medical-report.pdf';
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Disposition': 'attachment; filename="marina-seafarer-medical-report.pdf"',
       'Content-Length': pdfBuffer.length,
     });
     res.send(pdfBuffer);
