@@ -10,6 +10,44 @@ import { PDFDocument, PDFName, PDFArray, PDFBool, type PDFForm } from 'pdf-lib';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/**
+ * Partner co-brand logos, shipped alongside the template under public/templates.
+ * Each anchors to one top corner of page 1: Gard top-left, Seafarers' Trust
+ * top-right. Both render at the same height, top-aligned, so they sit level.
+ */
+const PARTNER_LOGO_HEIGHT = 34; // pt, shared by all partner logos
+const PARTNER_LOGOS: { file: string; align: 'left' | 'right' }[] = [
+  // Gard removed for now — restore by uncommenting:
+  // { file: 'public/templates/gard-logo.png', align: 'left' },
+  { file: 'public/templates/seafarers-trust-logo.png', align: 'right' },
+];
+
+/**
+ * Stamp the partner co-brand logos into the top corners of the page-1 header,
+ * flanking the centred Marina mark. Drawn at fill time (rather than baked into
+ * the template) so it appears on every generated report without a Chromium
+ * rebuild of the form geometry. Best-effort: a missing/unreadable file is
+ * skipped, not fatal.
+ */
+async function drawPartnerLogos(doc: PDFDocument): Promise<void> {
+  try {
+    const page = doc.getPage(0);
+    const margin = 30; // pt, from the page edges
+    const y = page.getHeight() - margin - PARTNER_LOGO_HEIGHT; // top-aligned
+
+    for (const { file, align } of PARTNER_LOGOS) {
+      const abs = path.join(process.cwd(), file);
+      if (!fs.existsSync(abs)) continue;
+      const img = await doc.embedPng(fs.readFileSync(abs));
+      const width = (img.width / img.height) * PARTNER_LOGO_HEIGHT;
+      const x = align === 'left' ? margin : page.getWidth() - margin - width;
+      page.drawImage(img, { x, y, width, height: PARTNER_LOGO_HEIGHT });
+    }
+  } catch (err) {
+    console.warn('[seafarerPdf] skipped partner logos:', (err as Error).message);
+  }
+}
+
 /** A field value: plain text, or a radio selection `{ value, onValue }`. */
 export type SeafarerFieldValue = string | { value: boolean; onValue: string };
 
@@ -70,6 +108,9 @@ export async function fillSeafarerForm(
       console.warn(`[seafarerPdf] skipped radio "${name}":`, (err as Error).message);
     }
   }
+
+  // Partner co-brands (top-right of the page-1 header).
+  await drawPartnerLogos(doc);
 
   // Tell viewers to (re)generate field appearances from each field's DA, so the
   // filled text renders navy rather than pdf-lib's baked black.
