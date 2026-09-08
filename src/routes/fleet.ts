@@ -282,6 +282,63 @@ const activityQuerySchema = z.object({
 /** Vessel labels that are too thin to stand alone in a per-ship breakdown. */
 const MIN_VESSEL_SESSIONS = 1;
 
+/**
+ * The smallest number of reports a demographic category may be shown with.
+ *
+ * Age, sex, rank and nationality describe a person, and stop describing one
+ * only because there are enough of them. On an eighteen-berth standby vessel,
+ * "one female, 25-34, Filipino, in August" is a name — so a category below
+ * this threshold is not returned at all, and the number of suppressed reports
+ * is returned in its place.
+ *
+ * Enforced here rather than in the client: a rule that only exists in a React
+ * component is one refactor away from not existing.
+ */
+const MIN_CELL = 5;
+
+/**
+ * Demographics are counted once per account, not once per report.
+ *
+ * There is no patient identifier in this system, deliberately — cases.patient_ref
+ * is the officer's own words and is not a foreign key, because a crew roster
+ * keyed to named individuals is a health register. The consequence is that
+ * "the same patient twenty-nine times" and "twenty-nine different patients"
+ * are indistinguishable.
+ *
+ * That is not hypothetical. On Esvagt, 29 of 31 reports recording a female
+ * patient are one person — same first name, same date of birth, same
+ * nationality, same account — a demonstration patient run repeatedly. Counted
+ * raw, the dashboard would have told a shipowner that 69% of their patients
+ * were women aged 25-34, all Danish.
+ *
+ * Counting distinct accounts is the conservative answer: it undercounts a ship
+ * that genuinely saw several different people, and it cannot be inflated by
+ * repetition. Given the choice, a fleet report should understate rather than
+ * invent, and the card says what it is counting.
+ */
+
+interface Cell {
+  label: string | null;
+  n: number;
+}
+
+/**
+ * Drop every category below MIN_CELL, and say how much was dropped.
+ *
+ * Reporting the suppressed total matters: a chart quietly missing its tail
+ * reads as a complete picture, and the office would draw conclusions from a
+ * denominator that is not the one on screen.
+ */
+function suppress(rows: Cell[]): { items: Cell[]; suppressed: number; hidden_categories: number } {
+  const kept = rows.filter((r) => r.label !== null && r.n >= MIN_CELL);
+  const dropped = rows.filter((r) => r.label === null || r.n < MIN_CELL);
+  return {
+    items: kept,
+    suppressed: dropped.reduce((a, r) => a + r.n, 0),
+    hidden_categories: dropped.length,
+  };
+}
+
 fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Promise<void> => {
   // Express 4 does not catch a rejected async handler: without this the
   // request never answers and the browser hangs until it times out, which is
@@ -395,8 +452,11 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
   ]);
 
   // ---- the operational figures the printed report carried ---------------
-  const [byHour, byDuration, byMismatch, byPort, byDestination, byUrgency, extras, output] =
-    await Promise.all([
+  const [
+    byHour, byDuration, byMismatch, byPort,
+    byAge, bySex, byRank, byNationality, deranged,
+    byDestination, byUrgency, extras, output,
+  ] = await Promise.all([
     // When work happens. The printed report's most quoted operational fact —
     // 61% of consultations start in the forenoon watch.
     query(
@@ -431,6 +491,42 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
       `SELECT a.nearest_port AS port, COUNT(*)::int AS n
          FROM v_fleet_activity a ${where} AND a.nearest_port IS NOT NULL
         GROUP BY 1 ORDER BY 2 DESC LIMIT 8`,
+      params,
+    ),
+    // Demographics. Fleet-wide only — deliberately never grouped with
+    // vessel_name, which is what makes the suppression threshold meaningful.
+    query(
+      `SELECT a.age_band AS label, COUNT(DISTINCT a.account_ref)::int AS n
+         FROM v_fleet_activity a ${where} AND a.age_band IS NOT NULL
+        GROUP BY 1 ORDER BY 1`,
+      params,
+    ),
+    query(
+      `SELECT a.sex AS label, COUNT(DISTINCT a.account_ref)::int AS n
+         FROM v_fleet_activity a ${where} AND a.sex IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
+      params,
+    ),
+    query(
+      `SELECT a.rank_group AS label, COUNT(DISTINCT a.account_ref)::int AS n
+         FROM v_fleet_activity a ${where} AND a.rank_group IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
+      params,
+    ),
+    query(
+      `SELECT a.nationality AS label, COUNT(DISTINCT a.account_ref)::int AS n
+         FROM v_fleet_activity a ${where} AND a.nationality IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
+      params,
+    ),
+    // Derangement. A rate over what was measured — never a reading, never a
+    // person — so no suppression is needed.
+    query(
+      `SELECT COUNT(*) FILTER (WHERE a.abnormal_pulse)::int AS pulse,
+              COUNT(*) FILTER (WHERE a.abnormal_bp)::int    AS bp,
+              COUNT(*) FILTER (WHERE a.abnormal_resp)::int  AS resp,
+              COUNT(*) FILTER (WHERE a.abnormal_spo2)::int  AS spo2,
+              COUNT(*) FILTER (WHERE a.abnormal_temp)::int  AS temp,
+              COUNT(*) FILTER (WHERE a.abnormal_pulse OR a.abnormal_bp OR a.abnormal_resp
+                                  OR a.abnormal_spo2 OR a.abnormal_temp)::int AS any_abnormal
+         FROM v_fleet_activity a ${where}`,
       params,
     ),
     query(
@@ -508,6 +604,14 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
     by_hour: byHour.rows,
     by_port: byPort.rows,
     by_destination: byDestination.rows,
+    demographics: {
+      age: suppress(byAge.rows as Cell[]),
+      sex: suppress(bySex.rows as Cell[]),
+      rank: suppress(byRank.rows as Cell[]),
+      nationality: suppress(byNationality.rows as Cell[]),
+      min_cell: MIN_CELL,
+    },
+    abnormal: deranged.rows[0] as Record<string, number>,
     by_urgency: byUrgency.rows,
     language_pairs: byMismatch.rows,
     duration: byDuration.rows[0] ?? { n: 0, median_minutes: null, p25_minutes: null, p75_minutes: null },

@@ -40,12 +40,13 @@ suite() {  # name  script  port  schema(full|pre015|pre016)
   dropdb --if-exists "$DB" >/dev/null 2>&1; createdb "$DB"
   for f in migrations/*.sql; do
     case "$UPTO" in
-      pre015) case "$f" in *015_*|*016_*|*018_*|*019_*|*020_*|*021_*) continue;; esac ;;
-      pre016) case "$f" in *016_*|*018_*|*019_*|*020_*|*021_*) continue;; esac ;;
-      pre018) case "$f" in *018_*|*019_*|*020_*|*021_*) continue;; esac ;;
-      pre019) case "$f" in *019_*|*020_*|*021_*) continue;; esac ;;
-      pre020) case "$f" in *020_*|*021_*) continue;; esac ;;
-      pre021) case "$f" in *021_*) continue;; esac ;;
+      pre015) case "$f" in *015_*|*016_*|*018_*|*019_*|*020_*|*021_*|*022_*) continue;; esac ;;
+      pre016) case "$f" in *016_*|*018_*|*019_*|*020_*|*021_*|*022_*) continue;; esac ;;
+      pre018) case "$f" in *018_*|*019_*|*020_*|*021_*|*022_*) continue;; esac ;;
+      pre019) case "$f" in *019_*|*020_*|*021_*|*022_*) continue;; esac ;;
+      pre020) case "$f" in *020_*|*021_*|*022_*) continue;; esac ;;
+      pre021) case "$f" in *021_*|*022_*) continue;; esac ;;
+      pre022) case "$f" in *022_*) continue;; esac ;;
     esac
     psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$f" >/dev/null 2>&1 || echo "  MIGRATE FAIL $f"
   done
@@ -98,6 +99,7 @@ run additive && suite c8 fleet-e2e.ts           4708 pre018
 run additive && suite c9 fleet-e2e.ts           4709 pre019
 run additive && suite c10 fleet-e2e.ts          4710 pre020
 run additive && suite c11 fleet-e2e.ts          4711 pre021
+run additive && suite c12 fleet-e2e.ts          4712 pre022
 
 # fleet_mews() in SQL is a second copy of a clinical scoring rule. Two copies
 # drift; this is what notices.
