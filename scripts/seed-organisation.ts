@@ -137,6 +137,30 @@ const ORGS: Record<string, OrgSpec> = {
       'mercator@esvagtvessel.com': 'Esvagt Mercator',
     },
   },
+
+  /**
+   * DFDS.
+   *
+   * Everything Esvagt made hard, this makes easy. Every account is on the
+   * company's own domain, nobody used a personal address, there are no typos,
+   * and the only variation in ship_name is capitals — which
+   * normalise_vessel_name() folds on its own. So: no company-text matching, no
+   * aliases, no per-account assignments.
+   *
+   * The accounts are named by ship and role (kngbri, kngcho, kngdck = King
+   * Seaways bridge/chief officer/deck), which suggests DFDS provisioned them
+   * centrally rather than letting crew self-register. That is why the data is
+   * clean, and it is worth knowing when the same question comes up for the
+   * next customer.
+   */
+  dfds: {
+    slug: 'dfds',
+    name: 'DFDS',
+    kind: 'owner',
+    domains: ['dfds.com'],
+    companyText: [],
+    vessels: [{ name: 'King Seaways' }, { name: 'Princess Seaways' }],
+  },
 };
 
 /** Mirrors normalise_vessel_name() in migration 018. Keep the two in step. */
