@@ -147,12 +147,42 @@ async function main() {
   // ---- THE REDACTION GUARANTEE -------------------------------------------
   // Nothing a management token can reach may contain the patient, the
   // complaint, the transcript or a vital sign.
-  const CLINICAL = ['Ramil', 'Santos', 'chest pain', 'crushing', '124', 'Paracetamol'];
+  // Text that must never appear, and vital signs that must never appear as a
+  // value. The two are checked differently on purpose.
+  //
+  // This used to substring-match every needle against JSON.stringify(body),
+  // which made the suite flaky roughly one run in ten: every response is full
+  // of random UUIDs, and '124' turns up inside one often enough to fail a
+  // build for no reason. A redaction test that cries wolf gets ignored, and
+  // this is the one test that must not be.
+  //
+  // So: text needles are matched against string leaves only, skipping
+  // UUID-shaped ones; numeric needles must match a leaf value exactly, which
+  // is how a vital sign would actually leak.
+  const CLINICAL_TEXT = ['Ramil', 'Santos', 'chest pain', 'crushing', 'Paracetamol'];
+  const CLINICAL_VALUES = ['124'];
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  const leaves = (v: unknown, out: unknown[] = []): unknown[] => {
+    if (v === null || v === undefined) return out;
+    if (Array.isArray(v)) { for (const x of v) leaves(x, out); return out; }
+    if (typeof v === 'object') { for (const x of Object.values(v)) leaves(x, out); return out; }
+    out.push(v);
+    return out;
+  };
+
   const surfaces = ['/fleet/board', '/fleet/vessels', '/fleet/cases', '/fleet/decisions', '/fleet/stats'];
 
   for (const path of surfaces) {
-    const body = JSON.stringify((await api('GET', path)).body);
-    const leaked = CLINICAL.filter((needle) => body.includes(needle));
+    const vals = leaves((await api('GET', path)).body);
+    const strings = vals
+      .filter((v): v is string => typeof v === 'string')
+      .filter((v) => !UUID_RE.test(v));
+
+    const leaked = [
+      ...CLINICAL_TEXT.filter((n) => strings.some((s) => s.toLowerCase().includes(n.toLowerCase()))),
+      ...CLINICAL_VALUES.filter((n) => vals.some((v) => String(v) === n)),
+    ];
     check(`no clinical data in ${path}`, leaked, []);
   }
 

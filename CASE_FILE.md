@@ -259,6 +259,42 @@ abandoned approach and can be deleted.
 
 ---
 
+## 8b. The fleet overview (added 2026-09-08)
+
+The Fleet Dashboard's original screens read `cases`. Production holds 264 cases
+and every one is still `recording`, with zero `case_decisions` — so the board
+and `/fleet/stats` are correct and empty for every real customer.
+
+`/fleet/activity` reads **sessions** instead, which are populated: 1012 of them,
+May–September 2026. For Esvagt specifically: 238 sessions, 27 accounts, 8–9
+vessels, English/Danish/Polish/German/Russian, 13 red flags, 134 structured
+reports. That needs no new behaviour from anyone at sea.
+
+- `migrations/018_fleet_activity.sql` — `vessel_aliases`, `normalise_vessel_name()`,
+  `normalise_language()`, `fleet_pathway()`, and the `v_fleet_activity` view.
+  Strictly additive. **Not yet applied to production.**
+- `scripts/seed-organisation.ts` — dry-run by default; creates the org, its
+  vessels and spelling aliases, attaches accounts, and (only with
+  `--management <email>`) promotes one existing account to the office view.
+  **Not yet applied to production.**
+- `fleet.marinahealth.eu` — new `/overview` screen, now the landing page.
+
+Two disclosure rules are enforced in the database, not the client:
+complaints are reported only as one of the 44 named pathways (everything else
+is `Unclassified`, and the page says how much that is); and the complaint mix
+is never broken down per vessel, because on an 18-person standby vessel one
+entry against one ship names a person.
+
+**Known data problems this surfaced.** `users.ship_name` and `users.company`
+are free text — Esvagt appears under five spellings, `Esvagt Crapri` is
+probably a typo for Capri, and `ESVAGT OFFICE` / `Esvagt A/S` are used as ship
+names. Worse: `conversations.chief_symptom` is polluted — 421 of 911 values are
+not symptoms, and `Jeg er Marina, din medicinske stemme` appears 8 times, which
+is Marina's own greeting stored as the patient's complaint. Worth fixing at
+source; the pathway whitelist contains the damage for now.
+
+---
+
 ## 9. What is next
 
 **Immediately blocking everything:** merge and deploy `cases` in

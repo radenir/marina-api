@@ -7,6 +7,7 @@
 // New accounts are created is_active=FALSE, email_verified=FALSE. This flips
 // both to TRUE for the given email and prints before/after state.
 // ---------------------------------------------------------------------------
+import 'dotenv/config';
 import { query, pool } from '../src/lib/db';
 
 async function main() {

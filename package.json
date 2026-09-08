@@ -10,6 +10,8 @@
     "start": "node dist/src/index.js",
     "migrate": "tsx migrations/run.ts",
     "backfill-cases": "tsx scripts/backfill-cases.ts",
+    "seed-organisation": "tsx scripts/seed-organisation.ts",
+    "provision-management": "tsx scripts/provision-management-account.ts",
     "generate-keys": "tsx scripts/generate-keys.ts",
     "migrate-legacy-users": "tsx scripts/migrate-legacy-users.ts",
     "provision-partner-key": "tsx scripts/provision-partner-key.ts",

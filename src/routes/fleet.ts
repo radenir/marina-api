@@ -249,3 +249,174 @@ fleetRouter.get('/stats', ...guard, async (req: Request, res: Response): Promise
     as_of: new Date().toISOString(),
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /fleet/activity — the report the office can actually be given today
+//
+// /fleet/board and /fleet/stats describe cases: open, overdue, closed, with an
+// outcome. Production contains 264 cases, every one still `recording`, and no
+// decisions at all — because promoting a case is a thing no client can do yet.
+// Those endpoints are therefore correct and empty.
+//
+// This one reads sessions, which are populated: a thousand of them, four
+// months, real ships. It answers the questions a shipowner actually asks —
+// how much is this being used, by which vessels, in which languages, for what
+// — without requiring any new behaviour from an officer at sea.
+//
+// Two disclosure rules are enforced here rather than trusted to the client:
+//
+//   1. A complaint is only ever reported as one of the 44 named pathways.
+//      `fleet_pathway()` in the database maps anything else to 'Unclassified',
+//      so the patient's own words cannot reach their employer even if this
+//      handler is rewritten carelessly.
+//
+//   2. The complaint mix is fleet-wide and is NOT broken down by vessel. On an
+//      eighteen-person standby vessel, "Capella: 1 x Mental Health Crisis"
+//      names a person to the company that employs them.
+// ---------------------------------------------------------------------------
+const activityQuerySchema = z.object({
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+});
+
+/** Vessel labels that are too thin to stand alone in a per-ship breakdown. */
+const MIN_VESSEL_SESSIONS = 1;
+
+fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Promise<void> => {
+  // Express 4 does not catch a rejected async handler: without this the
+  // request never answers and the browser hangs until it times out, which is
+  // a far worse failure than a 500. Learned the hard way — a missing column
+  // in the view left the dashboard spinning forever with no error on screen.
+  try {
+  const parsed = activityQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid query', issues: parsed.error.issues });
+    return;
+  }
+  const { from, to } = parsed.data;
+
+  // requireRole has already established that this account belongs to an
+  // organisation; confirm the organisation still exists before reporting on it.
+  const org = await query<{ slug: string }>(
+    `SELECT slug FROM partners WHERE id = $1`,
+    [req.orgId],
+  );
+  if (org.rows.length === 0) {
+    res.status(403).json({ error: 'Organisation not found' });
+    return;
+  }
+
+  // Membership is org_id and nothing else.
+  //
+  // This used to fall back to matching users.company and the email domain, so
+  // a fleet could be reported on before anyone was attached to it. That was a
+  // mistake. `company` is free text a person typed at registration, and on
+  // real data `LIKE 'esvagt%'` matched four accounts on gmail, hotmail and a
+  // personal .dk address — 96 sessions, 90 of them Marina's own testing. They
+  // would have appeared on Esvagt's own dashboard as Esvagt's usage, no matter
+  // how carefully the seed script excluded them.
+  //
+  // Deciding which company a person belongs to is not a string comparison. It
+  // is a deliberate act, recorded in org_id by seed-organisation.ts, and the
+  // dashboard now shows exactly who was attached — which is auditable, and
+  // wrong in a way somebody can find and fix rather than silently.
+  const scope = `a.org_id = $1`;
+
+  const params: unknown[] = [req.orgId];
+  let window = '';
+  if (from) {
+    params.push(from);
+    window += ` AND a.created_at >= $${params.length}`;
+  }
+  if (to) {
+    params.push(to);
+    window += ` AND a.created_at <= $${params.length}`;
+  }
+  const where = `WHERE ${scope}${window}`;
+
+  const [byMonth, byVessel, byLanguage, byPathway, byMode, totals] = await Promise.all([
+    query(
+      `SELECT to_char(a.month, 'YYYY-MM') AS month,
+              COUNT(*)::int                                      AS sessions,
+              COUNT(*) FILTER (WHERE a.substantive)::int         AS substantive,
+              COUNT(*) FILTER (WHERE a.has_report)::int          AS reports,
+              COUNT(*) FILTER (WHERE a.red_flag)::int            AS red_flags,
+              COUNT(DISTINCT a.vessel_name)::int                 AS vessels
+         FROM v_fleet_activity a ${where}
+        GROUP BY 1 ORDER BY 1`,
+      params,
+    ),
+    query(
+      `SELECT a.vessel_name,
+              COUNT(*)::int                              AS sessions,
+              COUNT(*) FILTER (WHERE a.substantive)::int AS substantive,
+              COUNT(*) FILTER (WHERE a.red_flag)::int    AS red_flags,
+              MAX(a.created_at)                          AS last_session_at
+         FROM v_fleet_activity a ${where}
+          AND a.vessel_name IS NOT NULL
+        GROUP BY 1
+       HAVING COUNT(*) >= ${MIN_VESSEL_SESSIONS}
+        ORDER BY 2 DESC`,
+      params,
+    ),
+    query(
+      `SELECT a.patient_language AS language, COUNT(*)::int AS n
+         FROM v_fleet_activity a ${where}
+          AND a.patient_language IS NOT NULL
+        GROUP BY 1 ORDER BY 2 DESC`,
+      params,
+    ),
+    // Fleet-wide only. See rule 2 above — never grouped with vessel_name.
+    query(
+      `SELECT a.pathway, COUNT(*)::int AS n
+         FROM v_fleet_activity a ${where}
+          AND a.pathway <> 'Unclassified'
+        GROUP BY 1 ORDER BY 2 DESC`,
+      params,
+    ),
+    query(
+      `SELECT a.mode, COUNT(*)::int AS n
+         FROM v_fleet_activity a ${where}
+        GROUP BY 1 ORDER BY 2 DESC`,
+      params,
+    ),
+    query(
+      `SELECT COUNT(*)::int                                        AS sessions,
+              COUNT(DISTINCT a.vessel_name)::int                   AS vessels,
+              COUNT(*) FILTER (WHERE a.substantive)::int           AS substantive,
+              COUNT(*) FILTER (WHERE a.has_report)::int            AS reports,
+              COUNT(*) FILTER (WHERE a.red_flag)::int              AS red_flags,
+              COUNT(*) FILTER (WHERE a.pathway <> 'Unclassified')::int AS classified,
+              MIN(a.created_at)                                    AS first_session_at,
+              MAX(a.created_at)                                    AS last_session_at
+         FROM v_fleet_activity a ${where}`,
+      params,
+    ),
+  ]);
+
+  const t = totals.rows[0] as Record<string, number | string | null>;
+
+  res.json({
+    by_month: byMonth.rows,
+    by_vessel: byVessel.rows,
+    by_language: byLanguage.rows,
+    by_pathway: byPathway.rows,
+    by_mode: byMode.rows,
+    totals: t,
+    // Stated, not hidden. Roughly half of chief_symptom in production is
+    // '[silence]', a greeting, or noise from the transcriber, and a complaint
+    // chart that quietly drops those would overstate what we know.
+    coverage: {
+      classified: Number(t?.classified ?? 0),
+      sessions: Number(t?.sessions ?? 0),
+    },
+    // The office is never given the free-text symptom, so say so in the payload
+    // rather than only in a code comment.
+    redaction: 'pathway-only; unmatched complaints are reported as Unclassified',
+    as_of: new Date().toISOString(),
+  });
+  } catch (err) {
+    console.error('[fleet/activity]', (err as Error).message);
+    res.status(500).json({ error: 'Could not build the fleet report' });
+  }
+});

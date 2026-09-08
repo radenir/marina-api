@@ -40,8 +40,10 @@ suite() {  # name  script  port  schema(full|pre015|pre016)
   dropdb --if-exists "$DB" >/dev/null 2>&1; createdb "$DB"
   for f in migrations/*.sql; do
     case "$UPTO" in
-      pre015) case "$f" in *015_*|*016_*) continue;; esac ;;
-      pre016) case "$f" in *016_*) continue;; esac ;;
+      pre015) case "$f" in *015_*|*016_*|*018_*|*019_*) continue;; esac ;;
+      pre016) case "$f" in *016_*|*018_*|*019_*) continue;; esac ;;
+      pre018) case "$f" in *018_*|*019_*) continue;; esac ;;
+      pre019) case "$f" in *019_*) continue;; esac ;;
     esac
     psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$f" >/dev/null 2>&1 || echo "  MIGRATE FAIL $f"
   done
@@ -84,5 +86,13 @@ run fleet    && suite c4 fleet-e2e.ts           4704 full
 run additive && suite c5 safety-no-migration.ts 4705 pre015
 run additive && suite c6 phase2-e2e.ts          4706 pre016
 run additive && suite c7 phase3-e2e.ts          4707 pre016
+# pre018 is the state production is in the moment the API ships ahead of its
+# migration — which is the normal deploy order, since rebuild.sh does not run
+# migrations. Every existing endpoint must be unaffected, and /fleet/activity
+# must answer 500 rather than hanging.
+run additive && suite c8 fleet-e2e.ts           4708 pre018
+# pre019: 018 applied but not 019. The view resolves vessels by alias only,
+# which is the state production is in right now.
+run additive && suite c9 fleet-e2e.ts           4709 pre019
 
 exit $fail
