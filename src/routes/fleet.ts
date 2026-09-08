@@ -4,6 +4,7 @@ import { query } from '../lib/db';
 import { rateLimit } from '../lib/rateLimit';
 import { requireAuth } from '../middleware/requireAuth';
 import { requireRole } from '../middleware/requireRole';
+import { buildFleetReportPdf } from '../lib/fleetReportPdf';
 
 /**
  * The Fleet Dashboard's API — what the office can see.
@@ -346,29 +347,27 @@ function suppress(rows: Cell[]): {
   };
 }
 
-fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Promise<void> => {
-  // Express 4 does not catch a rejected async handler: without this the
-  // request never answers and the browser hangs until it times out, which is
-  // a far worse failure than a 500. Learned the hard way — a missing column
-  // in the view left the dashboard spinning forever with no error on screen.
-  try {
-  const parsed = activityQuerySchema.safeParse(req.query);
-  if (!parsed.success) {
-    res.status(400).json({ error: 'Invalid query', issues: parsed.error.issues });
-    return;
-  }
-  const { from, to } = parsed.data;
+/**
+ * Build the whole fleet activity report for one organisation.
+ *
+ * Extracted from the /activity handler so the PDF export renders exactly the
+ * same numbers as the screen. Two code paths computing "how many sessions" is
+ * how a customer ends up holding a document that disagrees with the dashboard
+ * it was downloaded from.
+ */
+export async function buildFleetActivity(
+  orgId: string,
+  from?: string,
+  to?: string,
+): Promise<Record<string, unknown> | null> {
 
   // requireRole has already established that this account belongs to an
   // organisation; confirm the organisation still exists before reporting on it.
-  const org = await query<{ slug: string }>(
-    `SELECT slug FROM partners WHERE id = $1`,
-    [req.orgId],
+  const org = await query<{ slug: string; name: string }>(
+    `SELECT slug, name FROM partners WHERE id = $1`,
+    [orgId],
   );
-  if (org.rows.length === 0) {
-    res.status(403).json({ error: 'Organisation not found' });
-    return;
-  }
+  if (org.rows.length === 0) return null;
 
   // Membership is org_id and nothing else.
   //
@@ -386,7 +385,7 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
   // wrong in a way somebody can find and fix rather than silently.
   const scope = `a.org_id = $1`;
 
-  const params: unknown[] = [req.orgId];
+  const params: unknown[] = [orgId];
   let window = '';
   if (from) {
     params.push(from);
@@ -598,7 +597,7 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
         WHERE u.org_id = $1
           AND l.event_type IN ('pdf_generated', 'pdf_emailed')
         GROUP BY 1`,
-      [req.orgId],
+      [orgId],
     ),
   ]);
 
@@ -608,7 +607,8 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
 
   const t = totals.rows[0] as Record<string, number | string | null>;
 
-  res.json({
+  return {
+    organisation: org.rows[0].name,
     by_month: byMonth.rows,
     by_vessel: byVessel.rows,
     by_language: byLanguage.rows,
@@ -645,9 +645,71 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
     // rather than only in a code comment.
     redaction: 'pathway-only; unmatched complaints are reported as Unclassified',
     as_of: new Date().toISOString(),
-  });
+  };
+}
+
+// ---------------------------------------------------------------------------
+// GET /fleet/activity
+// ---------------------------------------------------------------------------
+fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Promise<void> => {
+  // Express 4 does not catch a rejected async handler: without this the request
+  // never answers and the browser hangs until it times out, which is a far
+  // worse failure than a 500.
+  try {
+    const parsed = activityQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid query', issues: parsed.error.issues });
+      return;
+    }
+    const report = await buildFleetActivity(req.orgId!, parsed.data.from, parsed.data.to);
+    if (!report) {
+      res.status(403).json({ error: 'Organisation not found' });
+      return;
+    }
+    res.json(report);
   } catch (err) {
     console.error('[fleet/activity]', (err as Error).message);
     res.status(500).json({ error: 'Could not build the fleet report' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /fleet/report.pdf
+//
+// The same report as /fleet/activity, drawn rather than serialised. It renders
+// from the identical object, so the document and the screen cannot disagree —
+// a customer holding a PDF that contradicts the dashboard it came from is
+// worse than having no PDF.
+// ---------------------------------------------------------------------------
+fleetRouter.get('/report.pdf', ...guard, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const parsed = activityQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid query', issues: parsed.error.issues });
+      return;
+    }
+    const report = await buildFleetActivity(req.orgId!, parsed.data.from, parsed.data.to);
+    if (!report) {
+      res.status(403).json({ error: 'Organisation not found' });
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bytes = await buildFleetReportPdf(report as any);
+    const org = String((report as { organisation?: string }).organisation ?? 'fleet')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition',
+      `attachment; filename="marina-fleet-summary-${org}-${stamp}.pdf"`);
+    // The document names a customer's fleet: never let a proxy hold a copy.
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(Buffer.from(bytes));
+  } catch (err) {
+    console.error('[fleet/report.pdf]', (err as Error).message);
+    res.status(500).json({ error: 'Could not build the report' });
   }
 });
