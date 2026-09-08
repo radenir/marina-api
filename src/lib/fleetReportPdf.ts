@@ -56,7 +56,9 @@ interface Report {
   demographics: { age: Cells; sex: Cells; rank: Cells; nationality: Cells; min_cell: number };
   quality?: {
     scored: number; avg_score: number | null; good: number; fair: number; poor: number;
-    unknown_sections: number; by_mode: { mode: string; avg_score: number; scored: number }[];
+    unknown_sections: number;
+    by_mode: { mode: string; avg_score: number; scored: number }[];
+    by_vessel?: { vessel_name: string; avg_score: number; scored: number }[];
   };
   completeness?: {
     by_mode: { mode: string; reports: number; avg_sections: string; full: number; thin: number }[];
@@ -557,28 +559,53 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
         ? ` The remaining ${reports - qual.scored} were written before grading existed and are left ` +
           `out rather than counted as poor.`
         : '');
+    const byVessel = qual.by_vessel ?? [];
+    const rowsQ = 3 + 1 + qual.by_mode.length + (byVessel.length ? 1 + byVessel.length : 0);
     d.y -= card(d, M, W, { n: '12', title: 'How good the records are', caption: capQ },
-      Math.max(3, qual.by_mode.length) * ROW + 26, (top) => {
-        d.txt(String(qual.avg_score ?? '-'), M + 13, top - 8, 20, NAVY, true);
-        d.txt('%', M + 13 + d.b.widthOfTextAtSize(String(qual.avg_score ?? '-'), 20) + 2,
-          top - 8, 9, MUTED);
-        d.txt('average across the fleet', M + 13, top - 20, 7, MUTED);
-        const x2 = M + 150;
-        const w2 = W - 163;
-        bar(d, x2, top, w2, 'Good  80+', qual.good, Math.max(1, qual.scored),
-          { colour: GREEN, note: pct(qual.good, qual.scored), labelW: 84 });
-        bar(d, x2, top - ROW, w2, 'Fair  50-79', qual.fair, Math.max(1, qual.scored),
-          { colour: AMBER, note: pct(qual.fair, qual.scored), labelW: 84 });
-        bar(d, x2, top - ROW * 2, w2, 'Poor  under 50', qual.poor, Math.max(1, qual.scored),
-          { colour: RED, note: pct(qual.poor, qual.scored), labelW: 84 });
-        let yy = top - ROW * 3 - 10;
-        d.txt('Average grade, by tool', M + 13, yy, 7, MUTED, true);
-        yy -= ROW;
-        qual.by_mode.forEach((m) => {
-          bar(d, M + 13, yy, W - 26, MODE_LABEL[m.mode] ?? m.mode, m.avg_score, 100,
-            { note: `${m.scored} graded`, labelW: 100 });
-          yy -= ROW;
-        });
+      Math.max(rowsQ, 6) * ROW + 8, (top) => {
+        // Left column: the headline and the spread. Right column: the
+        // breakdowns. Both use the same bar geometry, because the first
+        // version drew the band bars indented and the by-tool bars full width,
+        // and the two sets of numbers did not line up down the page.
+        const colW = (W - 26 - GAP) / 2;
+        const xL = M + 13;
+        const xR = xL + colW + GAP;
+
+        d.txt(String(qual.avg_score ?? '-'), xL, top - 10, 22, NAVY, true);
+        d.txt('%', xL + d.b.widthOfTextAtSize(String(qual.avg_score ?? '-'), 22) + 2,
+          top - 10, 10, MUTED);
+        d.txt('average across the fleet', xL, top - 24, 7, MUTED);
+
+        let yL = top - 40;
+        const bands: [string, number, Colour][] = [
+          ['Good  80+', qual.good, GREEN],
+          ['Fair  50-79', qual.fair, AMBER],
+          ['Poor  under 50', qual.poor, RED],
+        ];
+        for (const [lab, n, c] of bands) {
+          bar(d, xL, yL, colW, lab, n, Math.max(1, qual.scored),
+            { colour: c, note: pct(n, qual.scored), labelW: 76 });
+          yL -= ROW;
+        }
+
+        let yR = top;
+        d.txt('Average grade, by tool', xR, yR, 7, MUTED, true);
+        yR -= ROW;
+        for (const m of qual.by_mode) {
+          bar(d, xR, yR, colW, MODE_LABEL[m.mode] ?? m.mode, m.avg_score, 100,
+            { note: `${m.scored} graded`, labelW: 76 });
+          yR -= ROW;
+        }
+        if (byVessel.length) {
+          yR -= 4;
+          d.txt('Average grade, by vessel', xR, yR, 7, MUTED, true);
+          yR -= ROW;
+          for (const v of byVessel) {
+            bar(d, xR, yR, colW, v.vessel_name, v.avg_score, 100,
+              { note: `${v.scored} graded`, labelW: 76 });
+            yR -= ROW;
+          }
+        }
       }) + GAP;
   }
 
@@ -587,8 +614,8 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
   if (comp && comp.by_mode.length) {
     d.room(150);
     const yC = d.y;
-    const capC = 'Of the nine parts of a clinical record, how many each report carries. ' +
-      'This counts what is present, not whether it is right.';
+    const capC = 'How many of the nine parts of a clinical record each report carries, out of ' +
+      'nine. This counts what is present, not whether it is right.';
     const capS = 'Which parts of the record get filled in, out of every report.';
     const sections: [string, string][] = [
       ['symptom', 'Chief symptom'], ['problem', 'Problem described'],
@@ -607,7 +634,7 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
     (top) => {
       comp.by_mode.forEach((m, i) => bar(d, M + 13, top - i * ROW, COL - 26,
         MODE_LABEL[m.mode] ?? m.mode, Number(m.avg_sections), 9,
-        { note: 'of 9', labelW: 78 }));
+        { note: `${m.reports} reports`, labelW: 78 }));
     });
     d.y = yC;
     const hS = card(d, M + COL + GAP, COL, {

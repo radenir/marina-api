@@ -483,7 +483,7 @@ export async function buildFleetActivity(
   const [
     byHour, byDuration, byMismatch, byPort,
     byAge, bySex, byRank, byNationality, deranged,
-    byCompleteness, sectionFill, qualityTotals, qualityByMode,
+    byCompleteness, sectionFill, qualityTotals, qualityByMode, qualityByVessel,
     byDestination, byUrgency, extras, output,
   ] = await Promise.all([
     // When work happens. The printed report's most quoted operational fact —
@@ -609,6 +609,18 @@ export async function buildFleetActivity(
         GROUP BY 1 ORDER BY 2 DESC`,
       params,
     ),
+    // Per vessel. Three graded reports minimum: an average over one report is
+    // that report, and putting it beside a ship with thirty invites a
+    // comparison the data cannot support. This grades record-keeping, not
+    // people — the same reason the complaint mix is never broken down this way.
+    query(
+      `SELECT a.vessel_name, ROUND(AVG(a.quality_score))::int AS avg_score,
+              COUNT(*)::int AS scored
+         FROM v_fleet_activity a ${where}
+          AND a.quality_score IS NOT NULL AND a.vessel_name IS NOT NULL
+        GROUP BY 1 HAVING COUNT(*) >= 3 ORDER BY 2 DESC`,
+      params,
+    ),
     query(
       `SELECT a.destination AS port, COUNT(*)::int AS n
          FROM v_fleet_activity a ${where} AND a.destination IS NOT NULL
@@ -694,6 +706,7 @@ export async function buildFleetActivity(
     quality: {
       ...(qualityTotals.rows[0] as Record<string, number>),
       by_mode: qualityByMode.rows,
+      by_vessel: qualityByVessel.rows,
     },
     demographics: {
       age: suppress(byAge.rows as Cell[]),
