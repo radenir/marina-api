@@ -118,4 +118,14 @@ if run mews; then
   dropdb --if-exists "$DB" >/dev/null 2>&1
 fi
 
+# The PDF renderer draws with WinAnsi Helvetica, which throws rather than
+# substitutes. Production's first render died on an arrow in its own labels.
+if run pdf; then
+  out=$(npx tsx "$ROOT/tests/e2e/verify-fleet-pdf.ts" 2>&1)
+  verdict=$(printf '%s' "$out" | grep -oE 'ALL PASS|[0-9]+ FAILURE\(S\)' | tail -1)
+  count=$(printf '%s' "$out" | grep -c '^  ok  ')
+  printf '%-24s %-8s %-12s %s cases\n' "verify-fleet-pdf.ts" "[full]" "${verdict:-NO OUTPUT}" "$count"
+  [ "$verdict" = "ALL PASS" ] || { fail=1; printf '%s' "$out" | grep 'FAIL' | head -5 | sed 's/^/     /'; }
+fi
+
 exit $fail

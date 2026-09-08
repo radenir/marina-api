@@ -77,7 +77,8 @@ class Sheet {
     }
   }
 
-  text(s: string, opts: { size?: number; bold?: boolean; color?: ReturnType<typeof rgb>; x?: number; dy?: number } = {}): void {
+  text(raw: string, opts: { size?: number; bold?: boolean; color?: ReturnType<typeof rgb>; x?: number; dy?: number } = {}): void {
+    const s = ascii(raw);
     const size = opts.size ?? 9;
     this.y -= opts.dy ?? size + 3;
     this.page.drawText(s, {
@@ -105,19 +106,19 @@ class Sheet {
     this.need(46);
     this.y -= 16;
     this.page.drawText(n, { x: M, y: this.y, size: 7, font: this.bold, color: FILL });
-    this.page.drawText(title, { x: M + 18, y: this.y - 1, size: 11, font: this.bold, color: NAVY });
+    this.page.drawText(ascii(title), { x: M + 18, y: this.y - 1, size: 11, font: this.bold, color: NAVY });
     this.y -= 6;
   }
 
-  caption(s: string): void {
-    for (const line of wrap(s, this.font, 7.5, CONTENT)) {
+  caption(raw: string): void {
+    for (const line of wrap(ascii(raw), this.font, 7.5, CONTENT)) {
       this.text(line, { size: 7.5, color: MUTED, dy: 10 });
     }
     this.y -= 2;
   }
 
   /** A labelled horizontal bar, direct-labelled so no axis is needed. */
-  bar(label: string, value: number, max: number, opts: { note?: string; alert?: boolean } = {}): void {
+  bar(rawLabel: string, value: number, max: number, opts: { note?: string; alert?: boolean } = {}): void {
     this.need(16);
     this.y -= 13;
     const labelW = 132;
@@ -128,7 +129,7 @@ class Sheet {
     const trackX = M + labelW;
     const trackW = CONTENT - labelW - valueW;
 
-    this.page.drawText(clip(label, this.font, 8, labelW - 6), {
+    this.page.drawText(clip(label(rawLabel), this.font, 8, labelW - 6), {
       x: M, y: this.y, size: 8, font: this.font, color: INK,
     });
     this.page.drawRectangle({ x: trackX, y: this.y - 1.5, width: trackW, height: 7, color: TRACK });
@@ -145,7 +146,7 @@ class Sheet {
     // eye lands on the number rather than reading "156 40" as one figure.
     const num = value.toLocaleString();
     const numW = this.bold.widthOfTextAtSize(num, 8);
-    const note = opts.note ? clip(opts.note, this.font, 7, valueW - numW - 10) : '';
+    const note = opts.note ? clip(ascii(opts.note), this.font, 7, valueW - numW - 10) : '';
     const noteW = note ? this.font.widthOfTextAtSize(note, 7) + 4 : 0;
     this.page.drawText(num, {
       x: A4.w - M - numW, y: this.y, size: 8, font: this.bold, color: NAVY,
@@ -169,15 +170,71 @@ class Sheet {
         x, y: this.y, width: w, height: 46,
         borderColor: RULE, borderWidth: 0.7, color: rgb(1, 1, 1),
       });
-      this.page.drawText(it.label, { x: x + 8, y: this.y + 32, size: 7, font: this.font, color: MUTED });
+      this.page.drawText(ascii(it.label), { x: x + 8, y: this.y + 32, size: 7, font: this.font, color: MUTED });
       this.page.drawText(it.value, { x: x + 8, y: this.y + 14, size: 16, font: this.bold, color: NAVY });
       if (it.hint) {
-        this.page.drawText(clip(it.hint, this.font, 6.5, w - 16), {
+        this.page.drawText(clip(ascii(it.hint), this.font, 6.5, w - 16), {
           x: x + 8, y: this.y + 5, size: 6.5, font: this.font, color: MUTED,
         });
       }
     });
   }
+}
+
+/**
+ * Make a string safe for the standard Helvetica, which is WinAnsi-encoded and
+ * THROWS on anything outside CP1252 rather than substituting.
+ *
+ * This is not hypothetical tidying. The first production render of this report
+ * died on `WinAnsi cannot encode "→"` — an arrow in my own language-pair
+ * labels — and would have died next on the Polish ń and ł that appear in real
+ * crew data. The demo fixture contained none of it, so nothing caught it
+ * locally.
+ *
+ * Order matters: replace the typography first, then decompose accents so ń
+ * becomes n rather than being dropped, then map the letters that have no
+ * decomposition, and only then discard.
+ *
+ * The honest limit: a non-Latin script cannot be transliterated here, so a
+ * label in Chinese or Arabic degrades to a placeholder. Fixing that properly
+ * means embedding a Unicode font with fontkit, which is a bigger change than
+ * this document is worth today — but it is why every crew-facing label on this
+ * report comes from a fixed English vocabulary rather than free text.
+ */
+const TYPOGRAPHY: [RegExp, string][] = [
+  [/[\u2192\u27a1]/g, '->'],
+  [/[\u2190]/g, '<-'],
+  [/[\u2013\u2014]/g, '-'],
+  [/[\u2018\u2019\u201b]/g, "'"],
+  [/[\u201c\u201d\u201e]/g, '"'],
+  [/[\u2026]/g, '...'],
+  [/[\u00a0\u202f\u2009]/g, ' '],
+];
+/** Letters WinAnsi lacks and Unicode will not decompose for us. */
+const LETTERS: Record<string, string> = {
+  'ł': 'l', 'Ł': 'L', 'đ': 'd', 'Đ': 'D', 'ħ': 'h', 'ŧ': 't',
+  'ı': 'i', 'ſ': 's', 'ø': 'o', 'Ø': 'O',
+};
+
+function ascii(input: string): string {
+  let s = input;
+  for (const [re, to] of TYPOGRAPHY) s = s.replace(re, to);
+  // Decompose, then drop the combining marks: ń -> n, š -> s, ż -> z.
+  s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  s = s.replace(/[^\x00-\x7f]/g, (ch) => {
+    if (LETTERS[ch]) return LETTERS[ch];
+    // æ, ø, å, ü, ß and the rest of Latin-1 are all in WinAnsi — keep them.
+    const code = ch.codePointAt(0) ?? 0;
+    if (code >= 0xa1 && code <= 0xff) return ch;
+    return '';
+  });
+  return s.trim();
+}
+
+/** Never return an empty label: an empty row reads as a rendering fault. */
+function label(s: string): string {
+  const out = ascii(s);
+  return out.length > 0 ? out : '(not shown)';
 }
 
 function wrap(s: string, font: PDFFont, size: number, width: number): string[] {
@@ -288,10 +345,10 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
   for (const l of r.by_language) s.bar(l.language, l.n, maxL);
   if (r.language_pairs.length) {
     s.y -= 6;
-    s.text('Officer → patient, where they differed', { size: 7.5, bold: true, color: MUTED, dy: 12 });
+    s.text('Officer to patient, where they differed', { size: 7.5, bold: true, color: MUTED, dy: 12 });
     const maxP = Math.max(1, ...r.language_pairs.map((p) => p.n));
     for (const p of r.language_pairs) {
-      s.bar(`${p.officer_language} → ${p.patient_language}`, p.n, maxP);
+      s.bar(`${p.officer_language} -> ${p.patient_language}`, p.n, maxP);
     }
   }
 
@@ -429,7 +486,7 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
       start: { x: M, y: M + 16 }, end: { x: A4.w - M, y: M + 16 },
       thickness: 0.7, color: RULE,
     });
-    p.drawText(`Marina Health · Fleet Activity Summary · ${org}`, {
+    p.drawText(ascii(`Marina Health · Fleet Activity Summary · ${org}`), {
       x: M, y: M + 6, size: 6.5, font, color: MUTED,
     });
     const pn = `${i + 1} / ${pages.length}`;
