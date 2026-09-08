@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Prove the fleet migrations (018–023) are additive, rather than asserting it.
+# Prove the fleet migrations (018–024) are additive, rather than asserting it.
 #
 # Builds a database at the exact schema production is on today (000–017), fills
 # every table 018 could conceivably touch with rows, and fingerprints the lot:
@@ -30,7 +30,7 @@ trap 'dropdb --if-exists "$DB" >/dev/null 2>&1' EXIT
 
 echo "building the schema before the fleet migrations (000-017)..."
 for f in migrations/*.sql; do
-  case "$f" in *018_*|*019_*|*020_*|*021_*|*022_*|*023_*) continue;; esac
+  case "$f" in *018_*|*019_*|*020_*|*021_*|*022_*|*023_*|*024_*) continue;; esac
   psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$f" >/dev/null
 done
 
@@ -84,13 +84,14 @@ SQL
 fingerprint > /tmp/018_before.txt
 echo "  fingerprint: $(wc -l < /tmp/018_before.txt | tr -d ' ') facts recorded"
 
-echo "applying 018 through 023..."
+echo "applying 018 through 024..."
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f migrations/018_fleet_activity.sql >/dev/null
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f migrations/019_fleet_activity_explicit_vessel.sql >/dev/null
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f migrations/020_fleet_activity_operational.sql >/dev/null
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f migrations/021_fleet_activity_urgency.sql >/dev/null
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f migrations/022_fleet_activity_demographics.sql >/dev/null
 psql -v ON_ERROR_STOP=1 -q -d "$DB" -f migrations/023_fleet_activity_patient_key.sql >/dev/null
+psql -v ON_ERROR_STOP=1 -q -d "$DB" -f migrations/024_fleet_activity_completeness.sql >/dev/null
 
 fingerprint > /tmp/018_after.txt
 

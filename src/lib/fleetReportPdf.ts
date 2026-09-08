@@ -54,6 +54,10 @@ interface Report {
   language_pairs: { officer_language: string; patient_language: string; n: number }[];
   duration: { n: number; median_minutes: string | null; p25_minutes: string | null; p75_minutes: string | null };
   demographics: { age: Cells; sex: Cells; rank: Cells; nationality: Cells; min_cell: number };
+  completeness?: {
+    by_mode: { mode: string; reports: number; avg_sections: string; full: number; thin: number }[];
+    sections: Record<string, number>;
+  };
   abnormal: Record<string, number>;
   operational: Record<string, number>;
   totals: Record<string, number | string | null>;
@@ -538,7 +542,46 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
   });
   d.y = yUse - Math.max(hUse, hTime) - GAP;
 
-  // ---- 12 who ------------------------------------------------------------
+  // ---- completeness ------------------------------------------------------
+  const comp = r.completeness;
+  if (comp && comp.by_mode.length) {
+    d.room(150);
+    const yC = d.y;
+    const capC = 'Of the nine parts of a clinical record, how many each report carries. ' +
+      'This counts what is present, not whether it is right.';
+    const capS = 'Which parts of the record get filled in, out of every report.';
+    const sections: [string, string][] = [
+      ['symptom', 'Chief symptom'], ['problem', 'Problem described'],
+      ['past_history', 'Past history'], ['allergies', 'Allergies'],
+      ['medications', 'Medicines'], ['exam', 'Examination'],
+      ['investigations', 'Investigations'], ['vitals', 'Vital signs'],
+      ['consciousness', 'Consciousness'],
+    ];
+    const tallC = Math.max(
+      cardHeight(d, COL, { caption: capC }, comp.by_mode.length * ROW),
+      cardHeight(d, COL, { caption: capS }, sections.length * ROW),
+    );
+    const hC = card(d, M, COL, {
+      n: '12', title: 'How complete the records are', caption: capC,
+    }, comp.by_mode.length * ROW + (tallC - cardHeight(d, COL, { caption: capC }, comp.by_mode.length * ROW)),
+    (top) => {
+      comp.by_mode.forEach((m, i) => bar(d, M + 13, top - i * ROW, COL - 26,
+        MODE_LABEL[m.mode] ?? m.mode, Number(m.avg_sections), 9,
+        { note: 'of 9', labelW: 78 }));
+    });
+    d.y = yC;
+    const hS = card(d, M + COL + GAP, COL, {
+      n: '13', title: 'Which parts get filled in', caption: capS,
+    }, sections.length * ROW + (tallC - cardHeight(d, COL, { caption: capS }, sections.length * ROW)),
+    (top) => {
+      sections.forEach(([k, lab], i) => bar(d, M + COL + GAP + 13, top - i * ROW, COL - 26,
+        lab, comp.sections[k] ?? 0, Math.max(1, reports),
+        { note: pct(comp.sections[k] ?? 0, reports), labelW: 84 }));
+    });
+    d.y = yC - Math.max(hC, hS) - GAP;
+  }
+
+  // ---- 14 who ------------------------------------------------------------
   const dem = r.demographics;
   const shown = ([['Age', dem.age], ['Sex', dem.sex], ['Job on board', dem.rank],
     ['Nationality', dem.nationality]] as [string, Cells][]).filter(([, c]) => c.items.length > 0);
@@ -546,7 +589,7 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
   if (shown.length) {
     const rows = shown.reduce((a, [, c]) => a + c.items.length + 1, 0);
     d.y -= card(d, M, W, {
-      n: '12', title: 'Who the patients were',
+      n: '14', title: 'Who the patients were',
       caption: `Counted per person, not per report: reports sharing a name and date of birth are one ` +
         `patient, and a report naming nobody is not counted at all. Any group of fewer than ` +
         `${dem.min_cell} is not shown.`,
@@ -569,7 +612,7 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
       `fleet's reports do not carry enough of them to describe anybody without identifying an ` +
       `individual. ${op.unidentified_reports ?? 0} reports name nobody and give no date of birth, ` +
       'so they cannot say who the patient was.';
-    d.y -= card(d, M, W, { n: '12', title: 'Who the patients were' },
+    d.y -= card(d, M, W, { n: '14', title: 'Who the patients were' },
       d.paraHeight(note, W - 52) + 20, (top) => callout(d, M + 13, top + 6, W - 26, note)) + GAP;
   }
 

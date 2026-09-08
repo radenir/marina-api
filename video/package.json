@@ -1,0 +1,28 @@
+{
+  "name": "marina-walkthrough-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion walkthrough video explaining how the Marina iOS/macOS app works",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render MarinaWalkthrough out/marina-walkthrough.mp4 --concurrency=4",
+    "render:consultation": "remotion render MarinaConsultation out/marina-consultation.mp4 --concurrency=4",
+    "still": "remotion still MarinaWalkthrough out/frame.png",
+    "still:consultation": "remotion still MarinaConsultation out/frame.png",
+    "typecheck": "tsc --noEmit",
+    "vo": "node scripts/gen-vo.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.481",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "^4.0.481"
+  },
+  "devDependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.4.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.7.0"
+  }
+}

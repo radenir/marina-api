@@ -483,6 +483,7 @@ export async function buildFleetActivity(
   const [
     byHour, byDuration, byMismatch, byPort,
     byAge, bySex, byRank, byNationality, deranged,
+    byCompleteness, sectionFill,
     byDestination, byUrgency, extras, output,
   ] = await Promise.all([
     // When work happens. The printed report's most quoted operational fact —
@@ -559,6 +560,34 @@ export async function buildFleetActivity(
               COUNT(*) FILTER (WHERE a.abnormal_pulse OR a.abnormal_bp OR a.abnormal_resp
                                   OR a.abnormal_spo2 OR a.abnormal_temp)::int AS any_abnormal
          FROM v_fleet_activity a ${where}`,
+      params,
+    ),
+    // How complete the records are, and whether the tool makes a difference.
+    // Completeness, not quality: this counts which sections a report carries,
+    // and nothing here can say whether what they contain is medically sound.
+    query(
+      `SELECT a.mode,
+              COUNT(*)::int                                  AS reports,
+              ROUND(AVG(a.sections), 1)                      AS avg_sections,
+              COUNT(*) FILTER (WHERE a.sections >= 6)::int   AS full,
+              COUNT(*) FILTER (WHERE a.sections BETWEEN 3 AND 5)::int AS partial,
+              COUNT(*) FILTER (WHERE a.sections <= 2)::int   AS thin
+         FROM v_fleet_activity a ${where} AND a.sections IS NOT NULL
+        GROUP BY 1 ORDER BY 3 DESC`,
+      params,
+    ),
+    query(
+      `SELECT COUNT(*) FILTER (WHERE a.sec_symptom)::int        AS symptom,
+              COUNT(*) FILTER (WHERE a.sec_problem)::int        AS problem,
+              COUNT(*) FILTER (WHERE a.has_past_history)::int   AS past_history,
+              COUNT(*) FILTER (WHERE a.has_allergies)::int      AS allergies,
+              COUNT(*) FILTER (WHERE a.has_medications)::int    AS medications,
+              COUNT(*) FILTER (WHERE a.sec_exam)::int           AS exam,
+              COUNT(*) FILTER (WHERE a.sec_investigations)::int AS investigations,
+              COUNT(*) FILTER (WHERE a.vital_pulse)::int        AS vitals,
+              COUNT(*) FILTER (WHERE a.sec_consciousness)::int  AS consciousness,
+              ROUND(AVG(a.sections), 1)                         AS avg_sections
+         FROM v_fleet_activity a ${where} AND a.sections IS NOT NULL`,
       params,
     ),
     query(
@@ -639,6 +668,10 @@ export async function buildFleetActivity(
     by_hour: byHour.rows,
     by_port: byPort.rows,
     by_destination: byDestination.rows,
+    completeness: {
+      by_mode: byCompleteness.rows,
+      sections: sectionFill.rows[0] as Record<string, number>,
+    },
     demographics: {
       age: suppress(byAge.rows as Cell[]),
       sex: suppress(bySex.rows as Cell[]),
