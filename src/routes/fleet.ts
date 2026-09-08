@@ -297,25 +297,23 @@ const MIN_VESSEL_SESSIONS = 1;
 const MIN_CELL = 5;
 
 /**
- * Demographics are counted report by report, against the number of reports
- * that actually recorded the field.
+ * Demographics count apparent PATIENTS, and only where a patient can be
+ * identified at all.
  *
- * Age, sex, rank and nationality are optional boxes on the report form, so
- * they are filled in far less often than the clinical ones — for Esvagt, sex
- * appears on 45 of 55 reports and rank on 1. Every figure therefore travels
- * with its own denominator, and the card says what it is counting: reports,
- * not people.
+ * A report that gives no name and no date of birth cannot describe a person,
+ * so it is excluded from these four entirely. Reports sharing a name and date
+ * of birth on one account are one patient, however many times entered.
  *
- * That distinction is the whole point. On Esvagt, 29 of the 31 reports
- * recording a female patient are one demonstration patient run repeatedly —
- * same first name, same date of birth, same account. "31 of 45 reports
- * recorded a female patient" is true. "69% of your crew are women" is not, and
- * this must never say the second thing.
+ * Not a theoretical concern. Esvagt's 55 reports record sex on 45: 31 female,
+ * 14 male. All 31 female reports are Maria Schjerbeck, born 24.07.1993, on the
+ * `aurora` account, created on 26 August between 19:35 and 19:48 — thirty-one
+ * reports in thirteen minutes. Counted as reports, this dashboard would tell a
+ * shipowner that two-thirds of their patients are women. Counted as patients,
+ * it is one.
  *
- * An earlier version counted distinct accounts instead, to stop repetition
- * inflating a figure. That fixed the arithmetic and broke the meaning: it
- * counted logins and labelled them patients, which is its own untruth. Better
- * to count exactly what is there and be precise about what it is.
+ * Two earlier attempts were wrong in different directions: counting reports
+ * let one repetition speak thirty-one times, and counting distinct accounts
+ * counted logins and called them people.
  */
 interface Cell {
   label: string | null;
@@ -505,24 +503,28 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
     // Demographics. Fleet-wide only — deliberately never grouped with
     // vessel_name, which is what makes the suppression threshold meaningful.
     query(
-      `SELECT a.age_band AS label, COUNT(*)::int AS n
+      `SELECT a.age_band AS label, COUNT(DISTINCT a.patient_key)::int AS n
          FROM v_fleet_activity a ${where} AND a.age_band IS NOT NULL
+          AND a.patient_key IS NOT NULL
         GROUP BY 1 ORDER BY 1`,
       params,
     ),
     query(
-      `SELECT a.sex AS label, COUNT(*)::int AS n
-         FROM v_fleet_activity a ${where} AND a.sex IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
+      `SELECT a.sex AS label, COUNT(DISTINCT a.patient_key)::int AS n
+         FROM v_fleet_activity a ${where} AND a.sex IS NOT NULL
+          AND a.patient_key IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
       params,
     ),
     query(
-      `SELECT a.rank_group AS label, COUNT(*)::int AS n
-         FROM v_fleet_activity a ${where} AND a.rank_group IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
+      `SELECT a.rank_group AS label, COUNT(DISTINCT a.patient_key)::int AS n
+         FROM v_fleet_activity a ${where} AND a.rank_group IS NOT NULL
+          AND a.patient_key IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
       params,
     ),
     query(
-      `SELECT a.nationality AS label, COUNT(*)::int AS n
-         FROM v_fleet_activity a ${where} AND a.nationality IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
+      `SELECT a.nationality AS label, COUNT(DISTINCT a.patient_key)::int AS n
+         FROM v_fleet_activity a ${where} AND a.nationality IS NOT NULL
+          AND a.patient_key IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
       params,
     ),
     // Derangement. A rate over what was measured — never a reading, never a
@@ -581,7 +583,9 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
               COUNT(*) FILTER (WHERE a.has_allergies)::int                   AS history_allergies,
               COUNT(*) FILTER (WHERE a.has_medications)::int                 AS history_medications,
               COUNT(*) FILTER (WHERE a.has_location)::int                    AS with_location,
-              COUNT(*) FILTER (WHERE a.mews_score IS NOT NULL)::int          AS with_mews
+              COUNT(*) FILTER (WHERE a.mews_score IS NOT NULL)::int          AS with_mews,
+              COUNT(DISTINCT a.patient_key)::int                             AS identified_patients,
+              COUNT(*) FILTER (WHERE a.has_report AND a.patient_key IS NULL)::int AS unidentified_reports
          FROM v_fleet_activity a ${where}`,
       params,
     ),
