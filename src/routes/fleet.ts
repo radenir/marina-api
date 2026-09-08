@@ -394,6 +394,78 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
     ),
   ]);
 
+  // ---- the operational figures the printed report carried ---------------
+  const [byHour, byDuration, byMismatch, byPort, extras, output] = await Promise.all([
+    // When work happens. The printed report's most quoted operational fact —
+    // 61% of consultations start in the forenoon watch.
+    query(
+      `SELECT EXTRACT(HOUR FROM a.created_at)::int AS hour, COUNT(*)::int AS n
+         FROM v_fleet_activity a ${where}
+        GROUP BY 1 ORDER BY 1`,
+      params,
+    ),
+    // Percentiles, not a mean. Consultation length is heavily skewed — a
+    // handful of long sessions drag an average somewhere no real consultation
+    // sits, which is why the report quotes a median of 4 minutes against an
+    // average of 8.2.
+    query(
+      `SELECT COUNT(*)::int AS n,
+              ROUND(percentile_cont(0.5) WITHIN GROUP (ORDER BY a.duration_minutes)::numeric, 1) AS median_minutes,
+              ROUND(percentile_cont(0.25) WITHIN GROUP (ORDER BY a.duration_minutes)::numeric, 1) AS p25_minutes,
+              ROUND(percentile_cont(0.75) WITHIN GROUP (ORDER BY a.duration_minutes)::numeric, 1) AS p75_minutes
+         FROM v_fleet_activity a ${where} AND a.duration_minutes IS NOT NULL`,
+      params,
+    ),
+    // The clearest number in the whole printed report for what Marina is for:
+    // how often the officer and the patient had no language in common.
+    query(
+      `SELECT a.officer_language, a.patient_language, COUNT(*)::int AS n
+         FROM v_fleet_activity a ${where}
+          AND a.officer_language IS NOT NULL AND a.patient_language IS NOT NULL
+          AND a.officer_language <> a.patient_language
+        GROUP BY 1,2 ORDER BY 3 DESC LIMIT 8`,
+      params,
+    ),
+    query(
+      `SELECT a.nearest_port AS port, COUNT(*)::int AS n
+         FROM v_fleet_activity a ${where} AND a.nearest_port IS NOT NULL
+        GROUP BY 1 ORDER BY 2 DESC LIMIT 8`,
+      params,
+    ),
+    query(
+      `SELECT COUNT(*) FILTER (WHERE a.is_injury)::int                       AS injuries,
+              COUNT(*) FILTER (WHERE a.is_injury IS FALSE)::int              AS illnesses,
+              COUNT(*) FILTER (WHERE a.has_vitals)::int                      AS with_vitals,
+              COUNT(*) FILTER (WHERE a.officer_language IS NOT NULL
+                                 AND a.patient_language IS NOT NULL
+                                 AND a.officer_language <> a.patient_language)::int AS language_gap,
+              COUNT(*) FILTER (WHERE a.officer_language IS NOT NULL
+                                 AND a.patient_language IS NOT NULL)::int    AS language_known,
+              -- The printed report's de-duplication: a scenario demonstrated
+              -- forty times on one login counts once, so it cannot drown out
+              -- forty real cases on forty ships.
+              COUNT(DISTINCT (a.account_ref, a.pathway))
+                FILTER (WHERE a.pathway <> 'Unclassified')::int              AS distinct_presentations
+         FROM v_fleet_activity a ${where}`,
+      params,
+    ),
+    // What the ship did with the report. audit_logs is not part of the view —
+    // it is scoped here by joining the organisation's own accounts.
+    query(
+      `SELECT l.event_type, COUNT(*)::int AS n
+         FROM audit_logs l
+         JOIN users u ON u.id = l.user_id
+        WHERE u.org_id = $1
+          AND l.event_type IN ('pdf_generated', 'pdf_emailed')
+        GROUP BY 1`,
+      [req.orgId],
+    ),
+  ]);
+
+  const outputCounts = Object.fromEntries(
+    (output.rows as { event_type: string; n: number }[]).map((r) => [r.event_type, r.n]),
+  );
+
   const t = totals.rows[0] as Record<string, number | string | null>;
 
   res.json({
@@ -402,6 +474,15 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
     by_language: byLanguage.rows,
     by_pathway: byPathway.rows,
     by_mode: byMode.rows,
+    by_hour: byHour.rows,
+    by_port: byPort.rows,
+    language_pairs: byMismatch.rows,
+    duration: byDuration.rows[0] ?? { n: 0, median_minutes: null, p25_minutes: null, p75_minutes: null },
+    operational: {
+      ...(extras.rows[0] as Record<string, number>),
+      pdfs_generated: outputCounts['pdf_generated'] ?? 0,
+      pdfs_emailed: outputCounts['pdf_emailed'] ?? 0,
+    },
     totals: t,
     // Stated, not hidden. Roughly half of chief_symptom in production is
     // '[silence]', a greeting, or noise from the transcriber, and a complaint
