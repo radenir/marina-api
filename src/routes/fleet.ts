@@ -62,10 +62,17 @@ fleetRouter.get('/board', ...guard, async (req: Request, res: Response): Promise
             c.last_activity_at,
             v.id   AS vessel_id,
             v.name AS vessel_name,
-            -- Newest connection from any account on this vessel. NULL means
-            -- we have never heard from them, which the screen must say.
-            (SELECT MAX(u.last_seen_at) FROM users u
-              WHERE u.vessel_id = v.id) AS vessel_last_seen_at
+            -- Newest contact from any account on this vessel: a connection or
+            -- a session, whichever is later. NULL means we have genuinely never
+            -- heard from them, which the screen must say — but only then. See
+            -- the note in /fleet/vessels: last_seen_at alone reports silence
+            -- for any ship that stopped using Marina before 15 August 2026.
+            GREATEST(
+              (SELECT MAX(u.last_seen_at) FROM users u WHERE u.vessel_id = v.id),
+              (SELECT MAX(cc.created_at) FROM conversations cc
+                 JOIN users u2 ON u2.id = cc.user_id
+                WHERE u2.vessel_id = v.id)
+            ) AS vessel_last_seen_at
        FROM v_fleet_cases c
        -- LATERAL with LIMIT 1: real fleets contain the same ship name twice
        -- (a vessel re-registered under a new call sign, a name reused). A
@@ -101,7 +108,22 @@ fleetRouter.get('/vessels', ...guard, async (req: Request, res: Response): Promi
             v.name,
             v.call_sign,
             v.imo,
-            (SELECT MAX(u.last_seen_at) FROM users u WHERE u.vessel_id = v.id) AS last_seen_at,
+            -- The later of "the device connected" and "a session happened".
+            --
+            -- users.last_seen_at only exists from migration 016 (15 Aug 2026),
+            -- so every account that has not signed in since then reads NULL —
+            -- and the board printed "never seen" against Esvagt Capri, which
+            -- had thirty-one sessions, and Christina, which had twenty-seven.
+            -- That is a false statement about a customer's own ships.
+            --
+            -- A session IS a connection, and it is better evidence than the
+            -- column built to record connections for anything before that date.
+            GREATEST(
+              (SELECT MAX(u.last_seen_at) FROM users u WHERE u.vessel_id = v.id),
+              (SELECT MAX(c.created_at) FROM conversations c
+                 JOIN users u2 ON u2.id = c.user_id
+                WHERE u2.vessel_id = v.id)
+            ) AS last_seen_at,
             -- Match on call sign when the vessel has one, otherwise on name.
             -- Without this a case counts against every same-named vessel.
             (SELECT COUNT(*)::int FROM v_fleet_cases c
