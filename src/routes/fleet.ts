@@ -395,7 +395,8 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
   ]);
 
   // ---- the operational figures the printed report carried ---------------
-  const [byHour, byDuration, byMismatch, byPort, extras, output] = await Promise.all([
+  const [byHour, byDuration, byMismatch, byPort, byDestination, byUrgency, extras, output] =
+    await Promise.all([
     // When work happens. The printed report's most quoted operational fact —
     // 61% of consultations start in the forenoon watch.
     query(
@@ -433,6 +434,24 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
       params,
     ),
     query(
+      `SELECT a.destination AS port, COUNT(*)::int AS n
+         FROM v_fleet_activity a ${where} AND a.destination IS NOT NULL
+        GROUP BY 1 ORDER BY 2 DESC LIMIT 8`,
+      params,
+    ),
+    // Urgency, and the M-EWS band underneath it. Reported only for the
+    // reports that carried an observation — a session where nothing was
+    // measured has no urgency, and grading it "low" would invent reassurance.
+    query(
+      `SELECT a.urgency, COUNT(*)::int AS n,
+              COUNT(*) FILTER (WHERE a.mews_score BETWEEN 0 AND 1)::int AS mews_0_1,
+              COUNT(*) FILTER (WHERE a.mews_score BETWEEN 2 AND 3)::int AS mews_2_3,
+              COUNT(*) FILTER (WHERE a.mews_score >= 4)::int            AS mews_4_plus
+         FROM v_fleet_activity a ${where} AND a.urgency IS NOT NULL
+        GROUP BY 1`,
+      params,
+    ),
+    query(
       `SELECT COUNT(*) FILTER (WHERE a.is_injury)::int                       AS injuries,
               COUNT(*) FILTER (WHERE a.is_injury IS FALSE)::int              AS illnesses,
               COUNT(*) FILTER (WHERE a.has_vitals)::int                      AS with_vitals,
@@ -445,7 +464,19 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
               -- forty times on one login counts once, so it cannot drown out
               -- forty real cases on forty ships.
               COUNT(DISTINCT (a.account_ref, a.pathway))
-                FILTER (WHERE a.pathway <> 'Unclassified')::int              AS distinct_presentations
+                FILTER (WHERE a.pathway <> 'Unclassified')::int              AS distinct_presentations,
+              COUNT(*) FILTER (WHERE a.vital_pulse)::int                     AS vital_pulse,
+              COUNT(*) FILTER (WHERE a.vital_bp)::int                        AS vital_bp,
+              COUNT(*) FILTER (WHERE a.vital_resp)::int                      AS vital_resp,
+              COUNT(*) FILTER (WHERE a.vital_spo2)::int                      AS vital_spo2,
+              COUNT(*) FILTER (WHERE a.vital_temp)::int                      AS vital_temp,
+              COUNT(*) FILTER (WHERE a.vital_pulse AND a.vital_bp AND a.vital_resp
+                                 AND a.vital_spo2 AND a.vital_temp)::int     AS vital_full_set,
+              COUNT(*) FILTER (WHERE a.has_past_history)::int                AS history_past,
+              COUNT(*) FILTER (WHERE a.has_allergies)::int                   AS history_allergies,
+              COUNT(*) FILTER (WHERE a.has_medications)::int                 AS history_medications,
+              COUNT(*) FILTER (WHERE a.has_location)::int                    AS with_location,
+              COUNT(*) FILTER (WHERE a.mews_score IS NOT NULL)::int          AS with_mews
          FROM v_fleet_activity a ${where}`,
       params,
     ),
@@ -476,6 +507,8 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
     by_mode: byMode.rows,
     by_hour: byHour.rows,
     by_port: byPort.rows,
+    by_destination: byDestination.rows,
+    by_urgency: byUrgency.rows,
     language_pairs: byMismatch.rows,
     duration: byDuration.rows[0] ?? { n: 0, median_minutes: null, p25_minutes: null, p75_minutes: null },
     operational: {

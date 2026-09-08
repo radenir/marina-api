@@ -40,11 +40,12 @@ suite() {  # name  script  port  schema(full|pre015|pre016)
   dropdb --if-exists "$DB" >/dev/null 2>&1; createdb "$DB"
   for f in migrations/*.sql; do
     case "$UPTO" in
-      pre015) case "$f" in *015_*|*016_*|*018_*|*019_*|*020_*) continue;; esac ;;
-      pre016) case "$f" in *016_*|*018_*|*019_*|*020_*) continue;; esac ;;
-      pre018) case "$f" in *018_*|*019_*|*020_*) continue;; esac ;;
-      pre019) case "$f" in *019_*|*020_*) continue;; esac ;;
-      pre020) case "$f" in *020_*) continue;; esac ;;
+      pre015) case "$f" in *015_*|*016_*|*018_*|*019_*|*020_*|*021_*) continue;; esac ;;
+      pre016) case "$f" in *016_*|*018_*|*019_*|*020_*|*021_*) continue;; esac ;;
+      pre018) case "$f" in *018_*|*019_*|*020_*|*021_*) continue;; esac ;;
+      pre019) case "$f" in *019_*|*020_*|*021_*) continue;; esac ;;
+      pre020) case "$f" in *020_*|*021_*) continue;; esac ;;
+      pre021) case "$f" in *021_*) continue;; esac ;;
     esac
     psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$f" >/dev/null 2>&1 || echo "  MIGRATE FAIL $f"
   done
@@ -96,5 +97,21 @@ run additive && suite c8 fleet-e2e.ts           4708 pre018
 # which is the state production is in right now.
 run additive && suite c9 fleet-e2e.ts           4709 pre019
 run additive && suite c10 fleet-e2e.ts          4710 pre020
+run additive && suite c11 fleet-e2e.ts          4711 pre021
+
+# fleet_mews() in SQL is a second copy of a clinical scoring rule. Two copies
+# drift; this is what notices.
+if run mews; then
+  DB=e2e_mews
+  dropdb --if-exists "$DB" >/dev/null 2>&1; createdb "$DB"
+  for f in migrations/*.sql; do psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$f" >/dev/null 2>&1; done
+  out=$(env -i PATH="$PATH" HOME="$HOME" DATABASE_HOST=localhost DATABASE_PORT=5432 \
+    DATABASE_USER="$(whoami)" DATABASE_PASSWORD=x DATABASE_NAME="$DB" DATABASE_SSL=disable \
+    npx tsx "$ROOT/tests/e2e/verify-mews-parity.ts" 2>&1)
+  verdict=$(printf '%s' "$out" | grep -oE 'ALL PASS|[0-9]+ FAILURE\(S\)' | tail -1)
+  printf '%-24s %-8s %-12s %s\n' "verify-mews-parity.ts" "[full]" "${verdict:-NO OUTPUT}" "SQL vs mewsCalculator.ts"
+  [ "$verdict" = "ALL PASS" ] || { fail=1; printf '%s' "$out" | grep 'FAIL' | head -5 | sed 's/^/     /'; }
+  dropdb --if-exists "$DB" >/dev/null 2>&1
+fi
 
 exit $fail
