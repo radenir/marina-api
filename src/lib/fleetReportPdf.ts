@@ -54,6 +54,10 @@ interface Report {
   language_pairs: { officer_language: string; patient_language: string; n: number }[];
   duration: { n: number; median_minutes: string | null; p25_minutes: string | null; p75_minutes: string | null };
   demographics: { age: Cells; sex: Cells; rank: Cells; nationality: Cells; min_cell: number };
+  quality?: {
+    scored: number; avg_score: number | null; good: number; fair: number; poor: number;
+    unknown_sections: number; by_mode: { mode: string; avg_score: number; scored: number }[];
+  };
   completeness?: {
     by_mode: { mode: string; reports: number; avg_sections: string; full: number; thin: number }[];
     sections: Record<string, number>;
@@ -542,6 +546,42 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
   });
   d.y = yUse - Math.max(hUse, hTime) - GAP;
 
+  // ---- quality -----------------------------------------------------------
+  const qual = r.quality;
+  if (qual && qual.scored > 0) {
+    d.room(140);
+    const capQ = `Marina grades each report against the SYBRA protocol - the same score the ` +
+      `officer sees while writing it. Averaged over the ${qual.scored} of ${reports} reports that ` +
+      `carry a grade.` +
+      (qual.scored < reports
+        ? ` The remaining ${reports - qual.scored} were written before grading existed and are left ` +
+          `out rather than counted as poor.`
+        : '');
+    d.y -= card(d, M, W, { n: '12', title: 'How good the records are', caption: capQ },
+      Math.max(3, qual.by_mode.length) * ROW + 26, (top) => {
+        d.txt(String(qual.avg_score ?? '-'), M + 13, top - 8, 20, NAVY, true);
+        d.txt('%', M + 13 + d.b.widthOfTextAtSize(String(qual.avg_score ?? '-'), 20) + 2,
+          top - 8, 9, MUTED);
+        d.txt('average across the fleet', M + 13, top - 20, 7, MUTED);
+        const x2 = M + 150;
+        const w2 = W - 163;
+        bar(d, x2, top, w2, 'Good  80+', qual.good, Math.max(1, qual.scored),
+          { colour: GREEN, note: pct(qual.good, qual.scored), labelW: 84 });
+        bar(d, x2, top - ROW, w2, 'Fair  50-79', qual.fair, Math.max(1, qual.scored),
+          { colour: AMBER, note: pct(qual.fair, qual.scored), labelW: 84 });
+        bar(d, x2, top - ROW * 2, w2, 'Poor  under 50', qual.poor, Math.max(1, qual.scored),
+          { colour: RED, note: pct(qual.poor, qual.scored), labelW: 84 });
+        let yy = top - ROW * 3 - 10;
+        d.txt('Average grade, by tool', M + 13, yy, 7, MUTED, true);
+        yy -= ROW;
+        qual.by_mode.forEach((m) => {
+          bar(d, M + 13, yy, W - 26, MODE_LABEL[m.mode] ?? m.mode, m.avg_score, 100,
+            { note: `${m.scored} graded`, labelW: 100 });
+          yy -= ROW;
+        });
+      }) + GAP;
+  }
+
   // ---- completeness ------------------------------------------------------
   const comp = r.completeness;
   if (comp && comp.by_mode.length) {
@@ -562,7 +602,7 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
       cardHeight(d, COL, { caption: capS }, sections.length * ROW),
     );
     const hC = card(d, M, COL, {
-      n: '12', title: 'How complete the records are', caption: capC,
+      n: '13', title: 'How complete the records are', caption: capC,
     }, comp.by_mode.length * ROW + (tallC - cardHeight(d, COL, { caption: capC }, comp.by_mode.length * ROW)),
     (top) => {
       comp.by_mode.forEach((m, i) => bar(d, M + 13, top - i * ROW, COL - 26,
@@ -571,7 +611,7 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
     });
     d.y = yC;
     const hS = card(d, M + COL + GAP, COL, {
-      n: '13', title: 'Which parts get filled in', caption: capS,
+      n: '14', title: 'Which parts get filled in', caption: capS,
     }, sections.length * ROW + (tallC - cardHeight(d, COL, { caption: capS }, sections.length * ROW)),
     (top) => {
       sections.forEach(([k, lab], i) => bar(d, M + COL + GAP + 13, top - i * ROW, COL - 26,
@@ -589,7 +629,7 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
   if (shown.length) {
     const rows = shown.reduce((a, [, c]) => a + c.items.length + 1, 0);
     d.y -= card(d, M, W, {
-      n: '14', title: 'Who the patients were',
+      n: '15', title: 'Who the patients were',
       caption: `Counted per person, not per report: reports sharing a name and date of birth are one ` +
         `patient, and a report naming nobody is not counted at all. Any group of fewer than ` +
         `${dem.min_cell} is not shown.`,
@@ -612,7 +652,7 @@ export async function buildFleetReportPdf(r: Report): Promise<Uint8Array> {
       `fleet's reports do not carry enough of them to describe anybody without identifying an ` +
       `individual. ${op.unidentified_reports ?? 0} reports name nobody and give no date of birth, ` +
       'so they cannot say who the patient was.';
-    d.y -= card(d, M, W, { n: '14', title: 'Who the patients were' },
+    d.y -= card(d, M, W, { n: '15', title: 'Who the patients were' },
       d.paraHeight(note, W - 52) + 20, (top) => callout(d, M + 13, top + 6, W - 26, note)) + GAP;
   }
 

@@ -483,7 +483,7 @@ export async function buildFleetActivity(
   const [
     byHour, byDuration, byMismatch, byPort,
     byAge, bySex, byRank, byNationality, deranged,
-    byCompleteness, sectionFill,
+    byCompleteness, sectionFill, qualityTotals, qualityByMode,
     byDestination, byUrgency, extras, output,
   ] = await Promise.all([
     // When work happens. The printed report's most quoted operational fact —
@@ -590,6 +590,25 @@ export async function buildFleetActivity(
          FROM v_fleet_activity a ${where} AND a.sections IS NOT NULL`,
       params,
     ),
+    // The SYBRA clinical score, where a report has one. Reports written before
+    // scoring existed have none, and the page says how many rather than
+    // averaging over a silently smaller set.
+    query(
+      `SELECT COUNT(*) FILTER (WHERE a.quality_score IS NOT NULL)::int AS scored,
+              ROUND(AVG(a.quality_score))::int                         AS avg_score,
+              COUNT(*) FILTER (WHERE a.quality_score >= 80)::int       AS good,
+              COUNT(*) FILTER (WHERE a.quality_score BETWEEN 50 AND 79)::int AS fair,
+              COUNT(*) FILTER (WHERE a.quality_score < 50)::int        AS poor,
+              SUM(a.quality_unknown)::int                              AS unknown_sections
+         FROM v_fleet_activity a ${where} AND a.has_report`,
+      params,
+    ),
+    query(
+      `SELECT a.mode, ROUND(AVG(a.quality_score))::int AS avg_score, COUNT(*)::int AS scored
+         FROM v_fleet_activity a ${where} AND a.quality_score IS NOT NULL
+        GROUP BY 1 ORDER BY 2 DESC`,
+      params,
+    ),
     query(
       `SELECT a.destination AS port, COUNT(*)::int AS n
          FROM v_fleet_activity a ${where} AND a.destination IS NOT NULL
@@ -671,6 +690,10 @@ export async function buildFleetActivity(
     completeness: {
       by_mode: byCompleteness.rows,
       sections: sectionFill.rows[0] as Record<string, number>,
+    },
+    quality: {
+      ...(qualityTotals.rows[0] as Record<string, number>),
+      by_mode: qualityByMode.rows,
     },
     demographics: {
       age: suppress(byAge.rows as Cell[]),

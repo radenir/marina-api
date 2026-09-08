@@ -52,6 +52,7 @@ import {
   updateFromChat,
   updateFromExtract,
 } from '../lib/conversationStore.js';
+import { scoreAndStore } from '../lib/reportScore.js';
 
 export const aiRouter = Router();
 
@@ -899,6 +900,13 @@ aiRouter.post(
       mode: conversationId ? 'marina' : 'note_taker',
     });
 
+    // Score the report against SYBRA and keep the result, so a fleet office can
+    // be told how good its records are. Deliberately fire-and-forget: eight
+    // judges would add seconds to a report an officer is standing over, and a
+    // dashboard does not need the number for minutes. A failure here leaves the
+    // score absent, which the dashboard already knows how to say.
+    if (persistedId) scoreAndStore(persistedId, summary as Record<string, string>);
+
     res.json({ summary, conversationId: persistedId, caseId: resolvedCaseId });
   }
 );
@@ -998,6 +1006,13 @@ aiV2Router.post(
       conversation_id: persistedId,
       mode: conversationId ? 'marina' : 'note_taker',
     });
+
+    // Score the report against SYBRA and keep the result, so a fleet office can
+    // be told how good its records are. Deliberately fire-and-forget: eight
+    // judges would add seconds to a report an officer is standing over, and a
+    // dashboard does not need the number for minutes. A failure here leaves the
+    // score absent, which the dashboard already knows how to say.
+    if (persistedId) scoreAndStore(persistedId, summary as Record<string, string>);
 
     res.json({ summary, conversationId: persistedId, caseId: resolvedCaseId });
   }
