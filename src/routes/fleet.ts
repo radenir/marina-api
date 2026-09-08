@@ -297,26 +297,26 @@ const MIN_VESSEL_SESSIONS = 1;
 const MIN_CELL = 5;
 
 /**
- * Demographics are counted once per account, not once per report.
+ * Demographics are counted report by report, against the number of reports
+ * that actually recorded the field.
  *
- * There is no patient identifier in this system, deliberately — cases.patient_ref
- * is the officer's own words and is not a foreign key, because a crew roster
- * keyed to named individuals is a health register. The consequence is that
- * "the same patient twenty-nine times" and "twenty-nine different patients"
- * are indistinguishable.
+ * Age, sex, rank and nationality are optional boxes on the report form, so
+ * they are filled in far less often than the clinical ones — for Esvagt, sex
+ * appears on 45 of 55 reports and rank on 1. Every figure therefore travels
+ * with its own denominator, and the card says what it is counting: reports,
+ * not people.
  *
- * That is not hypothetical. On Esvagt, 29 of 31 reports recording a female
- * patient are one person — same first name, same date of birth, same
- * nationality, same account — a demonstration patient run repeatedly. Counted
- * raw, the dashboard would have told a shipowner that 69% of their patients
- * were women aged 25-34, all Danish.
+ * That distinction is the whole point. On Esvagt, 29 of the 31 reports
+ * recording a female patient are one demonstration patient run repeatedly —
+ * same first name, same date of birth, same account. "31 of 45 reports
+ * recorded a female patient" is true. "69% of your crew are women" is not, and
+ * this must never say the second thing.
  *
- * Counting distinct accounts is the conservative answer: it undercounts a ship
- * that genuinely saw several different people, and it cannot be inflated by
- * repetition. Given the choice, a fleet report should understate rather than
- * invent, and the card says what it is counting.
+ * An earlier version counted distinct accounts instead, to stop repetition
+ * inflating a figure. That fixed the arithmetic and broke the meaning: it
+ * counted logins and labelled them patients, which is its own untruth. Better
+ * to count exactly what is there and be precise about what it is.
  */
-
 interface Cell {
   label: string | null;
   n: number;
@@ -329,13 +329,22 @@ interface Cell {
  * reads as a complete picture, and the office would draw conclusions from a
  * denominator that is not the one on screen.
  */
-function suppress(rows: Cell[]): { items: Cell[]; suppressed: number; hidden_categories: number } {
+function suppress(rows: Cell[]): {
+  items: Cell[];
+  suppressed: number;
+  hidden_categories: number;
+  recorded: number;
+} {
   const kept = rows.filter((r) => r.label !== null && r.n >= MIN_CELL);
   const dropped = rows.filter((r) => r.label === null || r.n < MIN_CELL);
   return {
     items: kept,
     suppressed: dropped.reduce((a, r) => a + r.n, 0),
     hidden_categories: dropped.length,
+    // Every figure needs its own denominator: these are optional boxes, and a
+    // percentage over all reports would understate them as badly as a
+    // percentage over the recorded ones would overstate the fleet.
+    recorded: rows.reduce((a, r) => a + r.n, 0),
   };
 }
 
@@ -496,23 +505,23 @@ fleetRouter.get('/activity', ...guard, async (req: Request, res: Response): Prom
     // Demographics. Fleet-wide only — deliberately never grouped with
     // vessel_name, which is what makes the suppression threshold meaningful.
     query(
-      `SELECT a.age_band AS label, COUNT(DISTINCT a.account_ref)::int AS n
+      `SELECT a.age_band AS label, COUNT(*)::int AS n
          FROM v_fleet_activity a ${where} AND a.age_band IS NOT NULL
         GROUP BY 1 ORDER BY 1`,
       params,
     ),
     query(
-      `SELECT a.sex AS label, COUNT(DISTINCT a.account_ref)::int AS n
+      `SELECT a.sex AS label, COUNT(*)::int AS n
          FROM v_fleet_activity a ${where} AND a.sex IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
       params,
     ),
     query(
-      `SELECT a.rank_group AS label, COUNT(DISTINCT a.account_ref)::int AS n
+      `SELECT a.rank_group AS label, COUNT(*)::int AS n
          FROM v_fleet_activity a ${where} AND a.rank_group IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
       params,
     ),
     query(
-      `SELECT a.nationality AS label, COUNT(DISTINCT a.account_ref)::int AS n
+      `SELECT a.nationality AS label, COUNT(*)::int AS n
          FROM v_fleet_activity a ${where} AND a.nationality IS NOT NULL GROUP BY 1 ORDER BY 2 DESC`,
       params,
     ),
