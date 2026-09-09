@@ -55,6 +55,7 @@ export type AuditEventType =
   | 'email_verified'
   | 'email_verification_resent'
   | 'profile_updated'
+  | 'fleet_policy_changed'
   | 'conversation_summarized'
   | 'audio_transcribed'
   | 'text_translated'

@@ -5,6 +5,7 @@ import { rateLimit } from '../lib/rateLimit';
 import { requireAuth } from '../middleware/requireAuth';
 import { requireRole } from '../middleware/requireRole';
 import { buildFleetReportPdf } from '../lib/fleetReportPdf';
+import { resolvePolicy, POLICY_DEFAULTS } from '../lib/policy';
 
 /**
  * The Fleet Dashboard's API — what the office can see.
@@ -802,5 +803,111 @@ fleetRouter.get('/report.pdf', ...guard, async (req: Request, res: Response): Pr
   } catch (err) {
     console.error('[fleet/report.pdf]', (err as Error).message);
     res.status(500).json({ error: 'Could not build the report' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /fleet/policy  ·  PATCH /fleet/policy
+//
+// The first write path in this namespace. Everything above reads a redaction
+// view; this changes something, so it is worth being explicit about what keeps
+// it safe.
+//
+// SCOPE. `requireRole('management')` reads role and org_id from the database
+// and rejects a management account with no organisation. The UPDATE is keyed on
+// `req.orgId` and nothing in the request body can name a different fleet, so an
+// Esvagt manager cannot reach DFDS's policy however the request is shaped.
+//
+// BLAST RADIUS. This writes exactly one JSONB column on one `partners` row. It
+// cannot touch a user, a case, a conversation or a report — those tables are
+// not named in the statement.
+//
+// FLEET-WIDE ONLY, DELIBERATELY. Per-account exceptions stay in the CLI script.
+// Offering them here would mean listing the fleet's crew accounts by email in
+// the dashboard, and this namespace has been built the other way round on
+// purpose: the office sees `account_ref`, a hash, and never an individual. A
+// download switch is not a good enough reason to put a crew roster on that
+// screen.
+// ---------------------------------------------------------------------------
+
+const FleetPolicySchema = z
+  .object({
+    pdf_download: z.boolean().optional(),
+    pdf_email: z.boolean().optional(),
+  })
+  .strict() // an unknown key is a client bug or an attempt; either way, say so
+  .refine((o) => Object.keys(o).length > 0, { message: 'no policy keys given' });
+
+fleetRouter.get('/policy', ...guard, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { rows } = await query<{ name: string; policy: unknown }>(
+      `SELECT name, policy FROM partners WHERE id = $1`,
+      [req.orgId],
+    );
+    if (!rows.length) {
+      res.status(404).json({ error: 'Organisation not found' });
+      return;
+    }
+
+    // How many accounts have their own override, so the screen can say that
+    // changing the fleet setting will not reach all of them. A count, never a
+    // list — see the note above.
+    const { rows: ov } = await query<{ n: string; total: string }>(
+      `SELECT COUNT(*) FILTER (WHERE u.policy IS NOT NULL)::text AS n,
+              COUNT(*)::text AS total
+         FROM users u WHERE u.org_id = $1`,
+      [req.orgId],
+    );
+
+    res.json({
+      organisation: rows[0].name,
+      policy: resolvePolicy(rows[0].policy),
+      defaults: POLICY_DEFAULTS,
+      accounts: Number(ov[0].total),
+      accounts_with_override: Number(ov[0].n),
+    });
+  } catch (err) {
+    console.error('[fleet/policy:get]', (err as Error).message);
+    res.status(500).json({ error: 'Could not read the fleet policy' });
+  }
+});
+
+fleetRouter.patch('/policy', ...guard, async (req: Request, res: Response): Promise<void> => {
+  const parsed = FleetPolicySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+    return;
+  }
+
+  try {
+    // Merge, never replace: `||` on jsonb overwrites the keys given and leaves
+    // the rest, so switching download off cannot silently clear a flag set
+    // months ago by someone else.
+    const { rows } = await query<{ name: string; policy: unknown }>(
+      `UPDATE partners SET policy = policy || $2::jsonb WHERE id = $1
+       RETURNING name, policy`,
+      [req.orgId, JSON.stringify(parsed.data)],
+    );
+    if (!rows.length) {
+      res.status(404).json({ error: 'Organisation not found' });
+      return;
+    }
+
+    // Who turned off the ship's download button, and when. A fleet office
+    // asking "why can't the Havelok download reports" needs an answer that is
+    // not "someone, at some point".
+    await query(
+      `INSERT INTO audit_logs (user_id, event_type, metadata) VALUES ($1, $2, $3)`,
+      [
+        req.user!.id,
+        'fleet_policy_changed',
+        JSON.stringify({ org_id: req.orgId, changed: parsed.data }),
+      ],
+    ).catch((e) => console.error('[fleet/policy] audit not written:', (e as Error).message));
+
+    res.json({ organisation: rows[0].name, policy: resolvePolicy(rows[0].policy) });
+  } catch (err) {
+    console.error('[fleet/policy:patch]', (err as Error).message);
+    res.status(500).json({ error: 'Could not update the fleet policy' });
   }
 });
