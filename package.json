@@ -13,6 +13,7 @@
     "seed-organisation": "tsx scripts/seed-organisation.ts",
     "provision-management": "tsx scripts/provision-management-account.ts",
     "backfill-scores": "tsx scripts/backfill-report-scores.ts",
+    "set-policy": "tsx scripts/set-org-policy.ts",
     "generate-keys": "tsx scripts/generate-keys.ts",
     "migrate-legacy-users": "tsx scripts/migrate-legacy-users.ts",
     "provision-partner-key": "tsx scripts/provision-partner-key.ts",

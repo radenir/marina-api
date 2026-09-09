@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { resolvePolicy } from '../lib/policy.js';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { query, transaction } from '../lib/db';
@@ -627,20 +628,29 @@ authRouter.post('/verify-email/resend', resendVerifyRateLimit, async (req: Reque
 // ---------------------------------------------------------------------------
 
 authRouter.get('/me', requireAuth, async (req: Request, res: Response): Promise<void> => {
-  const result = await query<Omit<User, 'password'>>(
-    `SELECT id, email, first_name, last_name, role, ship_name, call_sign, satellite_phone, medicine_chest, cruise_speed_knots, company, language,
-            email_verified, is_active, mfa_enabled, created_at, updated_at
-     FROM users WHERE id = $1`,
+  const result = await query<Omit<User, 'password'> & { policy: unknown; org_policy: unknown }>(
+    `SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.ship_name, u.call_sign,
+            u.satellite_phone, u.medicine_chest, u.cruise_speed_knots, u.company, u.language,
+            u.email_verified, u.is_active, u.mfa_enabled, u.created_at, u.updated_at,
+            u.policy, p.policy AS org_policy
+     FROM users u
+     LEFT JOIN partners p ON p.id = u.org_id
+     WHERE u.id = $1`,
     [req.user!.id]
   );
 
-  const user = result.rows[0];
-  if (!user) {
+  const row = result.rows[0];
+  if (!row) {
     res.status(404).json({ error: 'User not found' });
     return;
   }
 
-  res.json({ user });
+  // The raw layers stay on the server. Clients get the resolved answer, so no
+  // client has to reimplement the merge order — three of them would get it
+  // subtly different, and the app that got it wrong would show a button the
+  // API then refuses.
+  const { policy: _userPolicy, org_policy: _orgPolicy, ...user } = row;
+  res.json({ user: { ...user, policy: resolvePolicy(_orgPolicy, _userPolicy) } });
 });
 
 // ---------------------------------------------------------------------------

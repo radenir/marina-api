@@ -132,4 +132,15 @@ if run pdf; then
   [ "$verdict" = "ALL PASS" ] || { fail=1; printf '%s' "$out" | grep 'FAIL' | head -5 | sed 's/^/     /'; }
 fi
 
+# The policy merge decides whether an officer at sea has a download button.
+# Pure function, no database — the cost of running it is nil and the cost of it
+# being wrong is a customer-visible outage on one fleet.
+if run policy; then
+  out=$(npx tsx "$ROOT/tests/e2e/verify-policy.ts" 2>&1)
+  verdict=$(printf '%s' "$out" | grep -oE 'ALL PASS|[0-9]+ FAILURE\(S\)' | tail -1)
+  count=$(printf '%s' "$out" | grep -c '^  ok  ')
+  printf '%-24s %-8s %-12s %s cases\n' "verify-policy.ts" "[full]" "${verdict:-NO OUTPUT}" "$count"
+  [ "$verdict" = "ALL PASS" ] || { fail=1; printf '%s' "$out" | grep 'FAIL' | head -5 | sed 's/^/     /'; }
+fi
+
 exit $fail

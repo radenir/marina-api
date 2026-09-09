@@ -8,6 +8,7 @@ import { requireVerifiedEmail } from '../middleware/requireVerifiedEmail.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { requireScope } from '../middleware/requireScope.js';
 import { requireVerifiedActiveUser } from '../middleware/requireVerifiedActiveUser.js';
+import { requirePolicy } from '../middleware/requirePolicy.js';
 import { allowAnonymous } from '../middleware/anonymous.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { nebius } from '../lib/nebius.js';
@@ -1097,6 +1098,7 @@ aiRouter.post(
   requireScope('pdf:write'),
   pdfRateLimit,
   requireVerifiedActiveUser,
+  requirePolicy('pdf_download'),
   async (req: Request, res: Response): Promise<void> => {
     const parsed = GeneratePdfSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -1174,6 +1176,7 @@ aiRouter.post(
   requireScope('pdf:email'),
   pdfEmailRateLimit,
   requireVerifiedActiveUser,
+  requirePolicy('pdf_email'),
   async (req: Request, res: Response): Promise<void> => {
     const parsed = EmailPdfSchema.safeParse(req.body);
     if (!parsed.success) {
