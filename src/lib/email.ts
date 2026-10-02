@@ -13,6 +13,8 @@ interface SendOptions {
   html: string;
   text?: string;
   attachments?: EmailAttachment[];
+  /** Optional Reply-To, e.g. the officer's address on a report sent to a TMAS. */
+  replyTo?: string;
 }
 
 export async function sendEmail(opts: SendOptions): Promise<void> {
@@ -27,6 +29,10 @@ export async function sendEmail(opts: SendOptions): Promise<void> {
     HTMLPart: opts.html,
     TextPart: opts.text ?? opts.html.replace(/<[^>]*>/g, ''),
   };
+
+  if (opts.replyTo) {
+    message.ReplyTo = { Email: opts.replyTo };
+  }
 
   if (opts.attachments?.length) {
     message.Attachments = opts.attachments.map((att) => ({
@@ -235,4 +241,50 @@ export function buildPdfReportEmail(dateStr: string): { subject: string; html: s
   `;
 
   return { subject: 'Your RMD Maritime Medical Report', html: layout(header, body) };
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
+/**
+ * The covering email for a report sent to a TMAS (/ai/email-pdf with `tmas`).
+ * Addressed to the medical service, not to the officer, and deliberately free
+ * of clinical content — everything medical is in the attached form, so the
+ * subject and body can be read by anyone handling the mailbox.
+ */
+export function buildTmasReportEmail(opts: {
+  tmasName: string;
+  vesselName?: string;
+  callSign?: string;
+  dateStr: string;
+  filename: string;
+}): { subject: string; html: string } {
+  const vessel = [opts.vesselName?.trim(), opts.callSign?.trim() ? `(${opts.callSign.trim()})` : '']
+    .filter(Boolean).join(' ');
+  const from = vessel || 'a vessel';
+  const header = `
+    <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#0a4b78;">Maritime medical report</h1>
+    <p style="margin:0;font-size:14px;color:#6b7280;">For ${escapeHtml(opts.tmasName)}</p>
+  `;
+  const body = `
+    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#374151;text-align:justify;">
+      A medical report from <strong>${escapeHtml(from)}</strong> is attached,
+      generated on <strong>${escapeHtml(opts.dateStr)}</strong>. It was sent on the vessel's behalf
+      through Marina Health; the vessel's contact details are in the report. Replies to this
+      email go to the sender where one was provided.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 24px;background-color:#f4f6f8;border-radius:10px;border:1px solid #e5e7eb;">
+      <tr>
+        <td style="padding:14px 18px;">
+          <p style="margin:0;font-size:14px;font-weight:600;color:#0a4b78;">${escapeHtml(opts.filename)}</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0;font-size:13px;color:#9ca3af;text-align:justify;">This report contains medical information intended for medical and maritime personnel only.</p>
+  `;
+  const subject = `Maritime medical report — ${from}`.replace(/[\r\n]+/g, ' ');
+  return { subject, html: layout(header, body) };
 }

@@ -1,7 +1,8 @@
 import { Queue, Worker, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { config } from '../config';
-import { sendEmail, buildPdfReportEmail } from './email';
+import { sendEmail, buildPdfReportEmail, buildTmasReportEmail } from './email';
+import { findTmas } from './tmas';
 import { fillRmdFormPdftk, fillGermanFormPdftk } from './pdftk';
 import { mapSummaryToRmdFields, extractMedicationFields } from './rmdMapper';
 import { mapSummaryToSeafarerFields } from './seafarerMapper';
@@ -32,6 +33,14 @@ export type PdfEmailJob = {
   // Which template to fill. Optional for backward compatibility with jobs that
   // were enqueued before this field existed (defaults to 'rmd').
   template?: PdfTemplate;
+  /**
+   * Set when the report is addressed to a TMAS (lib/tmas.ts) rather than the
+   * officer: the covering email is written for the medical service instead.
+   * Optional, so jobs enqueued before it existed behave exactly as before.
+   */
+  tmasId?: string;
+  /** Optional Reply-To for that covering email (the officer's address). */
+  replyTo?: string;
 };
 
 export type EmailJobData = SimpleEmailJob | PdfEmailJob;
@@ -104,10 +113,21 @@ export function createEmailWorker(): Worker<EmailJobData> {
         : template === 'german' ? 'tmas-germany-medical-report.pdf'
         : 'rmd-maritime-medical-report.pdf';
       const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-      const emailContent = buildPdfReportEmail(dateStr);
+      const tmas = data.tmasId ? findTmas(data.tmasId) : undefined;
+      const str = (v: unknown) => (typeof v === 'string' ? v : undefined);
+      const emailContent = tmas
+        ? buildTmasReportEmail({
+            tmasName: tmas.name,
+            vesselName: str(data.summary.shipName),
+            callSign: str(data.summary.shipCallSign),
+            dateStr,
+            filename,
+          })
+        : buildPdfReportEmail(dateStr);
       await sendEmail({
         to: data.to,
         ...emailContent,
+        ...(tmas && data.replyTo ? { replyTo: data.replyTo } : {}),
         attachments: [{ filename, content: pdfBuffer, contentType: 'application/pdf' }],
       });
     },
@@ -143,6 +163,7 @@ export async function enqueuePdfEmail(
   to: string,
   summary: Record<string, string | boolean | null>,
   template: PdfTemplate = 'rmd',
+  tmas?: { tmasId: string; replyTo?: string },
 ): Promise<void> {
-  await emailQueue.add('send', { type: 'pdf', to, summary, template });
+  await emailQueue.add('send', { type: 'pdf', to, summary, template, ...(tmas ?? {}) });
 }

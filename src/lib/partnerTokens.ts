@@ -29,9 +29,10 @@ export const PARTNER_TOKEN_PREFIX = 'mpt_';
  * The most a token can ever do. Intersected with the key's CURRENT scopes on
  * every request, so removing a scope from a key removes it from its tokens.
  * `pdf:email` is deliberately absent: a phone must not be able to mail a
- * medical PDF to an arbitrary address.
+ * medical PDF to an arbitrary address. `tmas:email` is allowed because
+ * /ai/email-tmas only ever sends to the vetted addresses in lib/tmas.ts.
  */
-export const PARTNER_TOKEN_SCOPES: readonly string[] = ['transcribe:write', 'extract:write', 'pdf:write'];
+export const PARTNER_TOKEN_SCOPES: readonly string[] = ['transcribe:write', 'extract:write', 'pdf:write', 'tmas:email'];
 
 export interface PartnerTokenPayload {
   /** partner_api_clients.id of the key that minted the token. */

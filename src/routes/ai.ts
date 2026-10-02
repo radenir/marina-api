@@ -27,6 +27,7 @@ import { fillSeafarerForm } from '../lib/seafarerPdf.js';
 import * as fs from 'fs';
 import { query } from '../lib/db.js';
 import { enqueuePdfEmail } from '../lib/emailQueue.js';
+import { findTmas } from '../lib/tmas.js';
 import { config } from '../config.js';
 import { sha256hex } from '../lib/tokens.js';
 import type { AuditEventType } from '../types/index.js';
@@ -201,6 +202,13 @@ const pdfRateLimit = rateLimit({
 
 const pdfEmailRateLimit = rateLimit({
   prefix: 'ai-pdf-email',
+  limit: 10,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const tmasEmailRateLimit = rateLimit({
+  prefix: 'ai-tmas-email',
   limit: 10,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
@@ -1225,6 +1233,79 @@ aiRouter.post(
       message: principal.type === 'partner'
         ? `Report queued for delivery to ${recipient}`
         : 'Your report is being sent to your email address',
+    });
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /ai/email-tmas
+// Email the report to a Telemedical Assistance Service from GET /tmas. The
+// caller names a TMAS id, never an address: the address and the form both come
+// from lib/tmas.ts, so only those vetted services can ever be emailed. That is
+// what lets short-lived tokens hold this scope while /ai/email-pdf, which takes
+// a free recipientEmail, stays API-key-only.
+// Accepts user JWT, partner API key or short-lived token (`tmas:email` scope).
+// Middleware order: authenticate → requireScope → tmasEmailRateLimit → requireVerifiedActiveUser → handler
+// ---------------------------------------------------------------------------
+
+const EmailTmasSchema = z.object({
+  summary: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])),
+  tmas: z.string().min(2).max(10),
+});
+
+aiRouter.post(
+  '/email-tmas',
+  authenticate,
+  requireScope('tmas:email'),
+  tmasEmailRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = EmailTmasSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    const tmas = findTmas(parsed.data.tmas);
+    if (!tmas) {
+      res.status(400).json({ error: `Unknown TMAS: ${parsed.data.tmas}. See GET /tmas.` });
+      return;
+    }
+    if (!tmas.email) {
+      res.status(400).json({ error: `${tmas.name} (${tmas.country}) does not accept reports by email` });
+      return;
+    }
+
+    if (tmas.template !== 'marina' && !(await checkPdftkAvailable())) {
+      res.status(503).json({ error: 'pdftk not available on this server' });
+      return;
+    }
+
+    const principal = req.principal!;
+    if (principal.type === 'anonymous') { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+    // Replies go to the officer when we know who that is.
+    let replyTo: string | undefined;
+    if (principal.type === 'user') {
+      const { rows } = await query('SELECT email FROM users WHERE id = $1', [principal.userId]);
+      replyTo = rows[0]?.email ?? undefined;
+    }
+
+    const { summary } = parsed.data;
+    await enqueuePdfEmail(tmas.email, summary, tmas.template, { tmasId: tmas.id, replyTo });
+
+    await auditLog('pdf_emailed_tmas', req, attributionFromPrincipal(req), {
+      fields_populated: Object.values(summary).filter(
+        v => v !== '' && v !== false && v !== null && v !== undefined
+      ).length,
+      tmas: tmas.id,
+      recipient_email: tmas.email,
+      template: tmas.template,
+    });
+
+    res.json({
+      message: `Report queued for delivery to ${tmas.name} (${tmas.email})`,
+      tmas: { id: tmas.id, name: tmas.name, email: tmas.email, template: tmas.template },
     });
   }
 );

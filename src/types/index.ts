@@ -76,6 +76,7 @@ export type AuditEventType =
   | 'vitals_revised_by_voice'
   | 'pdf_generated'
   | 'pdf_emailed'
+  | 'pdf_emailed_tmas'
   | 'interview_message_sent'
   | 'account_deletion_failed'
   | 'account_deleted';
