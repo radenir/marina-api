@@ -3,6 +3,7 @@ import { isIP } from 'net';
 import { verifyAccessToken } from '../lib/jwt.js';
 import { query } from '../lib/db.js';
 import { sha256hex } from '../lib/tokens.js';
+import { PARTNER_TOKEN_PREFIX, PARTNER_TOKEN_SCOPES, verifyPartnerToken } from '../lib/partnerTokens.js';
 
 const API_KEY_PREFIX = 'mk_live_';
 const PARTNER_USER_REF_HEADER = 'x-partner-user-ref';
@@ -15,8 +16,9 @@ interface ApiClientRow {
 }
 
 /**
- * Accepts either a JWT (existing user flow) or a partner API key
- * (`Authorization: Bearer mk_live_…`) and populates `req.principal`.
+ * Accepts a JWT (existing user flow), a partner API key
+ * (`Authorization: Bearer mk_live_…`) or a short-lived partner token minted
+ * from one (`Bearer mpt_…`), and populates `req.principal`.
  *
  * Failure responses are deliberately generic ("Invalid API key" / "Unauthorized")
  * so callers can't probe whether a key exists, is revoked, is expired, or is
@@ -33,6 +35,14 @@ export async function authenticate(
     return;
   }
   const token = auth.slice(7);
+
+  // Short-lived partner token. No API key starts with `mpt_` and no JWT can
+  // (a JWT starts with "eyJ"), so this branch is reachable only by tokens
+  // minted at POST /partner/tokens — the two paths below are unchanged.
+  if (token.startsWith(PARTNER_TOKEN_PREFIX)) {
+    await authenticatePartnerToken(token, req, res, next);
+    return;
+  }
 
   if (token.startsWith(API_KEY_PREFIX)) {
     await authenticateApiKey(token, req, res, next);
@@ -103,6 +113,60 @@ async function authenticateApiKey(
   } catch (err) {
     console.error('[authenticate] API key lookup error:', (err as Error).message);
     res.status(401).json({ error: 'Invalid API key' });
+  }
+}
+
+/**
+ * Accepts a short-lived `mpt_` token minted from an API key.
+ *
+ * The signature proves we minted it; the lookup proves the key behind it is
+ * still good, so revoking or expiring a key stops its tokens on the next
+ * request rather than up to 15 minutes later. No IP allowlist here — tokens
+ * exist for phones, which have no fixed egress — and the short lifetime plus
+ * the narrowed scopes are what stand in for it.
+ */
+async function authenticatePartnerToken(
+  token: string,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  let payload;
+  try {
+    payload = verifyPartnerToken(token);
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+    return;
+  }
+
+  try {
+    const result = await query<ApiClientRow>(
+      `SELECT id, partner_id, scopes
+         FROM partner_api_clients
+        WHERE id = $1
+          AND partner_id = $2
+          AND revoked_at IS NULL
+          AND (expires_at IS NULL OR expires_at > NOW())`,
+      [payload.cid, payload.pid],
+    );
+    if (result.rows.length === 0) {
+      res.status(401).json({ error: 'Invalid token' });
+      return;
+    }
+
+    const client = result.rows[0];
+    req.principal = {
+      type: 'partner',
+      partnerId: client.partner_id,
+      apiClientId: client.id,
+      scopes: (client.scopes ?? []).filter((s) => PARTNER_TOKEN_SCOPES.includes(s)),
+      partnerUserRef: payload.ref,
+      via: 'token',
+    };
+    next();
+  } catch (err) {
+    console.error('[authenticate] partner token lookup error:', (err as Error).message);
+    res.status(401).json({ error: 'Invalid token' });
   }
 }
 

@@ -89,6 +89,7 @@ run cases    && suite c1 verify-cases.ts        4701 full
 run phase2   && suite c2 phase2-e2e.ts          4702 full
 run phase3   && suite c3 phase3-e2e.ts          4703 full
 run fleet    && suite c4 fleet-e2e.ts           4704 full
+run partner  && suite c16 partner-tokens-e2e.ts 4716 full
 run additive && suite c5 safety-no-migration.ts 4705 pre015
 run additive && suite c6 phase2-e2e.ts          4706 pre016
 run additive && suite c7 phase3-e2e.ts          4707 pre016

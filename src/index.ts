@@ -12,6 +12,7 @@ import { casesRouter } from './routes/cases';
 import { fleetRouter } from './routes/fleet';
 import { conversationsRouter } from './routes/conversations';
 import { maritimeRouter } from './routes/maritime';
+import { partnerRouter } from './routes/partner';
 import { pool } from './lib/db';
 import { redis } from './lib/redis';
 import { createEmailWorker } from './lib/emailQueue';
@@ -129,6 +130,7 @@ app.use('/conversations', conversationsRouter);
 app.use('/cases', casesRouter);
 app.use('/fleet', fleetRouter);
 app.use('/maritime', maritimeRouter);
+app.use('/partner', partnerRouter);
 
 // ---------------------------------------------------------------------------
 // 404

@@ -20,6 +20,12 @@ export type PartnerPrincipal = {
   scopes: string[];
   /** Opaque caller-supplied ID for the partner's internal end-user. */
   partnerUserRef?: string;
+  /**
+   * How the partner authenticated. Absent on requests that predate short-lived
+   * tokens is equivalent to 'api_key'. A 'token' principal's scopes are already
+   * narrowed to PARTNER_TOKEN_SCOPES and its partnerUserRef is fixed by the token.
+   */
+  via?: 'api_key' | 'token';
 };
 
 /**

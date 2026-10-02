@@ -45,6 +45,16 @@ export const config = {
     resetTokenTtl: 60 * 60,         // 1 hour in seconds
   },
 
+  // Short-lived partner tokens (lib/partnerTokens.ts). Optional on purpose:
+  // unset, POST /partner/tokens returns 503 and `mpt_` tokens are rejected,
+  // so a deploy without it behaves exactly as before. Generate with
+  // `openssl rand -hex 32`.
+  partnerToken: {
+    secret: process.env.PARTNER_TOKEN_SECRET || null,
+    defaultTtlSeconds: 15 * 60,
+    maxTtlSeconds: 15 * 60,
+  },
+
   mailjet: {
     apiKey: require_env('MAILJET_API_KEY'),
     secretKey: require_env('MAILJET_SECRET_KEY'),
