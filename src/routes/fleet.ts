@@ -499,12 +499,15 @@ export async function buildFleetActivity(
     // handful of long sessions drag an average somewhere no real consultation
     // sits, which is why the report quotes a median of 4 minutes against an
     // average of 8.2.
+    // Gated on substantive AND has_report, like quality: the median is the
+    // length of a real consultation that produced a report, not of someone
+    // opening the app.
     query(
       `SELECT COUNT(*)::int AS n,
               ROUND(percentile_cont(0.5) WITHIN GROUP (ORDER BY a.duration_minutes)::numeric, 1) AS median_minutes,
               ROUND(percentile_cont(0.25) WITHIN GROUP (ORDER BY a.duration_minutes)::numeric, 1) AS p25_minutes,
               ROUND(percentile_cont(0.75) WITHIN GROUP (ORDER BY a.duration_minutes)::numeric, 1) AS p75_minutes
-         FROM v_fleet_activity a ${where} AND a.duration_minutes IS NOT NULL`,
+         FROM v_fleet_activity a ${where} AND a.duration_minutes IS NOT NULL AND a.substantive AND a.has_report`,
       params,
     ),
     // The clearest number in the whole printed report for what Marina is for:
@@ -601,12 +604,12 @@ export async function buildFleetActivity(
               COUNT(*) FILTER (WHERE a.quality_score BETWEEN 50 AND 79)::int AS fair,
               COUNT(*) FILTER (WHERE a.quality_score < 50)::int        AS poor,
               SUM(a.quality_unknown)::int                              AS unknown_sections
-         FROM v_fleet_activity a ${where} AND a.has_report`,
+         FROM v_fleet_activity a ${where} AND a.substantive AND a.has_report`,
       params,
     ),
     query(
       `SELECT a.mode, ROUND(AVG(a.quality_score))::int AS avg_score, COUNT(*)::int AS scored
-         FROM v_fleet_activity a ${where} AND a.quality_score IS NOT NULL
+         FROM v_fleet_activity a ${where} AND a.substantive AND a.has_report AND a.quality_score IS NOT NULL
         GROUP BY 1 ORDER BY 2 DESC`,
       params,
     ),
@@ -618,7 +621,7 @@ export async function buildFleetActivity(
       `SELECT a.vessel_name, ROUND(AVG(a.quality_score))::int AS avg_score,
               COUNT(*)::int AS scored
          FROM v_fleet_activity a ${where}
-          AND a.quality_score IS NOT NULL AND a.vessel_name IS NOT NULL
+          AND a.substantive AND a.has_report AND a.quality_score IS NOT NULL AND a.vessel_name IS NOT NULL
         GROUP BY 1 HAVING COUNT(*) >= 3 ORDER BY 2 DESC`,
       params,
     ),
