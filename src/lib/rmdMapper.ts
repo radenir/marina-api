@@ -156,7 +156,7 @@ function mewsAndVitalsLine(
  * The RMD form has one free-text box where the app has several fields, so the
  * headings are what keeps them legible once concatenated.
  */
-function joinSections(parts: Array<[string, unknown]>): string {
+export function joinSections(parts: Array<[string, unknown]>): string {
   return parts
     .map(([label, value]) => [label, String(value ?? '').trim()] as const)
     .filter(([, value]) => value !== '')
@@ -172,14 +172,14 @@ function joinSections(parts: Array<[string, unknown]>): string {
  * "Destination/ETA", so the value carries no prefix or brackets of its own —
  * spelling out "(ETA ...)" only pushed the text past the edge of the field.
  */
-function portWithEta(port: unknown, eta: unknown): string {
+export function portWithEta(port: unknown, eta: unknown): string {
   const name = String(port ?? '').trim();
   const arrival = String(eta ?? '').trim();
   if (!name) return arrival;
   return arrival ? `${name}/${arrival}` : name;
 }
 
-function getCurrentDateTime(): { date: string; time: string; utc: string } {
+export function getCurrentDateTime(): { date: string; time: string; utc: string } {
   const now = new Date();
   return {
     date: now.toISOString().split('T')[0],

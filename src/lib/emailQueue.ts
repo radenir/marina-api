@@ -7,10 +7,14 @@ import { fillRmdFormPdftk, fillGermanFormPdftk } from './pdftk';
 import { mapSummaryToRmdFields, extractMedicationFields } from './rmdMapper';
 import { mapSummaryToSeafarerFields } from './seafarerMapper';
 import { mapSummaryToGermanFields } from './germanMapper';
-import { fillSeafarerForm } from './seafarerPdf';
+import { mapSummaryToNorwegianFields } from './norwegianMapper';
+import { fillSeafarerForm, fillNorwegianForm } from './seafarerPdf';
 import * as fs from 'fs';
 
-export type PdfTemplate = 'rmd' | 'marina' | 'german';
+export type PdfTemplate = 'rmd' | 'marina' | 'german' | 'norwegian';
+
+/** Templates filled in-process with pdf-lib; the rest need pdftk. */
+export const PDF_LIB_TEMPLATES: readonly PdfTemplate[] = ['marina', 'norwegian'];
 
 // ---------------------------------------------------------------------------
 // Job types
@@ -99,6 +103,8 @@ export function createEmailWorker(): Worker<EmailJobData> {
           pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(data.summary), outputPath);
         } else if (template === 'german') {
           pdfBuffer = await fillGermanFormPdftk(mapSummaryToGermanFields(data.summary), outputPath);
+        } else if (template === 'norwegian') {
+          pdfBuffer = await fillNorwegianForm(mapSummaryToNorwegianFields(data.summary), outputPath);
         } else {
           const medFields = extractMedicationFields(data.summary.currentMedications);
           const rmdFields = mapSummaryToRmdFields({ ...data.summary, ...medFields });
@@ -111,6 +117,7 @@ export function createEmailWorker(): Worker<EmailJobData> {
       const filename =
         template === 'marina' ? 'marina-seafarer-medical-report.pdf'
         : template === 'german' ? 'tmas-germany-medical-report.pdf'
+        : template === 'norwegian' ? 'radio-medico-norway-medical-report.pdf'
         : 'rmd-maritime-medical-report.pdf';
       const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       const tmas = data.tmasId ? findTmas(data.tmasId) : undefined;

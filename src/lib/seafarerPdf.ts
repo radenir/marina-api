@@ -29,13 +29,13 @@ const PARTNER_LOGOS: { file: string; align: 'left' | 'right' }[] = [
  * rebuild of the form geometry. Best-effort: a missing/unreadable file is
  * skipped, not fatal.
  */
-async function drawPartnerLogos(doc: PDFDocument): Promise<void> {
+async function drawPartnerLogos(doc: PDFDocument, logos: typeof PARTNER_LOGOS): Promise<void> {
   try {
     const page = doc.getPage(0);
     const margin = 30; // pt, from the page edges
     const y = page.getHeight() - margin - PARTNER_LOGO_HEIGHT; // top-aligned
 
-    for (const { file, align } of PARTNER_LOGOS) {
+    for (const { file, align } of logos) {
       const abs = path.join(process.cwd(), file);
       if (!fs.existsSync(abs)) continue;
       const img = await doc.embedPng(fs.readFileSync(abs));
@@ -48,8 +48,11 @@ async function drawPartnerLogos(doc: PDFDocument): Promise<void> {
   }
 }
 
-/** A field value: plain text, or a radio selection `{ value, onValue }`. */
-export type SeafarerFieldValue = string | { value: boolean; onValue: string };
+/**
+ * A field value: plain text, a checkbox (`true` ticks it), or a radio selection
+ * `{ value, onValue }`.
+ */
+export type SeafarerFieldValue = string | boolean | { value: boolean; onValue: string };
 
 /**
  * Select a radio option at the low level. pdf-lib builds radio widgets with
@@ -73,13 +76,35 @@ function selectRadio(form: PDFForm, name: string, exportValue: string): void {
   acro.getWidgets().forEach((w, i) => w.dict.set(PDFName.of('AS'), i === idx ? onState : off));
 }
 
-export async function fillSeafarerForm(
+export function fillSeafarerForm(
   data: Record<string, SeafarerFieldValue>,
   outputPath: string,
 ): Promise<Buffer> {
-  const templatePath = path.join(process.cwd(), 'public/templates/seafarer-medical-report.pdf');
+  return fillBuiltForm('seafarer-medical-report.pdf', data, outputPath, PARTNER_LOGOS);
+}
+
+/**
+ * Fill the Norwegian Radio Medical Record (Radio Medico Norway). Built by the
+ * same pipeline as the Marina form, so it fills the same way; it carries its
+ * own Mariners Medico Guide branding, so no partner logos are stamped on it.
+ */
+export function fillNorwegianForm(
+  data: Record<string, SeafarerFieldValue>,
+  outputPath: string,
+): Promise<Buffer> {
+  return fillBuiltForm('radio-medical-record.pdf', data, outputPath, []);
+}
+
+/** Fill a form built by scripts/build-seafarer-form.ts (in public/templates). */
+async function fillBuiltForm(
+  templateFile: string,
+  data: Record<string, SeafarerFieldValue>,
+  outputPath: string,
+  logos: typeof PARTNER_LOGOS,
+): Promise<Buffer> {
+  const templatePath = path.join(process.cwd(), 'public/templates', templateFile);
   if (!fs.existsSync(templatePath)) {
-    throw new Error(`Seafarer template not found at: ${templatePath}`);
+    throw new Error(`Template not found at: ${templatePath}`);
   }
 
   const doc = await PDFDocument.load(fs.readFileSync(templatePath));
@@ -99,9 +124,19 @@ export async function fillSeafarerForm(
     }
   }
 
-  // 2) Radio selections (explicit /V + /AS so the chosen dot renders).
+  // 2) Checkboxes.
   for (const [name, value] of Object.entries(data)) {
-    if (typeof value === 'string' || !value?.value) continue;
+    if (value !== true) continue;
+    try {
+      form.getCheckBox(name).check();
+    } catch (err) {
+      console.warn(`[seafarerPdf] skipped checkbox "${name}":`, (err as Error).message);
+    }
+  }
+
+  // 3) Radio selections (explicit /V + /AS so the chosen dot renders).
+  for (const [name, value] of Object.entries(data)) {
+    if (typeof value !== 'object' || !value?.value) continue;
     try {
       selectRadio(form, name, value.onValue);
     } catch (err) {
@@ -110,7 +145,7 @@ export async function fillSeafarerForm(
   }
 
   // Partner co-brands (top-right of the page-1 header).
-  await drawPartnerLogos(doc);
+  if (logos.length) await drawPartnerLogos(doc, logos);
 
   // Tell viewers to (re)generate field appearances from each field's DA, so the
   // filled text renders navy rather than pdf-lib's baked black.

@@ -23,10 +23,11 @@ import { fillRmdFormPdftk, fillGermanFormPdftk, checkPdftkAvailable } from '../l
 import { mapSummaryToRmdFields, extractMedicationFields } from '../lib/rmdMapper.js';
 import { mapSummaryToSeafarerFields } from '../lib/seafarerMapper.js';
 import { mapSummaryToGermanFields } from '../lib/germanMapper.js';
-import { fillSeafarerForm } from '../lib/seafarerPdf.js';
+import { mapSummaryToNorwegianFields } from '../lib/norwegianMapper.js';
+import { fillSeafarerForm, fillNorwegianForm } from '../lib/seafarerPdf.js';
 import * as fs from 'fs';
 import { query } from '../lib/db.js';
-import { enqueuePdfEmail } from '../lib/emailQueue.js';
+import { enqueuePdfEmail, PDF_LIB_TEMPLATES } from '../lib/emailQueue.js';
 import { findTmas } from '../lib/tmas.js';
 import { config } from '../config.js';
 import { sha256hex } from '../lib/tokens.js';
@@ -1097,7 +1098,7 @@ aiRouter.post(
 const GeneratePdfSchema = z.object({
   summary: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])),
   // Which PDF template to fill. Defaults to the RMD form for backward compatibility.
-  template: z.enum(['rmd', 'marina', 'german']).optional().default('rmd'),
+  template: z.enum(['rmd', 'marina', 'german', 'norwegian']).optional().default('rmd'),
 });
 
 aiRouter.post(
@@ -1116,9 +1117,9 @@ aiRouter.post(
 
     const { summary, template } = parsed.data;
 
-    // The Marina form is filled in-process with pdf-lib; the RMD and German
-    // authority forms both need pdftk.
-    if (template !== 'marina' && !(await checkPdftkAvailable())) {
+    // The Marina and Norwegian forms are filled in-process with pdf-lib; the
+    // RMD and German authority forms both need pdftk.
+    if (!PDF_LIB_TEMPLATES.includes(template) && !(await checkPdftkAvailable())) {
       res.status(503).json({ error: 'pdftk not available on this server' });
       return;
     }
@@ -1130,6 +1131,8 @@ aiRouter.post(
         pdfBuffer = await fillSeafarerForm(mapSummaryToSeafarerFields(summary), outputPath);
       } else if (template === 'german') {
         pdfBuffer = await fillGermanFormPdftk(mapSummaryToGermanFields(summary), outputPath);
+      } else if (template === 'norwegian') {
+        pdfBuffer = await fillNorwegianForm(mapSummaryToNorwegianFields(summary), outputPath);
       } else {
         const medFields = extractMedicationFields(summary.currentMedications);
         const rmdFields = mapSummaryToRmdFields({ ...summary, ...medFields });
@@ -1156,7 +1159,9 @@ aiRouter.post(
 
     const filename = template === 'marina'
       ? 'marina-seafarer-medical-report.pdf'
-      : 'rmd-maritime-medical-report.pdf';
+      : template === 'norwegian'
+        ? 'radio-medico-norway-medical-report.pdf'
+        : 'rmd-maritime-medical-report.pdf';
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,
@@ -1192,8 +1197,7 @@ aiRouter.post(
       return;
     }
 
-    const available = await checkPdftkAvailable();
-    if (!available) {
+    if (!PDF_LIB_TEMPLATES.includes(parsed.data.template) && !(await checkPdftkAvailable())) {
       res.status(503).json({ error: 'pdftk not available on this server' });
       return;
     }
@@ -1276,7 +1280,7 @@ aiRouter.post(
       return;
     }
 
-    if (tmas.template !== 'marina' && !(await checkPdftkAvailable())) {
+    if (!PDF_LIB_TEMPLATES.includes(tmas.template) && !(await checkPdftkAvailable())) {
       res.status(503).json({ error: 'pdftk not available on this server' });
       return;
     }
