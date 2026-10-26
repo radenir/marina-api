@@ -561,7 +561,104 @@ const INJURY_ASSESSMENT: ExamMediaProtocol = {
   },
 };
 
+// Nose check. Q3 (blocked when breathing) and Q9 (sinus pain on pressing)
+// need the officer; Q5 is a first-aid instruction (pinch the nose). Q6 uses
+// the same throat photo as the Throat check, so one picture serves both.
+const NOSE_CHECK: ExamMediaProtocol = {
+  examinationId: examinationIds.NOSE_CHECK,
+  name: examinationDisplayNames[examinationIds.NOSE_CHECK],
+  shots: [
+    {
+      id: 'face-front',
+      kind: 'photo',
+      instruction:
+        'Photograph the whole face straight on from about 50 cm, in good light, with the patient looking at the camera. ' +
+        'If the nose is bleeding heavily, start first aid (pinch the soft part of the nose) — do not wait for the photo.',
+      flash: false,
+      answers: [1, 4],
+    },
+    {
+      id: 'nostrils',
+      kind: 'photo',
+      instruction:
+        'Ask the patient to tilt the head back. Shine a flashlight up into the nostrils and photograph from below, about 15 cm away, ' +
+        'so the inside of both nostrils is visible.',
+      flash: true,
+      answers: [2, 7, 8],
+    },
+    {
+      id: 'throat',
+      kind: 'photo',
+      instruction:
+        'Ask the patient to open the mouth wide. Push the tongue down with a tongue depressor or spoon, shine a flashlight into the throat ' +
+        'and photograph from about 15 cm so the back of the throat is visible.',
+      flash: true,
+      answers: [6],
+    },
+  ],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Is there swelling, bruising, or deformity around the nose?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      // A crooked nose after a blow means a possible fracture.
+      guidance: 'Swelling or bruising of the nose or around the eyes, or a nose that is crooked, flattened or bent to one side. If "yes", say which in detail.',
+      sentence: (a) => a.value === 'yes' ? withDetail('swelling, bruising or deformity of the nose', a) : 'no swelling, bruising or deformity of the nose',
+    },
+    2: {
+      questionNumber: 2,
+      text: 'Is there redness or yellow secretion around the nose or in the nostrils?',
+      options: ['none', 'redness', 'yellow secretion', 'redness and yellow secretion'],
+      needsSide: false,
+      guidance: 'Redness of the skin around or inside the nostrils, and yellow or green mucus or crusts. Clear mucus is "none".',
+      sentence: (a) => a.value === 'none' ? 'no redness or yellow secretion at the nose' : withDetail(`${a.value} at the nose`, a),
+    },
+    4: {
+      questionNumber: 4,
+      text: 'Is there active bleeding? If yes, from one or both nostrils?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: 'Fresh red blood running from the nostrils now. Dried blood alone is not active bleeding — say "dried blood" in detail. If "yes", give the side of the bleeding nostril, or "both".',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`active nosebleed${a.side === 'both' ? ' from both nostrils' : a.side ? ` from the ${a.side} nostril` : ''}`, a)
+        : withDetail('no active bleeding from the nose', a),
+    },
+    6: {
+      questionNumber: 6,
+      text: 'Is there any blood in the mouth or throat?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      // Blood running down the back of the throat = bleeding from the back of
+      // the nose, which pinching does not stop.
+      guidance: 'Fresh blood or clots on the back of the throat, the tongue or the teeth.',
+      sentence: (a) => a.value === 'yes' ? withDetail('blood in the mouth or throat', a) : 'no blood in the mouth or throat',
+    },
+    7: {
+      questionNumber: 7,
+      text: 'Use a light to look inside the nostrils, is there crusting or clots?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: 'Dry crusts or dark blood clots inside the nostrils. Give the side, or "both".',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`crusts or clots in ${a.side === 'both' ? 'both nostrils' : a.side ? `the ${a.side} nostril` : 'the nostrils'}`, a)
+        : 'no crusts or clots in the nostrils',
+    },
+    8: {
+      questionNumber: 8,
+      text: 'Can you see any foreign bodies in the nose?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: 'Any object in a nostril that is not part of the body or a blood clot. Give the side.',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`foreign body in the nose${a.side && a.side !== 'both' ? ` (${a.side} nostril)` : ''}`, a)
+        : 'no foreign body seen in the nose',
+    },
+  },
+};
+
 export const EXAM_MEDIA_PROTOCOLS: Record<number, ExamMediaProtocol> = {
+  [NOSE_CHECK.examinationId]: NOSE_CHECK,
   [JOINT_EXAM.examinationId]: JOINT_EXAM,
   [INJURY_ASSESSMENT.examinationId]: INJURY_ASSESSMENT,
   [EYE_EXAM.examinationId]: EYE_EXAM,

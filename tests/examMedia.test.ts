@@ -207,6 +207,28 @@ console.log('joint and local injury protocols');
       'open wound, bruising or swelling on the left side (swelling and bruising).', i);
 }
 
+console.log('nose protocol');
+{
+  const nose = getProtocol(3)!;
+  check('face photo Q1+Q4, nostrils Q2/Q7/Q8, throat photo Q6',
+    getShot(nose, 'face-front')!.answers.join() === '1,4' &&
+    getShot(nose, 'nostrils')!.answers.join() === '2,7,8' &&
+    getShot(nose, 'throat')!.answers.join() === '6');
+  check('officer-only questions have no photo question', !nose.questions[3] && !nose.questions[5] && !nose.questions[9]);
+  const s = renderExamSentence(3, [
+    { questionNumber: 1, value: 'yes', detail: 'nose bent to the left' },
+    { questionNumber: 2, value: 'none' },
+    { questionNumber: 4, value: 'yes', side: 'right' },
+    { questionNumber: 6, value: 'no' },
+    { questionNumber: 7, value: 'yes', side: 'both' },
+    { questionNumber: 8, value: 'no' },
+  ]);
+  check('nose sentence',
+    s === 'Nose check (photo, confirmed by officer): swelling, bruising or deformity of the nose (nose bent to the left); ' +
+      'no redness or yellow secretion at the nose; active nosebleed from the right nostril; no blood in the mouth or throat; ' +
+      'crusts or clots in both nostrils; no foreign body seen in the nose.', s);
+}
+
 console.log('withPhotoFindings');
 {
   const batch = { name: 'findings', prompt: 'Rules...\nReturn JSON:\n{"exam":""}' };
