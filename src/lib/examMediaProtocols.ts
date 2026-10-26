@@ -321,10 +321,162 @@ const SKIN_ASSESSMENT: ExamMediaProtocol = {
   },
 };
 
+// Throat and Dental share the mouth-opening test (Throat Q6 = Dental Q4), and
+// the same open-mouth photo serves both, so the app can send one picture to
+// both examinations. Shot ids are therefore the same in both protocols.
+const MOUTH_OPENING_SHOT = (questionNumber: number): MediaShot => ({
+  id: 'mouth-opening',
+  kind: 'photo',
+  instruction:
+    'Ask the patient to open the mouth as wide as they can and to stack their own fingers flat, one above the other, ' +
+    'between the upper and lower front teeth. Photograph from the front so the fingers and teeth are clearly visible.',
+  flash: true,
+  answers: [questionNumber],
+});
+
+const MOUTH_OPENING_QUESTION = (questionNumber: number): MediaQuestion => ({
+  questionNumber,
+  text: 'Can the patient open their mouth normally? How many fingers can you stack between their upper and lower teeth?',
+  options: ['0', '1', '2', '3', '4'],
+  needsSide: false,
+  guidance:
+    'Count the fingers stacked vertically between the upper and lower front teeth. ' +
+    'If no fingers are in the mouth, or you cannot count them, answer "cannot_determine".',
+  // ≤ 2 fingers: trismus suspected (examinationInstructions.ts).
+  sentence: (a) => Number(a.value) <= 2
+    ? `mouth opening limited to ${a.value} finger${a.value === '1' ? '' : 's'} (trismus suspected)`
+    : `mouth opens normally (${a.value} fingers)`,
+});
+
+const THROAT_CHECK: ExamMediaProtocol = {
+  examinationId: examinationIds.THROAT_CHECK,
+  name: examinationDisplayNames[examinationIds.THROAT_CHECK],
+  shots: [
+    {
+      id: 'throat',
+      kind: 'photo',
+      instruction:
+        'Ask the patient to open the mouth wide and say "aaah". Push the tongue down with a tongue depressor or spoon, ' +
+        'shine a flashlight into the throat and photograph from about 15 cm so the back of the throat and both tonsils are visible.',
+      flash: true,
+      answers: [2, 3, 4],
+    },
+    MOUTH_OPENING_SHOT(6),
+  ],
+  questions: {
+    2: {
+      questionNumber: 2,
+      text: 'Are the tonsils swollen or can you see white or yellowish patches?',
+      options: ['no', 'swollen', 'patches', 'swollen with patches'],
+      needsSide: true,
+      guidance: 'The tonsils are the two rounded lumps either side of the back of the throat. If the tongue hides them, answer "cannot_determine".',
+      sentence: (a) => {
+        if (a.value === 'no') return 'tonsils not swollen, no patches';
+        const finding = {
+          swollen: 'swollen tonsils',
+          patches: 'white or yellow patches on the tonsils',
+          'swollen with patches': 'swollen tonsils with white or yellow patches',
+        }[a.value] ?? a.value;
+        return withDetail(a.side && a.side !== 'both' ? `${finding} (${a.side})` : finding, a);
+      },
+    },
+    3: {
+      questionNumber: 3,
+      text: 'Is there any yellow secretion or redness?',
+      options: ['none', 'redness', 'yellow secretion', 'redness and yellow secretion'],
+      needsSide: false,
+      guidance: 'Redness of the back of the throat and tonsils, and yellow mucus or pus. A normal throat is pink.',
+      sentence: (a) => a.value === 'none' ? 'throat not red, no secretion' : withDetail(`${a.value} in the throat`, a),
+    },
+    4: {
+      questionNumber: 4,
+      text: 'Are the tonsils symmetrical and of similar size?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: 'If "no", give the side of the LARGER tonsil. The uvula being pushed to one side also means "no".',
+      sentence: (a) => a.value === 'yes'
+        ? 'tonsils symmetrical'
+        : withDetail(`tonsils not symmetrical${a.side && a.side !== 'both' ? ` (${a.side} larger)` : ''}`, a),
+    },
+    6: MOUTH_OPENING_QUESTION(6),
+  },
+};
+
+const DENTAL_EXAM: ExamMediaProtocol = {
+  examinationId: examinationIds.DENTAL_EXAM,
+  name: examinationDisplayNames[examinationIds.DENTAL_EXAM],
+  shots: [
+    {
+      id: 'face-front',
+      kind: 'photo',
+      instruction: 'Photograph the whole face straight on from about 50 cm, in good light, with the mouth closed and the patient looking at the camera.',
+      flash: false,
+      answers: [1],
+    },
+    {
+      id: 'mouth-open',
+      kind: 'photo',
+      instruction:
+        'Ask the patient to open the mouth and pull the lips back so the teeth and gums are visible. ' +
+        'Shine a flashlight in and photograph from about 15 cm. Take one photo of the painful side if there is one.',
+      flash: true,
+      answers: [5, 6, 7, 8],
+    },
+    MOUTH_OPENING_SHOT(4),
+  ],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Is the face swollen or red? Is the face symmetrical?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: '"yes" = swelling or redness of the cheek, jaw or face, or one side clearly fuller than the other. Give the side. Compare both halves of the face.',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`face swollen or red${a.side && a.side !== 'both' ? ` on the ${a.side} side` : ''}`, a)
+        : 'face not swollen or red, symmetrical',
+    },
+    4: MOUTH_OPENING_QUESTION(4),
+    5: {
+      questionNumber: 5,
+      text: 'Can you see any sores or blisters on the lips or inside the mouth?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Ulcers, blisters, white patches or raw spots on the lips, gums, cheeks or tongue. If "yes", say where.',
+      sentence: (a) => a.value === 'yes' ? withDetail('sores or blisters in or around the mouth', a) : 'no sores or blisters in the mouth',
+    },
+    6: {
+      questionNumber: 6,
+      text: 'Is there any redness, yellow fluid, bleeding or swelling around the gums?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Healthy gums are pale pink and tight around the teeth. If "yes", say which (red, swollen, bleeding, pus) and where.',
+      sentence: (a) => a.value === 'yes' ? withDetail('gums red, swollen, bleeding or with pus', a) : 'gums look healthy',
+    },
+    7: {
+      questionNumber: 7,
+      text: 'Are there cracks, chips, broken or missing teeth?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Only teeth visible in the photo. If "yes", say which (e.g. "upper front tooth chipped").',
+      sentence: (a) => a.value === 'yes' ? withDetail('cracked, chipped, broken or missing teeth', a) : 'no broken or missing teeth seen',
+    },
+    8: {
+      questionNumber: 8,
+      text: 'Are there any teeth that are more black or brown than the others?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Black or brown spots, holes or whole teeth darker than the rest. General yellowish colour of all teeth is "no".',
+      sentence: (a) => a.value === 'yes' ? withDetail('black or brown teeth', a) : 'no black or brown teeth seen',
+    },
+  },
+};
+
 export const EXAM_MEDIA_PROTOCOLS: Record<number, ExamMediaProtocol> = {
   [EYE_EXAM.examinationId]: EYE_EXAM,
   [WOUND_EXAM.examinationId]: WOUND_EXAM,
   [SKIN_ASSESSMENT.examinationId]: SKIN_ASSESSMENT,
+  [THROAT_CHECK.examinationId]: THROAT_CHECK,
+  [DENTAL_EXAM.examinationId]: DENTAL_EXAM,
 };
 
 /** Whether `value` is an answer the question allows: one of its options, or a match for its value format. */

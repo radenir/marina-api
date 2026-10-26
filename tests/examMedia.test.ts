@@ -151,6 +151,40 @@ console.log('skin protocol');
     renderExamSentence(19, [{ questionNumber: 1, value: 'widespread' }]) === 'Skin assessment (photo, confirmed by officer): widespread skin condition.');
 }
 
+console.log('throat and dental protocols');
+{
+  const throat = getProtocol(5)!;
+  const dental = getProtocol(20)!;
+  check('same mouth-opening shot id in both', !!getShot(throat, 'mouth-opening') && !!getShot(dental, 'mouth-opening'));
+  check('mouth opening answers Throat Q6 and Dental Q4',
+    getShot(throat, 'mouth-opening')!.answers.join() === '6' && getShot(dental, 'mouth-opening')!.answers.join() === '4');
+  check('finger count must be 0-4', isValidAnswer(throat, { questionNumber: 6, value: '2' }) && !isValidAnswer(throat, { questionNumber: 6, value: 'two' }));
+  check('throat Q1 is an instruction, not a photo question', !throat.questions[1]);
+
+  const t = renderExamSentence(5, [
+    { questionNumber: 2, value: 'swollen with patches', side: 'right' },
+    { questionNumber: 3, value: 'redness' },
+    { questionNumber: 4, value: 'no', side: 'right' },
+    { questionNumber: 6, value: '1' },
+  ]);
+  check('throat sentence',
+    t === 'Throat check (photo, confirmed by officer): swollen tonsils with white or yellow patches (right); redness in the throat; ' +
+      'tonsils not symmetrical (right larger); mouth opening limited to 1 finger (trismus suspected).', t);
+
+  const d = renderExamSentence(20, [
+    { questionNumber: 1, value: 'yes', side: 'left', detail: 'cheek' },
+    { questionNumber: 4, value: '3' },
+    { questionNumber: 5, value: 'no' },
+    { questionNumber: 6, value: 'yes', detail: 'swollen gum lower left' },
+    { questionNumber: 7, value: 'no' },
+    { questionNumber: 8, value: 'yes', detail: 'lower left molar' },
+  ]);
+  check('dental sentence',
+    d === 'Dental examination (photo, confirmed by officer): face swollen or red on the left side (cheek); mouth opens normally (3 fingers); ' +
+      'no sores or blisters in the mouth; gums red, swollen, bleeding or with pus (swollen gum lower left); no broken or missing teeth seen; ' +
+      'black or brown teeth (lower left molar).', d);
+}
+
 console.log('withPhotoFindings');
 {
   const batch = { name: 'findings', prompt: 'Rules...\nReturn JSON:\n{"exam":""}' };
