@@ -62,6 +62,21 @@ console.log('parseModelOutput');
   check('non-JSON → everything cannot_determine', r.answers.length === 5 && r.answers.every((a) => a.status === 'cannot_determine'));
 }
 
+{
+  // One over-long detail must not throw away the other answers.
+  const r = parse(JSON.stringify({
+    quality: { ok: true },
+    answers: [
+      { questionNumber: 1, value: 'no', confidence: 0.9 },
+      { questionNumber: 2, value: 'yes', side: 'right', confidence: 0.9, detail: 'x'.repeat(280) },
+    ],
+  }));
+  const q2 = r.answers.find((a) => a.questionNumber === 2)!;
+  check('long detail is shortened, not rejected',
+    r.answers.find((a) => a.questionNumber === 1)?.status === 'answered' && q2.status === 'answered' && q2.detail!.length === 200 && q2.detail!.endsWith('…'),
+    q2);
+}
+
 console.log('renderExamSentence');
 {
   const s = renderExamSentence(2, [
@@ -227,6 +242,42 @@ console.log('nose protocol');
     s === 'Nose check (photo, confirmed by officer): swelling, bruising or deformity of the nose (nose bent to the left); ' +
       'no redness or yellow secretion at the nose; active nosebleed from the right nostril; no blood in the mouth or throat; ' +
       'crusts or clots in both nostrils; no foreign body seen in the nose.', s);
+}
+
+console.log('abdomen and neurologic protocols');
+{
+  const abdomen = getProtocol(8)!;
+  const pain = getProtocol(22)!;
+  const simple = getProtocol(6)!;
+  const advanced = getProtocol(7)!;
+  check('abdomen photo shared by Abdomen examination and Abdominal pain exam',
+    getShot(abdomen, 'abdomen')!.answers.join() === '1,2' && getShot(pain, 'abdomen')!.answers.join() === '1');
+  check('same face-symmetry shots in simple and advanced neuro',
+    ['smile', 'show-teeth', 'raise-eyebrows'].every((id) => !!getShot(simple, id) && !!getShot(advanced, id)));
+  check('advanced Q4 uses the eye photo', getShot(advanced, 'eyes-front')!.answers.join() === '4');
+  check('eye examination shot unchanged', getShot(getProtocol(2)!, 'eyes-front')!.answers.join() === '1,2,3,4,5');
+
+  const s = renderExamSentence(6, [
+    { questionNumber: 1, value: 'no', side: 'left' },
+    { questionNumber: 2, value: 'no', side: 'left' },
+    { questionNumber: 3, value: 'yes' },
+  ]);
+  check('simple neuro sentence',
+    s === 'Simple neurologic check (photo, confirmed by officer): face not symmetrical when smiling (left side droops); ' +
+      'face not symmetrical when showing the teeth (left side droops); face symmetrical when raising the eyebrows.', s);
+  const a = renderExamSentence(7, [
+    { questionNumber: 4, value: 'no', side: 'right' },
+    { questionNumber: 11, value: 'yes', detail: 'bite mark on the left side of the tongue' },
+  ]);
+  check('advanced neuro sentence',
+    a === 'Advanced neurologic check (photo, confirmed by officer): pupils not similar in size or not round (right larger or irregular); ' +
+      'wounds on the tongue or lips (bite mark on the left side of the tongue).', a);
+  const b = renderExamSentence(8, [
+    { questionNumber: 1, value: 'yes' }, { questionNumber: 2, value: 'yes', detail: 'appendectomy scar right lower belly' }, { questionNumber: 3, value: 'no' },
+  ]);
+  check('abdomen sentence',
+    b === 'Abdomen examination (photo, confirmed by officer): belly swollen or distended; scars, surgical wounds or lumps on the belly ' +
+      '(appendectomy scar right lower belly); does not look pale or unwell.', b);
 }
 
 console.log('withPhotoFindings');

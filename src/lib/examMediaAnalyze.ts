@@ -32,19 +32,26 @@ export interface AnalysisResult {
   model: string;
 }
 
+// Free text from the model is shortened, not rejected: one over-long "detail"
+// used to fail the whole parse and throw away every correct answer with it.
+// 200 matches the detail limit of the confirm endpoint.
+const clipped = (max: number) =>
+  z.string().transform((s) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s));
+
 const ModelOutput = z.object({
   quality: z.object({
     ok: z.boolean(),
-    reason: z.string().max(300).optional().nullable(),
+    reason: clipped(300).optional().nullable(),
   }),
   // A rejected photo comes back without answers.
   answers: z.array(z.object({
     questionNumber: z.number().int(),
     value: z.string().max(40),
-    side: z.string().max(10).optional().nullable(),
-    detail: z.string().max(200).optional().nullable(),
+    // Anything but left/right/both is dropped when the answer is built.
+    side: z.string().optional().nullable(),
+    detail: clipped(200).optional().nullable(),
     confidence: z.number().min(0).max(1).optional().nullable(),
-    reason: z.string().max(300).optional().nullable(),
+    reason: clipped(300).optional().nullable(),
   })).max(20).default([]),
 });
 

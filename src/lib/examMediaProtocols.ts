@@ -657,7 +657,175 @@ const NOSE_CHECK: ExamMediaProtocol = {
   },
 };
 
+// Abdomen examination and Abdominal pain exam share the abdomen photo; the
+// pressing questions stay with the officer.
+const ABDOMEN_SHOT = (answers: number[]): MediaShot => ({
+  id: 'abdomen',
+  kind: 'photo',
+  instruction:
+    'Lay the patient flat on their back with the belly uncovered from below the chest to the groin. ' +
+    'Photograph from straight above or slightly from the side, about 1 m away, in good light.',
+  flash: false,
+  answers,
+});
+
+const ABDOMEN_EXAM: ExamMediaProtocol = {
+  examinationId: examinationIds.ABDOMEN_EXAM,
+  name: examinationDisplayNames[examinationIds.ABDOMEN_EXAM],
+  shots: [
+    ABDOMEN_SHOT([1, 2]),
+    {
+      id: 'face-front',
+      kind: 'photo',
+      instruction: 'Photograph the whole face straight on from about 50 cm, in daylight or good white light, with the patient looking at the camera.',
+      flash: false,
+      answers: [3],
+    },
+  ],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Is the belly more swollen or distended than normal?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      // A photo cannot know this person's normal belly; only an obviously
+      // bulging, tense abdomen is a confident "yes".
+      guidance: '"yes" only for a clearly bulging, tense or rounded belly, standing above the level of the chest. A normally rounded or overweight belly is not distension. If you cannot tell, answer "cannot_determine".',
+      sentence: (a) => a.value === 'yes' ? withDetail('belly swollen or distended', a) : 'belly not distended',
+    },
+    2: {
+      questionNumber: 2,
+      text: 'Are there any visible scars, surgical wounds, or lumps on the surface?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Scars, healing or fresh surgical wounds, or bulges and lumps (e.g. at the belly button or in the groin). If "yes", say what and where.',
+      sentence: (a) => a.value === 'yes' ? withDetail('scars, surgical wounds or lumps on the belly', a) : 'no scars, wounds or lumps on the belly',
+    },
+    3: {
+      questionNumber: 3,
+      text: 'Does the person look pale or unwell?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Pale or grey skin and lips, sweaty, drawn or exhausted face. Lighting and skin tone change how pale someone looks; if you cannot tell, answer "cannot_determine".',
+      sentence: (a) => a.value === 'yes' ? withDetail('looks pale or unwell', a) : 'does not look pale or unwell',
+    },
+  },
+};
+
+const ABDOMINAL_PAIN: ExamMediaProtocol = {
+  examinationId: examinationIds.ABDOMINAL_PAIN,
+  name: examinationDisplayNames[examinationIds.ABDOMINAL_PAIN],
+  shots: [ABDOMEN_SHOT([1])],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Can you see any distension, asymmetry, discoloration, or surgical scars?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'A clearly bulging belly, one side fuller than the other, bruising or discoloured skin (blue, purple, yellow, red), or scars. If "yes", say which and where.',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail('distension, asymmetry, discoloration or scars of the abdomen', a)
+        : 'no distension, asymmetry, discoloration or scars of the abdomen',
+    },
+  },
+};
+
+// Facial symmetry for the neurologic checks. A drooping side of the face is a
+// stroke sign, so any visible difference is "no" and a tilted or unclear photo
+// is "cannot_determine" — never "yes, symmetrical" by default.
+const FACE_SYMMETRY_GUIDANCE =
+  'Compare the two halves of the face: the corners of the mouth, the fold from nose to mouth corner, the eyelids, the eyebrows and forehead lines. ' +
+  'Any side that droops or moves less means "no" — give that side (the patient\'s side; in a frontal photo the patient\'s right is on the LEFT of the image). ' +
+  'If the head is tilted or turned, or the face is not clearly visible, answer "cannot_determine".';
+
+const FACE_SHOTS = {
+  smile: (answers: number[]): MediaShot => ({
+    id: 'smile', kind: 'photo', flash: false, answers,
+    instruction: 'Ask the patient to smile broadly. Photograph the whole face straight on from about 50 cm, head upright, in good light.',
+  }),
+  teeth: (answers: number[]): MediaShot => ({
+    id: 'show-teeth', kind: 'photo', flash: false, answers,
+    instruction: 'Ask the patient to show their teeth (lips pulled back). Photograph the whole face straight on from about 50 cm, head upright.',
+  }),
+  eyebrows: (answers: number[]): MediaShot => ({
+    id: 'raise-eyebrows', kind: 'photo', flash: false, answers,
+    instruction: 'Ask the patient to raise both eyebrows as high as they can. Photograph the whole face straight on from about 50 cm, head upright.',
+  }),
+};
+
+const faceSymmetryQuestion = (questionNumber: number, action: string, when: string): MediaQuestion => ({
+  questionNumber,
+  text: `Ask the patient to ${action}. Does the face look symmetrical and normal?`,
+  options: ['yes', 'no'],
+  needsSide: true,
+  guidance: FACE_SYMMETRY_GUIDANCE,
+  sentence: (a) => a.value === 'yes'
+    ? `face symmetrical when ${when}`
+    : withDetail(`face not symmetrical when ${when}${a.side && a.side !== 'both' ? ` (${a.side} side droops)` : ''}`, a),
+});
+
+const SIMPLE_NEURO: ExamMediaProtocol = {
+  examinationId: examinationIds.SIMPLE_NEURO,
+  name: examinationDisplayNames[examinationIds.SIMPLE_NEURO],
+  shots: [FACE_SHOTS.smile([1]), FACE_SHOTS.teeth([2]), FACE_SHOTS.eyebrows([3])],
+  questions: {
+    1: faceSymmetryQuestion(1, 'smile', 'smiling'),
+    2: faceSymmetryQuestion(2, 'show teeth', 'showing the teeth'),
+    3: faceSymmetryQuestion(3, 'raise eyebrows', 'raising the eyebrows'),
+  },
+};
+
+const ADVANCED_NEURO: ExamMediaProtocol = {
+  examinationId: examinationIds.ADVANCED_NEURO,
+  name: examinationDisplayNames[examinationIds.ADVANCED_NEURO],
+  shots: [
+    { ...EYE_EXAM.shots[0], answers: [4] },
+    FACE_SHOTS.smile([7]),
+    FACE_SHOTS.teeth([8]),
+    FACE_SHOTS.eyebrows([9]),
+    {
+      id: 'mouth-open',
+      kind: 'photo',
+      instruction: 'Ask the patient to open the mouth and stick out the tongue. Shine a flashlight in and photograph the tongue and lips from about 20 cm.',
+      flash: true,
+      answers: [11],
+    },
+  ],
+  questions: {
+    4: {
+      questionNumber: 4,
+      text: 'Check the pupils, are they similar in size and round?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      // Unequal pupils after a head injury can mean bleeding in the skull: a
+      // visible difference must never be rounded to "similar".
+      guidance:
+        'Compare the two pupils (the black centres) in size and shape. Any difference you can see, or a pupil that is not round, means "no" — ' +
+        'give the side of the larger or irregular pupil. If a pupil cannot be told apart from its iris, answer "cannot_determine".',
+      sentence: (a) => a.value === 'yes'
+        ? 'pupils similar in size and round'
+        : withDetail(`pupils not similar in size or not round${a.side && a.side !== 'both' ? ` (${a.side} larger or irregular)` : ''}`, a),
+    },
+    7: faceSymmetryQuestion(7, 'smile', 'smiling'),
+    8: faceSymmetryQuestion(8, 'show teeth', 'showing the teeth'),
+    9: faceSymmetryQuestion(9, 'raise eyebrows', 'raising the eyebrows'),
+    11: {
+      questionNumber: 11,
+      text: 'Ask the patient to open their mouth. Are there any wounds on the tongue or lips?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      // A bitten tongue suggests the patient had a seizure.
+      guidance: 'Bite marks, cuts, swelling or bleeding on the tongue (especially its sides) or the lips. If "yes", say where.',
+      sentence: (a) => a.value === 'yes' ? withDetail('wounds on the tongue or lips', a) : 'no wounds on the tongue or lips',
+    },
+  },
+};
+
 export const EXAM_MEDIA_PROTOCOLS: Record<number, ExamMediaProtocol> = {
+  [ABDOMEN_EXAM.examinationId]: ABDOMEN_EXAM,
+  [ABDOMINAL_PAIN.examinationId]: ABDOMINAL_PAIN,
+  [SIMPLE_NEURO.examinationId]: SIMPLE_NEURO,
+  [ADVANCED_NEURO.examinationId]: ADVANCED_NEURO,
   [NOSE_CHECK.examinationId]: NOSE_CHECK,
   [JOINT_EXAM.examinationId]: JOINT_EXAM,
   [INJURY_ASSESSMENT.examinationId]: INJURY_ASSESSMENT,
