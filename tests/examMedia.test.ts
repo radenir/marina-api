@@ -280,6 +280,26 @@ console.log('abdomen and neurologic protocols');
       '(appendectomy scar right lower belly); does not look pale or unwell.', b);
 }
 
+console.log('general appearance and thrombosis protocols');
+{
+  const ga = getProtocol(14)!;
+  const th = getProtocol(17)!;
+  check('GA: face photo Q3, body photo Q5',
+    getShot(ga, 'face-front')!.answers.join() === '3' && getShot(ga, 'body-front')!.answers.join() === '5');
+  check('thrombosis: both legs Q1-2, pitting photo Q5',
+    getShot(th, 'legs-both')!.answers.join() === '1,2' && getShot(th, 'pitting-test')!.answers.join() === '5');
+  const g = renderExamSentence(14, [{ questionNumber: 3, value: 'yes' }, { questionNumber: 5, value: 'no', detail: 'legs covered' }]);
+  check('GA sentence', g === 'General appearance (photo, confirmed by officer): looks pale or grey; no visible signs of trauma (legs covered).', g);
+  const t = renderExamSentence(17, [
+    { questionNumber: 1, value: 'yes', side: 'left' },
+    { questionNumber: 2, value: 'yes', side: 'left' },
+    { questionNumber: 5, value: 'yes' },
+  ]);
+  check('thrombosis sentence',
+    t === 'Thrombosis and edema check (photo, confirmed by officer): swollen left leg, foot or ankle; one leg clearly larger than the other on the left side; ' +
+      'pitting edema (dent remains after pressing).', t);
+}
+
 console.log('withPhotoFindings');
 {
   const batch = { name: 'findings', prompt: 'Rules...\nReturn JSON:\n{"exam":""}' };

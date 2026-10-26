@@ -821,7 +821,111 @@ const ADVANCED_NEURO: ExamMediaProtocol = {
   },
 };
 
+// General appearance. Talking (Q1), breathing (Q2) and walking (Q6) need a
+// video, sweaty / warm skin (Q4) needs touch — they stay with the officer.
+const GENERAL_APPEARANCE: ExamMediaProtocol = {
+  examinationId: examinationIds.GENERAL_APPEARANCE,
+  name: examinationDisplayNames[examinationIds.GENERAL_APPEARANCE],
+  shots: [
+    {
+      id: 'face-front',
+      kind: 'photo',
+      instruction: 'Photograph the whole face straight on from about 50 cm, in daylight or good white light, with the patient looking at the camera.',
+      flash: false,
+      answers: [3],
+    },
+    {
+      id: 'body-front',
+      kind: 'photo',
+      instruction:
+        'Photograph the whole patient from the front, from about 2 m, in good light. ' +
+        'Uncover the places that hurt or were hit, as far as decency and warmth allow.',
+      flash: false,
+      answers: [5],
+    },
+  ],
+  questions: {
+    3: {
+      questionNumber: 3,
+      text: 'Does the person look more pale or grey than usual?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Pale, grey or bluish skin and lips. Lighting and skin tone change how pale someone looks, and the photo cannot show what is "usual" for this person; if you cannot tell, answer "cannot_determine".',
+      sentence: (a) => a.value === 'yes' ? withDetail('looks pale or grey', a) : 'does not look pale or grey',
+    },
+    5: {
+      questionNumber: 5,
+      text: 'Are there any signs of trauma, such as wounds or bruising?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Wounds, blood, bruises, swelling or burns anywhere visible. If "yes", say what and where. Covered body parts cannot be judged — mention it in detail.',
+      sentence: (a) => a.value === 'yes' ? withDetail('signs of trauma', a) : withDetail('no visible signs of trauma', a),
+    },
+  },
+};
+
+// Thrombosis and edema check. Calf (Q3) and groin (Q4) pain need pressing.
+// Pitting (Q5) is a photo taken right after the thumb press: the dent is
+// still visible for a few seconds.
+const THROMBOSIS_EDEMA: ExamMediaProtocol = {
+  examinationId: examinationIds.THROMBOSIS_EDEMA,
+  name: examinationDisplayNames[examinationIds.THROMBOSIS_EDEMA],
+  shots: [
+    {
+      id: 'legs-both',
+      kind: 'photo',
+      instruction:
+        'Uncover both legs from the knees down. Place the feet side by side, in the same position, and photograph both lower legs, ankles and feet ' +
+        'from the front, about 1 m away, in good light.',
+      flash: false,
+      answers: [1, 2],
+    },
+    {
+      id: 'pitting-test',
+      kind: 'photo',
+      instruction:
+        'Press your thumb firmly into the skin just above the ankle bone for 5 seconds, then let go and photograph the spot straight away, ' +
+        'slightly from the side and close up, so a remaining dent would be visible.',
+      flash: true,
+      answers: [5],
+    },
+  ],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Are the legs, feet, or ankles swollen?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: 'Puffy ankles or feet, ankle bones not visible, tight shiny skin, or marks from socks. Give the side, or "both".',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`swollen ${a.side === 'both' || !a.side ? 'legs, feet or ankles' : `${a.side} leg, foot or ankle`}`, a)
+        : 'legs, feet and ankles not swollen',
+    },
+    2: {
+      questionNumber: 2,
+      text: 'Is one leg more swollen and clearly larger than the other?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      // One-sided swelling is the warning sign for a deep vein thrombosis.
+      guidance: 'Compare the width of both calves and ankles. If one is clearly larger, answer "yes" with its side. Both legs must be in the photo; otherwise "cannot_determine".',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`one leg clearly larger than the other${onSide(a)}`, a)
+        : 'both legs similar in size',
+    },
+    5: {
+      questionNumber: 5,
+      text: 'Press your thumb above the ankle, then release. Does a dent or dipped area remain in the skin?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'A visible pit or dip in the skin where the thumb pressed. A red mark without a dip is "no".',
+      sentence: (a) => a.value === 'yes' ? withDetail('pitting edema (dent remains after pressing)', a) : 'no pitting edema',
+    },
+  },
+};
+
 export const EXAM_MEDIA_PROTOCOLS: Record<number, ExamMediaProtocol> = {
+  [GENERAL_APPEARANCE.examinationId]: GENERAL_APPEARANCE,
+  [THROMBOSIS_EDEMA.examinationId]: THROMBOSIS_EDEMA,
   [ABDOMEN_EXAM.examinationId]: ABDOMEN_EXAM,
   [ABDOMINAL_PAIN.examinationId]: ABDOMINAL_PAIN,
   [SIMPLE_NEURO.examinationId]: SIMPLE_NEURO,
