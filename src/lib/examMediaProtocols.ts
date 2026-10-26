@@ -923,7 +923,130 @@ const THROMBOSIS_EDEMA: ExamMediaProtocol = {
   },
 };
 
+// Ears check. Only the outer ear can be photographed with a phone; the ear
+// canal and eardrum (Q3, Q4) need an otoscope, and the rest needs touch or
+// hearing. Warmth cannot be seen.
+const EARS_CHECK: ExamMediaProtocol = {
+  examinationId: examinationIds.EARS_CHECK,
+  name: examinationDisplayNames[examinationIds.EARS_CHECK],
+  shots: [
+    {
+      id: 'outer-ear',
+      kind: 'photo',
+      instruction:
+        'Photograph the painful ear from the side, about 20 cm away, in good light, with hair held back so the whole outer ear and the skin behind it are visible.',
+      flash: false,
+      answers: [1],
+    },
+  ],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Check the outer ear, is there any redness, swelling, or warmth?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Redness or swelling of the outer ear, the ear lobe or the skin behind the ear, or discharge at the ear opening. Warmth cannot be seen. If "yes", say what and where.',
+      sentence: (a) => a.value === 'yes'
+        ? `outer ear red or swollen${a.detail?.trim() ? `: ${a.detail.trim()}` : ''} (warmth not assessed)`
+        : 'outer ear not red or swollen (warmth not assessed)',
+    },
+  },
+};
+
+// Back pain assessment. Pressing the spine, the walking and squat tests and
+// feeling are for the officer (or video).
+const BACK_PAIN: ExamMediaProtocol = {
+  examinationId: examinationIds.BACK_PAIN,
+  name: examinationDisplayNames[examinationIds.BACK_PAIN],
+  shots: [
+    {
+      id: 'back',
+      kind: 'photo',
+      instruction: 'Uncover the back from the neck to the buttocks. Photograph the whole back from about 1 m, in good light, with the patient standing or lying on the front.',
+      flash: false,
+      answers: [1],
+    },
+  ],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Can you see any bruising, swelling or wounds on the back?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Bruises, swelling, wounds, grazes or a bump along the spine. If "yes", say what and where (e.g. "bruise over the lower spine").',
+      sentence: (a) => a.value === 'yes' ? withDetail('bruising, swelling or wounds on the back', a) : 'no bruising, swelling or wounds on the back',
+    },
+  },
+};
+
+// Limb circulation check. Reuses the side-by-side photo of Joint / Local
+// injury; the pulse (Q1) and warmth need the officer's hands.
+const LIMB_CIRCULATION: ExamMediaProtocol = {
+  examinationId: examinationIds.LIMB_CIRCULATION,
+  name: examinationDisplayNames[examinationIds.LIMB_CIRCULATION],
+  shots: [COMPARE_SIDES_SHOT([2, 3])],
+  questions: {
+    2: {
+      questionNumber: 2,
+      text: 'Are both sides equally warm and have a similar color? If not, please explain.',
+      options: ['similar', 'different'],
+      needsSide: true,
+      guidance: 'Colour only — warmth cannot be seen. "different" if the injured limb is paler, whiter, bluish, grey or mottled compared with the healthy one; give the side of the abnormal limb and the colour in detail.',
+      sentence: (a) => a.value === 'similar'
+        ? 'both limbs similar in colour (warmth not assessed)'
+        : `limb colour different${onSide(a)}${a.detail?.trim() ? `: ${a.detail.trim()}` : ''} (warmth not assessed)`,
+    },
+    3: {
+      questionNumber: 3,
+      text: 'Compare the color of the nails, fingertips or toes between the affected and unaffected limbs. Do they look similar?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      // Pale or blue fingertips beyond an injury mean the blood supply may be cut off.
+      guidance: 'Compare the nails, fingertips or toes of both limbs. "no" if one side is paler, white, blue or grey; give that side. If the nails or tips are not visible, answer "cannot_determine".',
+      sentence: (a) => a.value === 'yes'
+        ? 'nails, fingertips or toes similar in colour on both sides'
+        : withDetail(`nails, fingertips or toes different in colour${onSide(a)}`, a),
+    },
+  },
+};
+
+// Infection focus check. Q2 reuses the Throat check photo, Q3 the photo of the
+// whole patient from General appearance. Cough, pressing the belly and the
+// joints stay with the officer.
+const INFECTION_FOCUS: ExamMediaProtocol = {
+  examinationId: examinationIds.INFECTION_FOCUS,
+  name: examinationDisplayNames[examinationIds.INFECTION_FOCUS],
+  shots: [
+    { ...THROAT_CHECK.shots.find((s) => s.id === 'throat')!, answers: [2] },
+    { ...GENERAL_APPEARANCE.shots.find((s) => s.id === 'body-front')!, answers: [3] },
+  ],
+  questions: {
+    2: {
+      questionNumber: 2,
+      text: 'Look in the throat and around tonsils, is there redness or swelling? Any white patches or yellow fluid?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Red or swollen throat or tonsils, white patches or yellow fluid. A normal throat is pink. If the tongue hides the throat, answer "cannot_determine".',
+      sentence: (a) => a.value === 'yes' ? withDetail('throat red or swollen, or with white patches / yellow fluid', a) : 'throat looks normal',
+    },
+    3: {
+      questionNumber: 3,
+      text: 'Check the chest, back, legs and arms. Can you see any redness, swelling, wounds, or insect bites?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Red or swollen skin, wounds, rashes or insect bites anywhere on the visible body. If "yes", say what and where. Body parts not visible in the photo cannot be judged — mention it in detail.',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail('redness, swelling, wounds or insect bites on the skin', a)
+        : withDetail('no redness, swelling, wounds or insect bites seen on the skin', a),
+    },
+  },
+};
+
 export const EXAM_MEDIA_PROTOCOLS: Record<number, ExamMediaProtocol> = {
+  [EARS_CHECK.examinationId]: EARS_CHECK,
+  [BACK_PAIN.examinationId]: BACK_PAIN,
+  [LIMB_CIRCULATION.examinationId]: LIMB_CIRCULATION,
+  [INFECTION_FOCUS.examinationId]: INFECTION_FOCUS,
   [GENERAL_APPEARANCE.examinationId]: GENERAL_APPEARANCE,
   [THROMBOSIS_EDEMA.examinationId]: THROMBOSIS_EDEMA,
   [ABDOMEN_EXAM.examinationId]: ABDOMEN_EXAM,

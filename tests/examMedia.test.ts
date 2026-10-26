@@ -300,6 +300,27 @@ console.log('general appearance and thrombosis protocols');
       'pitting edema (dent remains after pressing).', t);
 }
 
+console.log('ears, back, limb circulation, infection focus');
+{
+  const ears = getProtocol(4)!;
+  const back = getProtocol(9)!;
+  const limb = getProtocol(11)!;
+  const inf = getProtocol(15)!;
+  check('ears outer-ear Q1, back Q1', getShot(ears, 'outer-ear')!.answers.join() === '1' && getShot(back, 'back')!.answers.join() === '1');
+  check('limb circulation reuses compare-sides for Q2-3', getShot(limb, 'compare-sides')!.answers.join() === '2,3');
+  check('infection focus reuses throat (Q2) and body-front (Q3)',
+    getShot(inf, 'throat')!.answers.join() === '2' && getShot(inf, 'body-front')!.answers.join() === '3');
+  check('throat check and GA shots unchanged',
+    getShot(getProtocol(5)!, 'throat')!.answers.join() === '2,3,4' && getShot(getProtocol(14)!, 'body-front')!.answers.join() === '5');
+  const l = renderExamSentence(11, [
+    { questionNumber: 2, value: 'different', side: 'right', detail: 'pale' },
+    { questionNumber: 3, value: 'no', side: 'right', detail: 'bluish fingertips' },
+  ]);
+  check('limb circulation sentence',
+    l === 'Limb circulation check (photo, confirmed by officer): limb colour different on the right side: pale (warmth not assessed); ' +
+      'nails, fingertips or toes different in colour on the right side (bluish fingertips).', l);
+}
+
 console.log('withPhotoFindings');
 {
   const batch = { name: 'findings', prompt: 'Rules...\nReturn JSON:\n{"exam":""}' };
