@@ -8,7 +8,7 @@
  *     ./node_modules/.bin/tsx tests/examMedia.test.ts
  * Exits non-zero on any failure.
  */
-import { getProtocol, getShot, renderExamSentence } from '../src/lib/examMediaProtocols.js';
+import { getProtocol, getShot, isValidAnswer, renderExamSentence } from '../src/lib/examMediaProtocols.js';
 import { parseModelOutput } from '../src/lib/examMediaAnalyze.js';
 import { withPhotoFindings } from '../src/lib/medicalExtractV2.js';
 
@@ -80,6 +80,49 @@ console.log('renderExamSentence');
     === 'Eye examination (photo, confirmed by officer): pupils unequal in size (left pupil larger).');
   check('nothing confirmed → empty', renderExamSentence(2, []) === '');
   check('unknown examination → empty', renderExamSentence(999, [{ questionNumber: 1, value: 'yes' }]) === '');
+}
+
+console.log('wound protocol');
+{
+  const wound = getProtocol(21)!;
+  const close = getShot(wound, 'wound-close')!;
+  const r = parseModelOutput(JSON.stringify({
+    quality: { ok: true },
+    answers: [
+      { questionNumber: 1, value: '4.5 x 1.0', confidence: 0.8, detail: 'measured against ruler' },
+      { questionNumber: 2, value: 'jagged', confidence: 0.85 },
+      { questionNumber: 3, value: 'gaping', confidence: 0.9 },
+      { questionNumber: 4, value: 'fat', confidence: 0.75 },
+      { questionNumber: 5, value: 'no', confidence: 0.8 },
+      { questionNumber: 6, value: 'yes', confidence: 0.8, detail: 'grit' },
+    ],
+  }), wound, close, 0.7);
+  check('all six close-up answers kept', r.answers.every((a) => a.status === 'answered'), r.answers);
+  const bad = parseModelOutput('{"quality":{"ok":true},"answers":[{"questionNumber":1,"value":"about 4 cm","confidence":0.9}]}', wound, close, 0.7);
+  check('size not in "L x W" form → cannot_determine', bad.answers.find((a) => a.questionNumber === 1)?.status === 'cannot_determine');
+  check('size format valid', isValidAnswer(wound, { questionNumber: 1, value: '12 x 0.5' }));
+  check('size format invalid', !isValidAnswer(wound, { questionNumber: 1, value: '12cm' }));
+  check('Q7 belongs to the distal shot only', getShot(wound, 'wound-distal')!.answers.join() === '7' && !close.answers.includes(7));
+
+  const s = renderExamSentence(21, [
+    { questionNumber: 7, value: 'normal' },
+    { questionNumber: 1, value: '4.5 x 1.0', detail: 'estimated from a coin' },
+    { questionNumber: 2, value: 'jagged' },
+    { questionNumber: 3, value: 'gaping' },
+    { questionNumber: 4, value: 'fat' },
+    { questionNumber: 5, value: 'no' },
+    { questionNumber: 6, value: 'yes', detail: 'grit' },
+  ]);
+  check(
+    'wound findings from both photos in one sentence',
+    s === 'Wound examination (photo, confirmed by officer): wound about 4.5 cm long and 1.0 cm wide (estimated from a coin); ' +
+      'edges uneven and jagged; edges gaping open; fat visible in the wound; no signs of infection; debris in the wound (grit); ' +
+      'skin beyond the wound of normal colour (warmth not assessed).',
+    s,
+  );
+  check('retaken photo: later answer wins', renderExamSentence(2, [
+    { questionNumber: 2, value: 'no' }, { questionNumber: 2, value: 'yes', side: 'left' },
+  ]) === 'Eye examination (photo, confirmed by officer): redness of the white of the left eye.');
 }
 
 console.log('withPhotoFindings');

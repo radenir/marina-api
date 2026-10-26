@@ -74,6 +74,8 @@ examMediaRouter.get('/protocols', requireAuth, examMediaRateLimit, (req: Request
         questionNumber: q.questionNumber,
         text: q.text,
         options: q.options,
+        // Set for measured answers (wound size), where `options` is empty.
+        valueFormat: q.valueFormat?.description,
         needsSide: q.needsSide,
       })),
     }));

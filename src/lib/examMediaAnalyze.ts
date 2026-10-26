@@ -13,7 +13,7 @@
 import { z } from 'zod';
 import { nebius } from './nebius.js';
 import { config } from '../config.js';
-import type { ExamMediaProtocol, MediaShot, Side } from './examMediaProtocols.js';
+import { allowsValue, type ExamMediaProtocol, type MediaShot, type Side } from './examMediaProtocols.js';
 
 export interface AiAnswer {
   questionNumber: number;
@@ -53,7 +53,10 @@ export function buildPrompt(protocol: ExamMediaProtocol, shot: MediaShot): strin
     const q = protocol.questions[n];
     const sideNote = q.needsSide ? ' If the answer is positive, give "side": "left", "right" or "both".' : '';
     const guidance = q.guidance ? `\n   Guidance: ${q.guidance}` : '';
-    return `${n}. ${q.text}\n   Allowed values: ${[...q.options, 'cannot_determine'].map((o) => `"${o}"`).join(', ')}.${sideNote}${guidance}`;
+    const allowed = q.valueFormat
+      ? `Answer as ${q.valueFormat.description}, or "cannot_determine".`
+      : `Allowed values: ${[...q.options, 'cannot_determine'].map((o) => `"${o}"`).join(', ')}.`;
+    return `${n}. ${q.text}\n   ${allowed}${sideNote}${guidance}`;
   }).join('\n');
 
   return `You assist a non-medical ship's officer who is examining a crew member at sea. You are shown one photo taken for the "${protocol.name}". The photo was meant to show: ${shot.instruction}
@@ -113,7 +116,7 @@ export function parseModelOutput(
     if (a.value === 'cannot_determine') {
       return { questionNumber: n, status: 'cannot_determine', reason: a.reason ?? undefined };
     }
-    if (!q.options.includes(a.value)) {
+    if (!allowsValue(q, a.value)) {
       return { questionNumber: n, status: 'cannot_determine', reason: 'Answer outside the allowed values.' };
     }
     const confidence = a.confidence ?? 0;

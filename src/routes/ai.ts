@@ -56,7 +56,7 @@ import {
   updateFromExtract,
 } from '../lib/conversationStore.js';
 import { scoreAndStore } from '../lib/reportScore.js';
-import { renderExamSentence } from '../lib/examMediaProtocols.js';
+import { renderExamSentence, type MediaAnswer } from '../lib/examMediaProtocols.js';
 import { getConfirmedExamMedia, linkExamMediaToConversation } from '../lib/examMediaStore.js';
 
 export const aiRouter = Router();
@@ -983,8 +983,14 @@ aiV2Router.post(
     if (mediaIds.length && principal.type === 'user') {
       try {
         const rows = await getConfirmedExamMedia(mediaIds, principal.userId);
-        photoExam = rows
-          .map((r) => renderExamSentence(r.examination_id, r.confirmed_answers ?? []))
+        // One sentence per examination, even when it took several photos
+        // (a wound close-up plus the hand beyond it).
+        const byExam = new Map<number, MediaAnswer[]>();
+        for (const r of rows) {
+          byExam.set(r.examination_id, [...(byExam.get(r.examination_id) ?? []), ...(r.confirmed_answers ?? [])]);
+        }
+        photoExam = [...byExam]
+          .map(([examinationId, answers]) => renderExamSentence(examinationId, answers))
           .filter(Boolean)
           .join(' ');
       } catch (err) {
