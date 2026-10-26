@@ -232,9 +232,99 @@ const WOUND_EXAM: ExamMediaProtocol = {
   },
 };
 
+// Fixed list rather than free text, so the location reads the same in every
+// report. Combined with the side ("left forearm"); midline areas need no side.
+const BODY_AREAS = [
+  'scalp', 'face', 'neck', 'chest', 'abdomen', 'back', 'buttocks', 'groin',
+  'shoulder', 'upper arm', 'elbow', 'forearm', 'hand', 'thigh', 'knee', 'lower leg', 'foot', 'widespread',
+];
+
+const SKIN_ASSESSMENT: ExamMediaProtocol = {
+  examinationId: examinationIds.SKIN_ASSESSMENT,
+  name: examinationDisplayNames[examinationIds.SKIN_ASSESSMENT],
+  shots: [
+    {
+      id: 'skin-wide',
+      kind: 'photo',
+      instruction:
+        'Photograph the whole affected body area from about 1 m, in good light, so it is clear where on the body the skin problem is. ' +
+        'If it could be on both sides of the body (both arms, both legs), get both sides in the photo.',
+      flash: false,
+      answers: [1, 2, 3],
+    },
+    {
+      id: 'skin-close',
+      kind: 'photo',
+      instruction:
+        'Photograph the skin problem close up, from about 15 cm, in good light. ' +
+        'If you can, take it slightly from the side so it shows whether the skin is raised.',
+      flash: false,
+      answers: [4, 5, 6],
+    },
+  ],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Where is the skin condition located?',
+      options: BODY_AREAS,
+      needsSide: true,
+      guidance:
+        'The main body area of the skin problem. Give "side" for arms, legs, hands, feet, shoulders and one-sided findings; ' +
+        'leave it out for midline areas. "widespread" if it covers several body areas.',
+      sentence: (a) => {
+        const where = a.value === 'widespread'
+          ? 'widespread skin condition'
+          : `skin condition on the ${a.side && a.side !== 'both' ? `${a.side} ` : ''}${a.value}${a.side === 'both' ? ' on both sides' : ''}`;
+        return withDetail(where, a);
+      },
+    },
+    2: {
+      questionNumber: 2,
+      text: 'Does the skin condition spread to other areas?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: '"yes" if the same kind of skin change is visible in more than one separate body area, or spreads out from the main area.',
+      sentence: (a) => a.value === 'yes' ? withDetail('spreading to other areas', a) : 'confined to one area',
+    },
+    3: {
+      questionNumber: 3,
+      text: 'Is it symmetrical or not?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Symmetrical = the same on both sides of the body. Only answer if both sides are visible in the photo; otherwise "cannot_determine".',
+      sentence: (a) => a.value === 'yes' ? 'symmetrical on both sides of the body' : 'not symmetrical',
+    },
+    4: {
+      questionNumber: 4,
+      text: 'Is it flat? Or rather swollen or raised?',
+      options: ['flat', 'raised', 'swollen'],
+      needsSide: false,
+      guidance: '"raised" = bumps, welts or plaques above the skin; "swollen" = the whole area puffed up. Judge from shadows and the outline; if the photo is straight on and gives no clue, "cannot_determine".',
+      sentence: (a) => withDetail(a.value === 'flat' ? 'flat' : a.value, a),
+    },
+    5: {
+      questionNumber: 5,
+      text: 'Is it dry or weeping?',
+      options: ['dry', 'weeping'],
+      needsSide: false,
+      guidance: '"weeping" = moist, oozing clear or yellow fluid, or wet crusts; "dry" = dry, scaly or flaky.',
+      sentence: (a) => withDetail(a.value, a),
+    },
+    6: {
+      questionNumber: 6,
+      text: 'Are there any blisters or open wounds?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Fluid-filled blisters, burst blisters, open sores, erosions or scratch wounds. If "yes", say which in detail.',
+      sentence: (a) => a.value === 'yes' ? withDetail('blisters or open wounds present', a) : 'no blisters or open wounds',
+    },
+  },
+};
+
 export const EXAM_MEDIA_PROTOCOLS: Record<number, ExamMediaProtocol> = {
   [EYE_EXAM.examinationId]: EYE_EXAM,
   [WOUND_EXAM.examinationId]: WOUND_EXAM,
+  [SKIN_ASSESSMENT.examinationId]: SKIN_ASSESSMENT,
 };
 
 /** Whether `value` is an answer the question allows: one of its options, or a match for its value format. */

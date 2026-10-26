@@ -125,6 +125,32 @@ console.log('wound protocol');
   ]) === 'Eye examination (photo, confirmed by officer): redness of the white of the left eye.');
 }
 
+console.log('skin protocol');
+{
+  const skin = getProtocol(19)!;
+  check('wide photo answers Q1-3, close-up Q4-6',
+    getShot(skin, 'skin-wide')!.answers.join() === '1,2,3' && getShot(skin, 'skin-close')!.answers.join() === '4,5,6');
+  check('body area from the fixed list', isValidAnswer(skin, { questionNumber: 1, value: 'forearm', side: 'left' }));
+  check('body area outside the list rejected', !isValidAnswer(skin, { questionNumber: 1, value: 'left wrist' }));
+  const s = renderExamSentence(19, [
+    { questionNumber: 1, value: 'forearm', side: 'left' },
+    { questionNumber: 2, value: 'no' },
+    { questionNumber: 3, value: 'no' },
+    { questionNumber: 4, value: 'raised' },
+    { questionNumber: 5, value: 'weeping', detail: 'yellow crusts' },
+    { questionNumber: 6, value: 'yes', detail: 'small blisters' },
+  ]);
+  check(
+    'skin findings in one sentence',
+    s === 'Skin assessment (photo, confirmed by officer): skin condition on the left forearm; confined to one area; not symmetrical; ' +
+      'raised; weeping (yellow crusts); blisters or open wounds present (small blisters).',
+    s,
+  );
+  check('both sides / widespread wording',
+    renderExamSentence(19, [{ questionNumber: 1, value: 'lower leg', side: 'both' }]) === 'Skin assessment (photo, confirmed by officer): skin condition on the lower leg on both sides.' &&
+    renderExamSentence(19, [{ questionNumber: 1, value: 'widespread' }]) === 'Skin assessment (photo, confirmed by officer): widespread skin condition.');
+}
+
 console.log('withPhotoFindings');
 {
   const batch = { name: 'findings', prompt: 'Rules...\nReturn JSON:\n{"exam":""}' };
