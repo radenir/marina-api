@@ -56,6 +56,8 @@ import {
   updateFromExtract,
 } from '../lib/conversationStore.js';
 import { scoreAndStore } from '../lib/reportScore.js';
+import { renderExamSentence } from '../lib/examMediaProtocols.js';
+import { getConfirmedExamMedia, linkExamMediaToConversation } from '../lib/examMediaStore.js';
 
 export const aiRouter = Router();
 
@@ -931,6 +933,12 @@ aiRouter.post(
 // Middleware order: authenticate → requireScope → extractRateLimit → requireVerifiedActiveUser → handler
 // ---------------------------------------------------------------------------
 
+// v2 additionally takes the photos the officer confirmed via /ai/exam-media;
+// their findings are written into "exam".
+const ExtractV2Schema = ExtractSchema.extend({
+  examMediaIds: z.array(z.string().uuid()).max(20).optional(),
+});
+
 aiV2Router.post(
   '/extract',
   authenticate,
@@ -938,7 +946,7 @@ aiV2Router.post(
   extractRateLimit,
   requireVerifiedActiveUser,
   async (req: Request, res: Response): Promise<void> => {
-    const parsed = ExtractSchema.safeParse(req.body);
+    const parsed = ExtractV2Schema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
       return;
@@ -952,6 +960,7 @@ aiV2Router.post(
       caseId,
       patientLanguage,
       medicalOfficerLanguage,
+      examMediaIds,
     } = parsed.data;
 
     const principal = req.principal!;
@@ -962,10 +971,30 @@ aiV2Router.post(
       res.status(400).json({ error: 'conversationId is not supported for partner authentication' });
       return;
     }
+    if (isPartner && examMediaIds?.length) {
+      res.status(400).json({ error: 'examMediaIds is not supported for partner authentication' });
+      return;
+    }
+
+    // Confirmed photo findings, rendered to report sentences. Ids that are not
+    // the caller's, or not yet confirmed, are ignored.
+    const mediaIds = examMediaIds ?? [];
+    let photoExam = '';
+    if (mediaIds.length && principal.type === 'user') {
+      try {
+        const rows = await getConfirmedExamMedia(mediaIds, principal.userId);
+        photoExam = rows
+          .map((r) => renderExamSentence(r.examination_id, r.confirmed_answers ?? []))
+          .filter(Boolean)
+          .join(' ');
+      } catch (err) {
+        console.error('[v2/ai/extract] exam media load failed:', (err as Error).message);
+      }
+    }
 
     let summary: Record<string, string | boolean>;
     try {
-      summary = await parallelExtractV2(conversation, userProfile as UserProfile | undefined, mewsScore ?? null);
+      summary = await parallelExtractV2(conversation, userProfile as UserProfile | undefined, mewsScore ?? null, photoExam);
     } catch (err) {
       console.error('[v2/ai/extract] extraction error:', (err as Error).message);
       res.status(502).json({ error: 'Extraction service unavailable' });
@@ -1008,6 +1037,12 @@ aiV2Router.post(
       } catch (err) {
         console.error('[v2/ai/extract] note-taker persist failed:', (err as Error).message);
       }
+    }
+
+    if (persistedId && mediaIds.length && principal.type === 'user') {
+      linkExamMediaToConversation(mediaIds, principal.userId, persistedId).catch((err) =>
+        console.error('[v2/ai/extract] exam media link failed:', (err as Error).message),
+      );
     }
 
     await auditLog('medical_record_extracted', req, attributionFromPrincipal(req), {

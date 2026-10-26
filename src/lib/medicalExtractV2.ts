@@ -456,10 +456,29 @@ const BATCHES_V2: BatchConfig[] = [
 // Public API
 // ---------------------------------------------------------------------------
 
+// Examination findings the officer already confirmed from photos
+// (/ai/exam-media). They are written into "exam" in code, word for word, rather
+// than left for the model to pick out of the transcript: an LLM can drop or
+// reword them, and they must read the same every time. The findings batch is
+// told they exist so it does not record the same questions a second time.
+export function withPhotoFindings(batch: BatchConfig, photoExam: string): BatchConfig {
+  if (!photoExam) return batch;
+  const block = `────────────────────────────────────────────────────────
+ALREADY RECORDED FROM PHOTOS
+────────────────────────────────────────────────────────
+The officer photographed the patient and confirmed these examination findings. They are added to "exam" automatically — do NOT write them again. In "exam", record only the examination findings the transcript adds beyond these:
+${photoExam}
+
+Return JSON:`;
+  const i = batch.prompt.lastIndexOf('Return JSON:');
+  return { name: batch.name, prompt: batch.prompt.slice(0, i) + block + batch.prompt.slice(i + 'Return JSON:'.length) };
+}
+
 export async function parallelExtractV2(
   conversation: Array<{ role: string; content: string }>,
   userProfile?: UserProfile,
   mewsScore?: number | null,
+  photoExam = '',
 ): Promise<Record<string, string | boolean>> {
   const text = conversationToText(conversation);
 
@@ -485,12 +504,17 @@ export async function parallelExtractV2(
   const results = await Promise.all([
     corePromise,
     ...parallelBatches.map((b) => extractBatchV2(text, b)),
-    pathwayPromise.then((p) => extractBatchV2(text, findingsBatchFor(p))),
+    pathwayPromise.then((p) => extractBatchV2(text, withPhotoFindings(findingsBatchFor(p), photoExam))),
     pathwayPromise.then((p) => extractBatchV2(text, historyBatchFor(p))),
     pathwayPromise.then((p) => extractBatchV2(text, medicalHistoryBatchFor(p))),
   ]);
   const merged: Record<string, string | boolean> = {};
   results.forEach(r => Object.assign(merged, r));
+
+  if (photoExam) {
+    const spoken = typeof merged.exam === 'string' ? merged.exam.trim() : '';
+    merged.exam = spoken ? `${photoExam} ${spoken}` : photoExam;
+  }
 
   // M-EWS: use the caller-supplied score, else compute it from extracted vitals.
   let finalMewsScore = (mewsScore !== null && mewsScore !== undefined) ? mewsScore : null;

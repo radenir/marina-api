@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import { config } from './config';
 import { authRouter } from './routes/auth';
 import { aiRouter, aiV2Router, aiFreeRouter } from './routes/ai';
+import { examMediaRouter } from './routes/examMedia';
 import { casesRouter } from './routes/cases';
 import { fleetRouter } from './routes/fleet';
 import { conversationsRouter } from './routes/conversations';
@@ -124,6 +125,7 @@ app.use(
 );
 
 app.use('/auth', authRouter);
+app.use('/ai/exam-media', examMediaRouter);
 app.use('/ai', aiRouter);
 app.use('/v2/ai', aiV2Router);
 app.use('/free/ai', aiFreeRouter);

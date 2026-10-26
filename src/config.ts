@@ -79,6 +79,18 @@ export const config = {
     extractV2Model: optional_env('NEBIUS_EXTRACT_V2_MODEL', 'openai/gpt-oss-120b'),
   },
 
+  // Vision model for /ai/exam-media: reads an examination photo and answers the
+  // examination questions it can see. Runs on Nebius (EU). There is no fallback:
+  // the OVH backup models are text-only, and an unanswered photo simply leaves
+  // its questions to be asked in the conversation, as before.
+  vision: {
+    model:     optional_env('VISION_MODEL', 'moonshotai/Kimi-K3'),
+    timeoutMs: parseInt(optional_env('VISION_TIMEOUT_MS', '60000'), 10),
+    // Below this, an answer is returned as "cannot determine" and the question
+    // is asked normally.
+    minConfidence: parseFloat(optional_env('VISION_MIN_CONFIDENCE', '0.7')),
+  },
+
   // OVHcloud AI Endpoints — backup LLM used when Nebius is slow/unavailable.
   // Defaults to the same OVH endpoint/key already used for Whisper.
   ovh: {
