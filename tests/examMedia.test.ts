@@ -185,6 +185,28 @@ console.log('throat and dental protocols');
       'black or brown teeth (lower left molar).', d);
 }
 
+console.log('joint and local injury protocols');
+{
+  const joint = getProtocol(23)!;
+  const injury = getProtocol(27)!;
+  check('same compare-sides shot in both',
+    getShot(joint, 'compare-sides')!.answers.join() === '1,2,3' && getShot(injury, 'compare-sides')!.answers.join() === '1,2');
+  const j = renderExamSentence(23, [
+    { questionNumber: 1, value: 'yes', side: 'right' },
+    { questionNumber: 2, value: 'no' },
+    { questionNumber: 3, value: 'no' },
+  ]);
+  check('joint sentence',
+    j === 'Joint examination (photo, confirmed by officer): swelling of the joint on the right side, compared with the healthy side; joint not red (warmth not assessed); joint not deformed.', j);
+  const i = renderExamSentence(27, [
+    { questionNumber: 1, value: 'yes', side: 'left', detail: 'wrist bent' },
+    { questionNumber: 2, value: 'yes', side: 'left', detail: 'swelling and bruising' },
+  ]);
+  check('local injury sentence',
+    i === 'Local injury assessment (photo, confirmed by officer): injured part crooked, deformed or out of place on the left side (wrist bent); ' +
+      'open wound, bruising or swelling on the left side (swelling and bruising).', i);
+}
+
 console.log('withPhotoFindings');
 {
   const batch = { name: 'findings', prompt: 'Rules...\nReturn JSON:\n{"exam":""}' };

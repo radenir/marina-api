@@ -59,6 +59,10 @@ export interface ExamMediaProtocol {
 const sideOf = (a: MediaAnswer, noun: string): string =>
   a.side === 'both' ? `both ${noun}s` : a.side ? `the ${a.side} ${noun}` : `the ${noun}`;
 
+/** " on the left side" — for one-sided findings; '' for both sides or no side. */
+const onSide = (a: MediaAnswer): string =>
+  a.side && a.side !== 'both' ? ` on the ${a.side} side` : '';
+
 const withDetail = (s: string, a: MediaAnswer): string =>
   a.detail && a.detail.trim() ? `${s} (${a.detail.trim()})` : s;
 
@@ -471,7 +475,95 @@ const DENTAL_EXAM: ExamMediaProtocol = {
   },
 };
 
+// Joint examination and Local injury assessment share one photo: the injured
+// side next to the healthy side, so swelling and deformity are judged by
+// comparison. Same shot id in both protocols, so one photo serves both.
+const COMPARE_SIDES_SHOT = (answers: number[]): MediaShot => ({
+  id: 'compare-sides',
+  kind: 'photo',
+  instruction:
+    'Place the injured arm, leg, hand or foot next to the healthy one, in the same position, and photograph both from about 50 cm in good light. ' +
+    'For a shoulder, hip or knee, photograph both sides of the body from the front. Remove clothing over the injury.',
+  flash: false,
+  answers,
+});
+
+// Deformity points to a fracture or dislocation — the finding that decides
+// evacuation — so the model must not answer "no" unless it can see clearly.
+const DEFORMITY_GUIDANCE =
+  'Compare with the healthy side: an angle or bend where there should be none, a step or bump, a shortened or rotated limb, ' +
+  'or a joint that sits out of place. Give the side of the injured limb. Answer "no" only if the injured part is fully visible and ' +
+  'looks the same shape as the healthy side; if the healthy side is missing from the photo or the view is unclear, answer "cannot_determine".';
+
+const JOINT_EXAM: ExamMediaProtocol = {
+  examinationId: examinationIds.JOINT_EXAM,
+  name: examinationDisplayNames[examinationIds.JOINT_EXAM],
+  shots: [COMPARE_SIDES_SHOT([1, 2, 3])],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Compare the joints to the other side, is there any swelling?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: 'Compare the size and outline of the joint with the same joint on the healthy side. Give the side of the swollen joint. If only one side is in the photo, answer "cannot_determine".',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`swelling of the joint${onSide(a)}, compared with the healthy side`, a)
+        : 'no swelling compared with the other side',
+    },
+    2: {
+      questionNumber: 2,
+      text: 'Is the joint or area around red and warm?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: 'Colour only — warmth cannot be seen. "yes" if the skin over or around the joint is redder than on the healthy side.',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`joint red${onSide(a)} (warmth not assessed)`, a)
+        : 'joint not red (warmth not assessed)',
+    },
+    3: {
+      questionNumber: 3,
+      text: 'Is the joint deformed or looks unusual?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: DEFORMITY_GUIDANCE,
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`joint deformed or unusual-looking${onSide(a)}`, a)
+        : 'joint not deformed',
+    },
+  },
+};
+
+const INJURY_ASSESSMENT: ExamMediaProtocol = {
+  examinationId: examinationIds.INJURY_ASSESSMENT,
+  name: examinationDisplayNames[examinationIds.INJURY_ASSESSMENT],
+  shots: [COMPARE_SIDES_SHOT([1, 2])],
+  questions: {
+    1: {
+      questionNumber: 1,
+      text: 'Does the injury look crooked, deformed or out of place?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: DEFORMITY_GUIDANCE,
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`injured part crooked, deformed or out of place${onSide(a)}`, a)
+        : 'no visible deformity',
+    },
+    2: {
+      questionNumber: 2,
+      text: 'Is there any open wound, bruising, or swelling?',
+      options: ['yes', 'no'],
+      needsSide: true,
+      guidance: 'Any break in the skin, bruising (blue, purple or dark discolouration) or swelling compared with the healthy side. If "yes", say which in detail.',
+      sentence: (a) => a.value === 'yes'
+        ? withDetail(`open wound, bruising or swelling${onSide(a)}`, a)
+        : 'no open wound, bruising or swelling',
+    },
+  },
+};
+
 export const EXAM_MEDIA_PROTOCOLS: Record<number, ExamMediaProtocol> = {
+  [JOINT_EXAM.examinationId]: JOINT_EXAM,
+  [INJURY_ASSESSMENT.examinationId]: INJURY_ASSESSMENT,
   [EYE_EXAM.examinationId]: EYE_EXAM,
   [WOUND_EXAM.examinationId]: WOUND_EXAM,
   [SKIN_ASSESSMENT.examinationId]: SKIN_ASSESSMENT,
