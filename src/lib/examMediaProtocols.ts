@@ -77,7 +77,16 @@ const EYE_EXAM: ExamMediaProtocol = {
         'Photograph both eyes, straight on, from about 30 cm, in good normal light. ' +
         'Do not use the flash. Ask the patient to look into the camera with eyes wide open.',
       flash: false,
-      answers: [1, 2, 3, 4, 5],
+      answers: [1, 2, 3, 4, 5, 6],
+    },
+    {
+      id: 'eyelids',
+      kind: 'photo',
+      instruction:
+        'Gently pull down the lower eyelid with one finger and ask the patient to look up; photograph the inside of the lower lid and the eye from about 15 cm. ' +
+        'Then lift the upper eyelid, ask the patient to look down, and take a second photo. Use the flash or a flashlight.',
+      flash: true,
+      answers: [9],
     },
   ],
   questions: {
@@ -127,6 +136,28 @@ const EYE_EXAM: ExamMediaProtocol = {
       needsSide: false,
       guidance: 'Compare both pupils. Answer "no" only for a clearly visible difference. If "no", give in detail which pupil is larger.',
       sentence: (a) => a.value === 'yes' ? 'pupils equal in size' : withDetail('pupils unequal in size', a),
+    },
+    6: {
+      questionNumber: 6,
+      text: 'How many millimeters in size would you estimate?',
+      options: [],
+      valueFormat: { pattern: /^([1-9])(\.5)?$/, description: 'pupil diameter in mm, whole or half millimetres, e.g. "4" or "3.5"' },
+      needsSide: false,
+      // The iris is about 12 mm across in adults — the only built-in scale.
+      guidance:
+        'Estimate the pupil diameter against the iris, which is about 12 mm across in adults. Give one value; if the two pupils differ, give the larger ' +
+        'and both sizes in detail (e.g. "right 5, left 3"). If the pupil edge is not clearly visible, answer "cannot_determine".',
+      sentence: (a) => withDetail(`pupils about ${a.value} mm`, a),
+    },
+    9: {
+      questionNumber: 9,
+      text: 'Gently pull down the lower eyelid and lift the upper eyelid. Is there any dust, foreign body or particles?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance:
+        'Specks, dust, metal or wood particles, eyelashes or anything else on the eye or the inside of the eyelids. ' +
+        'Tiny metal splinters are easy to miss — if the eyelid is not pulled back far enough to see, answer "cannot_determine". If "yes", say what and where.',
+      sentence: (a) => a.value === 'yes' ? withDetail('foreign body on the eye or under the eyelid', a) : 'no foreign body seen on the eye or under the eyelids',
     },
   },
 };
@@ -1042,7 +1073,56 @@ const INFECTION_FOCUS: ExamMediaProtocol = {
   },
 };
 
+// Dehydration check. Skin turgor (Q1) needs a video of the pinch; dry mouth
+// (Q2) uses the tongue-out photo from the Advanced neurologic check.
+const DEHYDRATION: ExamMediaProtocol = {
+  examinationId: examinationIds.DEHYDRATION,
+  name: examinationDisplayNames[examinationIds.DEHYDRATION],
+  shots: [{ ...ADVANCED_NEURO.shots.find((s) => s.id === 'mouth-open')!, answers: [2] }],
+  questions: {
+    2: {
+      questionNumber: 2,
+      text: 'Are the tongue, lips or mouth rather dry?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Dry, cracked or crusted lips, a dry, rough or furrowed tongue without shine, sticky mouth. A moist, shiny tongue is "no".',
+      sentence: (a) => a.value === 'yes' ? withDetail('tongue, lips or mouth dry', a) : 'tongue and lips moist',
+    },
+  },
+};
+
+// Breathing check. Only Q3 (something in the mouth) is a photo; the rest is
+// breathing, listening and pressing. Airway first: if the patient is choking,
+// the officer clears the mouth and takes no photo.
+const BREATHING_CHECK: ExamMediaProtocol = {
+  examinationId: examinationIds.BREATHING_CHECK,
+  name: examinationDisplayNames[examinationIds.BREATHING_CHECK],
+  shots: [
+    {
+      id: 'throat',
+      kind: 'photo',
+      instruction:
+        'ONLY if the patient is breathing normally: ask them to open the mouth wide, shine a flashlight in and photograph from about 15 cm. ' +
+        'If the patient is choking or cannot breathe, clear the mouth now — do not take a photo.',
+      flash: true,
+      answers: [3],
+    },
+  ],
+  questions: {
+    3: {
+      questionNumber: 3,
+      text: 'Is there a foreign body or vomit in the mouth?',
+      options: ['yes', 'no'],
+      needsSide: false,
+      guidance: 'Food, vomit, blood clots, a loose tooth or denture, or any object in the mouth or throat. If "yes", say what.',
+      sentence: (a) => a.value === 'yes' ? withDetail('foreign body or vomit in the mouth', a) : 'no foreign body or vomit in the mouth',
+    },
+  },
+};
+
 export const EXAM_MEDIA_PROTOCOLS: Record<number, ExamMediaProtocol> = {
+  [DEHYDRATION.examinationId]: DEHYDRATION,
+  [BREATHING_CHECK.examinationId]: BREATHING_CHECK,
   [EARS_CHECK.examinationId]: EARS_CHECK,
   [BACK_PAIN.examinationId]: BACK_PAIN,
   [LIMB_CIRCULATION.examinationId]: LIMB_CIRCULATION,

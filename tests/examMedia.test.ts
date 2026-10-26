@@ -39,7 +39,7 @@ console.log('parseModelOutput');
     ],
   }));
   const by = new Map(r.answers.map((a) => [a.questionNumber, a]));
-  check('answers every question of the shot', r.answers.length === 5, r.answers);
+  check('answers every question of the shot', r.answers.length === shot.answers.length, r.answers);
   check('valid answer kept', by.get(1)?.status === 'answered' && by.get(1)?.value === 'no');
   check('side and detail kept', by.get(2)?.side === 'right' && by.get(2)?.detail === 'diffuse');
   check('value outside options → cannot_determine', by.get(3)?.status === 'cannot_determine');
@@ -49,7 +49,7 @@ console.log('parseModelOutput');
 {
   const r = parse('```json\n{"quality":{"ok":true},"answers":[{"questionNumber":4,"value":"yes","confidence":0.95}]}\n```');
   check('code fence stripped', r.answers.find((a) => a.questionNumber === 4)?.status === 'answered');
-  check('missing answers → cannot_determine', r.answers.filter((a) => a.status === 'cannot_determine').length === 4);
+  check('missing answers → cannot_determine', r.answers.filter((a) => a.status === 'cannot_determine').length === shot.answers.length - 1);
 }
 {
   // Kimi-K3 leaves "answers" out entirely when it rejects a photo.
@@ -59,7 +59,7 @@ console.log('parseModelOutput');
 }
 {
   const r = parse('I cannot help with that.');
-  check('non-JSON → everything cannot_determine', r.answers.length === 5 && r.answers.every((a) => a.status === 'cannot_determine'));
+  check('non-JSON → everything cannot_determine', r.answers.length === shot.answers.length && r.answers.every((a) => a.status === 'cannot_determine'));
 }
 
 {
@@ -255,7 +255,7 @@ console.log('abdomen and neurologic protocols');
   check('same face-symmetry shots in simple and advanced neuro',
     ['smile', 'show-teeth', 'raise-eyebrows'].every((id) => !!getShot(simple, id) && !!getShot(advanced, id)));
   check('advanced Q4 uses the eye photo', getShot(advanced, 'eyes-front')!.answers.join() === '4');
-  check('eye examination shot unchanged', getShot(getProtocol(2)!, 'eyes-front')!.answers.join() === '1,2,3,4,5');
+  check('eye photo answers Q1-6, eyelid photo Q9', getShot(getProtocol(2)!, 'eyes-front')!.answers.join() === '1,2,3,4,5,6' && getShot(getProtocol(2)!, 'eyelids')!.answers.join() === '9');
 
   const s = renderExamSentence(6, [
     { questionNumber: 1, value: 'no', side: 'left' },
@@ -319,6 +319,18 @@ console.log('ears, back, limb circulation, infection focus');
   check('limb circulation sentence',
     l === 'Limb circulation check (photo, confirmed by officer): limb colour different on the right side: pale (warmth not assessed); ' +
       'nails, fingertips or toes different in colour on the right side (bluish fingertips).', l);
+}
+
+console.log('eye Q6/Q9, dehydration, breathing');
+{
+  const eye = getProtocol(2)!;
+  check('pupil size format', isValidAnswer(eye, { questionNumber: 6, value: '3.5' }) && isValidAnswer(eye, { questionNumber: 6, value: '4' }) &&
+    !isValidAnswer(eye, { questionNumber: 6, value: '12' }) && !isValidAnswer(eye, { questionNumber: 6, value: '4 mm' }));
+  check('dehydration reuses the tongue-out photo', getShot(getProtocol(10)!, 'mouth-open')!.answers.join() === '2' &&
+    getShot(getProtocol(7)!, 'mouth-open')!.answers.join() === '11');
+  check('breathing Q3 photo says airway first', getShot(getProtocol(18)!, 'throat')!.instruction.includes('choking'));
+  const s = renderExamSentence(2, [{ questionNumber: 6, value: '5', detail: 'right 5, left 3' }, { questionNumber: 9, value: 'no' }]);
+  check('eye Q6/Q9 sentence', s === 'Eye examination (photo, confirmed by officer): pupils about 5 mm (right 5, left 3); no foreign body seen on the eye or under the eyelids.', s);
 }
 
 console.log('withPhotoFindings');
