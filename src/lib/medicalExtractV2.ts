@@ -146,9 +146,9 @@ const HISTORY_V2_BATCH: BatchConfig = {
 ${SHARED_RULES}
 
 ────────────────────────────────────────────────────────
-problemDescription : the patient's account of the MAIN problem
+problemDescription : the MAIN problem, as described
 ────────────────────────────────────────────────────────
-Write the story of the presenting complaint as prose, using ONLY what the patient said plus anything they were asked about and explicitly denied. The list below is just a guide to WHAT to capture IF it came up — include only the points that were actually discussed, and never mention or list the ones that were not:
+Write the story of the presenting complaint as prose, using ONLY what was said about it, plus anything asked about and explicitly denied. The list below is just a guide to WHAT to capture IF it came up — include only the points that were actually discussed, and never mention or list the ones that were not:
   • Onset — when it started; sudden or gradual
   • Duration and pattern — how long; constant or comes and goes
   • Location — where it is; whether it spreads/radiates or has moved
