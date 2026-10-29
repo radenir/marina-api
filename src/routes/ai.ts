@@ -339,6 +339,16 @@ const freeTranscribeRateLimit = rateLimit({
   keyFn: principalRateLimitKey,
 });
 
+// The free Translator sends one request per utterance, like transcription, so
+// it gets the same ceiling. Text in and out is cheap; read-aloud (TTS, billed per
+// character) deliberately has no free endpoint.
+const freeTranslateRateLimit = rateLimit({
+  prefix: 'ai-free-translate',
+  limit: 300,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
 const freeExtractRateLimit = rateLimit({
   prefix: 'ai-free-extract',
   limit: 60,
@@ -709,13 +719,12 @@ SPECIAL RULES FOR MEDICAL TRANSLATION:
 The text to translate will be in the user message. Start translating immediately with medical accuracy.`;
 }
 
-aiRouter.post(
-  '/translate',
-  requireAuth,
-  translateRateLimit,
-  requireVerifiedEmail,
-  requireActiveUser,
-  async (req: Request, res: Response): Promise<void> => {
+/**
+ * The translation itself, shared by /ai/translate and the free /free/ai/translate
+ * so the two cannot drift apart. `free` only marks the audit entry.
+ */
+function translateHandler(logTag: string, free = false) {
+  return async (req: Request, res: Response): Promise<void> => {
     const parsed = TranslateSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
@@ -746,14 +755,14 @@ aiRouter.post(
 
       const content = completion.choices[0]?.message?.content;
       if (!content) {
-        console.error('[ai/translate] empty response from Nebius');
+        console.error(`[${logTag}] empty response from Nebius`);
         res.status(502).json({ error: 'Translation service unavailable' });
         return;
       }
 
       translation = content;
     } catch (err) {
-      console.error('[ai/translate] Nebius API error:', (err as Error).message);
+      console.error(`[${logTag}] Nebius API error:`, (err as Error).message);
       res.status(502).json({ error: 'Translation service unavailable' });
       return;
     }
@@ -762,10 +771,20 @@ aiRouter.post(
       from_lang: fromLang,
       to_lang: toLang,
       char_count: text.length,
+      ...(free ? { free: true } : {}),
     });
 
     res.json({ translation });
-  }
+  };
+}
+
+aiRouter.post(
+  '/translate',
+  requireAuth,
+  translateRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  translateHandler('ai/translate'),
 );
 
 // ---------------------------------------------------------------------------
@@ -2414,6 +2433,21 @@ aiFreeRouter.post(
 
 // POST /free/ai/extract — builds the report and persists it (transcript +
 // report + case) under the Free (Anonymous) partner. See section header above.
+// ---------------------------------------------------------------------------
+// POST /free/ai/translate
+// The free, no-login Translator: the same translation as /ai/translate, sent
+// anonymously with the device id (x-marina-device) for the rate limit. Nothing
+// is persisted beyond the audit entry.
+// Middleware order: allowAnonymous → freeTranslateRateLimit → handler
+// ---------------------------------------------------------------------------
+
+aiFreeRouter.post(
+  '/translate',
+  allowAnonymous,
+  freeTranslateRateLimit,
+  translateHandler('free/ai/translate', true),
+);
+
 aiFreeRouter.post(
   '/extract',
   allowAnonymous,

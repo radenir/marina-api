@@ -93,6 +93,7 @@ run fleet    && suite c4 fleet-e2e.ts           4704 full
 run partner  && suite c16 partner-tokens-e2e.ts 4716 full
 run tmas     && suite c17 tmas-e2e.ts           4717 full
 run photos   && suite c18 photos-e2e.ts         4718 full
+run translate && suite c20 free-translate-e2e.ts 4720 full
 run additive && suite c5 safety-no-migration.ts 4705 pre015
 run additive && suite c6 phase2-e2e.ts          4706 pre016
 run additive && suite c7 phase3-e2e.ts          4707 pre016
