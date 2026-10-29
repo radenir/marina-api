@@ -9,6 +9,8 @@ import { mapSummaryToSeafarerFields } from './seafarerMapper';
 import { mapSummaryToGermanFields } from './germanMapper';
 import { mapSummaryToNorwegianFields } from './norwegianMapper';
 import { fillSeafarerForm, fillNorwegianForm } from './seafarerPdf';
+import { appendPhotoPages } from './photoPages';
+import { getPhotosForPdf } from './reportPhotoStore';
 import * as fs from 'fs';
 
 export type PdfTemplate = 'rmd' | 'marina' | 'german' | 'norwegian';
@@ -45,6 +47,14 @@ export type PdfEmailJob = {
   tmasId?: string;
   /** Optional Reply-To for that covering email (the officer's address). */
   replyTo?: string;
+  /**
+   * Photos to append after the form (report_photos ids) and whose they are.
+   * Ids, not images, for the same reason as `summary`: the worker loads them
+   * when it builds the PDF, so no image ever sits in Redis. Optional, so jobs
+   * enqueued before photos existed behave exactly as before.
+   */
+  photoIds?: string[];
+  photoUserId?: string;
 };
 
 export type EmailJobData = SimpleEmailJob | PdfEmailJob;
@@ -114,6 +124,12 @@ export function createEmailWorker(): Worker<EmailJobData> {
         try { if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath); } catch { /* ignore */ }
       }
 
+      // Throws rather than sending without them: the job retries, and the
+      // officer is never told a report with photos went out when it did not.
+      if (data.photoIds?.length && data.photoUserId) {
+        pdfBuffer = await appendPhotoPages(pdfBuffer, await getPhotosForPdf(data.photoIds, data.photoUserId));
+      }
+
       const filename =
         template === 'marina' ? 'marina-seafarer-medical-report.pdf'
         : template === 'german' ? 'tmas-germany-medical-report.pdf'
@@ -170,7 +186,11 @@ export async function enqueuePdfEmail(
   to: string,
   summary: Record<string, string | boolean | null>,
   template: PdfTemplate = 'rmd',
-  tmas?: { tmasId: string; replyTo?: string },
+  options?: { tmasId?: string; replyTo?: string; photos?: { ids: string[]; userId: string } },
 ): Promise<void> {
-  await emailQueue.add('send', { type: 'pdf', to, summary, template, ...(tmas ?? {}) });
+  const { photos, ...tmas } = options ?? {};
+  await emailQueue.add('send', {
+    type: 'pdf', to, summary, template, ...tmas,
+    ...(photos ? { photoIds: photos.ids, photoUserId: photos.userId } : {}),
+  });
 }

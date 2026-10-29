@@ -58,6 +58,8 @@ import {
 import { scoreAndStore } from '../lib/reportScore.js';
 import { renderExamSentence, type MediaAnswer } from '../lib/examMediaProtocols.js';
 import { getConfirmedExamMedia, linkExamMediaToConversation } from '../lib/examMediaStore.js';
+import { getPhotosForPdf, MAX_REPORT_PHOTOS } from '../lib/reportPhotoStore.js';
+import { appendPhotoPages } from '../lib/photoPages.js';
 
 export const aiRouter = Router();
 
@@ -1136,10 +1138,29 @@ aiRouter.post(
 // Middleware order: authenticate → requireScope → pdfRateLimit → requireVerifiedActiveUser → handler
 // ---------------------------------------------------------------------------
 
+// Photos to append after the form, from POST /ai/exam-media/photos or the
+// `photoId` of /ai/exam-media/analyze. Optional: without it every PDF route
+// renders exactly what it did before photos existed.
+const PhotoIdsSchema = z.array(z.string().uuid()).max(MAX_REPORT_PHOTOS).optional();
+
+/**
+ * Photos are a signed-in officer's own uploads; partners and short-lived tokens
+ * cannot upload any, so they cannot name any either. Sends the 400 and returns
+ * false when the caller may not.
+ */
+function photoIdsAllowed(req: Request, res: Response, photoIds: string[] | undefined): boolean {
+  if (photoIds?.length && req.principal?.type !== 'user') {
+    res.status(400).json({ error: 'photoIds is only supported for signed-in users' });
+    return false;
+  }
+  return true;
+}
+
 const GeneratePdfSchema = z.object({
   summary: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])),
   // Which PDF template to fill. Defaults to the RMD form for backward compatibility.
   template: z.enum(['rmd', 'marina', 'german', 'norwegian']).optional().default('rmd'),
+  photoIds: PhotoIdsSchema,
 });
 
 aiRouter.post(
@@ -1156,7 +1177,8 @@ aiRouter.post(
       return;
     }
 
-    const { summary, template } = parsed.data;
+    const { summary, template, photoIds } = parsed.data;
+    if (!photoIdsAllowed(req, res, photoIds)) return;
 
     // The Marina and Norwegian forms are filled in-process with pdf-lib; the
     // RMD and German authority forms both need pdftk.
@@ -1189,6 +1211,18 @@ aiRouter.post(
       } catch { /* ignore cleanup errors */ }
     }
 
+    // A report the officer believes has photos must not go out without them,
+    // so a failure here fails the request rather than dropping the photos.
+    if (photoIds?.length && req.principal?.type === 'user') {
+      try {
+        pdfBuffer = await appendPhotoPages(pdfBuffer, await getPhotosForPdf(photoIds, req.principal.userId));
+      } catch (err) {
+        console.error('[ai/generate-pdf] photo pages error:', (err as Error).message);
+        res.status(502).json({ error: 'The photos could not be added to the PDF' });
+        return;
+      }
+    }
+
     const fieldsPopulated = Object.values(summary).filter(
       v => v !== '' && v !== false && v !== null && v !== undefined
     ).length;
@@ -1196,6 +1230,7 @@ aiRouter.post(
     await auditLog('pdf_generated', req, attributionFromPrincipal(req), {
       fields_populated: fieldsPopulated,
       file_size_bytes: pdfBuffer.length,
+      ...(photoIds?.length ? { photos_requested: photoIds.length } : {}),
     });
 
     const filename = template === 'marina'
@@ -1261,9 +1296,13 @@ aiRouter.post(
       recipient = parsed.data.recipientEmail;
     }
 
-    const { summary, template } = parsed.data;
+    const { summary, template, photoIds } = parsed.data;
+    if (!photoIdsAllowed(req, res, photoIds)) return;
 
-    await enqueuePdfEmail(recipient, summary, template);
+    await enqueuePdfEmail(
+      recipient, summary, template,
+      photoIds?.length && principal.type === 'user' ? { photos: { ids: photoIds, userId: principal.userId } } : undefined,
+    );
 
     const fieldsPopulated = Object.values(summary).filter(
       v => v !== '' && v !== false && v !== null && v !== undefined
@@ -1296,6 +1335,7 @@ aiRouter.post(
 const EmailTmasSchema = z.object({
   summary: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])),
   tmas: z.string().min(2).max(10),
+  photoIds: PhotoIdsSchema,
 });
 
 aiRouter.post(
@@ -1336,8 +1376,13 @@ aiRouter.post(
       replyTo = rows[0]?.email ?? undefined;
     }
 
-    const { summary } = parsed.data;
-    await enqueuePdfEmail(tmas.email, summary, tmas.template, { tmasId: tmas.id, replyTo });
+    const { summary, photoIds } = parsed.data;
+    if (!photoIdsAllowed(req, res, photoIds)) return;
+    await enqueuePdfEmail(tmas.email, summary, tmas.template, {
+      tmasId: tmas.id,
+      replyTo,
+      ...(photoIds?.length && principal.type === 'user' ? { photos: { ids: photoIds, userId: principal.userId } } : {}),
+    });
 
     await auditLog('pdf_emailed_tmas', req, attributionFromPrincipal(req), {
       fields_populated: Object.values(summary).filter(

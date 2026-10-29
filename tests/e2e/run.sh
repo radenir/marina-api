@@ -50,6 +50,7 @@ suite() {  # name  script  port  schema(full|pre015|pre016)
       pre023) case "$f" in *023_*|*024_*|*025_*) continue;; esac ;;
       pre024) case "$f" in *024_*|*025_*) continue;; esac ;;
       pre025) case "$f" in *025_*) continue;; esac ;;
+      pre028) case "$f" in *028_*) continue;; esac ;;
     esac
     psql -v ON_ERROR_STOP=1 -q -d "$DB" -f "$f" >/dev/null 2>&1 || echo "  MIGRATE FAIL $f"
   done
@@ -91,6 +92,7 @@ run phase3   && suite c3 phase3-e2e.ts          4703 full
 run fleet    && suite c4 fleet-e2e.ts           4704 full
 run partner  && suite c16 partner-tokens-e2e.ts 4716 full
 run tmas     && suite c17 tmas-e2e.ts           4717 full
+run photos   && suite c18 photos-e2e.ts         4718 full
 run additive && suite c5 safety-no-migration.ts 4705 pre015
 run additive && suite c6 phase2-e2e.ts          4706 pre016
 run additive && suite c7 phase3-e2e.ts          4707 pre016
@@ -108,6 +110,9 @@ run additive && suite c12 fleet-e2e.ts          4712 pre022
 run additive && suite c13 fleet-e2e.ts          4713 pre023
 run additive && suite c14 fleet-e2e.ts          4714 pre024
 run additive && suite c15 fleet-e2e.ts          4715 pre025
+# pre028: report photos shipped ahead of their table. PDF routes without
+# photoIds must be unchanged; the photo endpoints must answer, not hang.
+{ run additive || run photos; } && suite c19 photos-e2e.ts 4719 pre028
 
 # fleet_mews() in SQL is a second copy of a clinical scoring rule. Two copies
 # drift; this is what notices.

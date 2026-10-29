@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { createHash } from 'crypto';
 import { z } from 'zod';
 import multer from 'multer';
@@ -20,6 +20,8 @@ import {
   confirmExamMedia,
   userOwnsConversation,
 } from '../lib/examMediaStore.js';
+import { shrinkPhoto } from '../lib/photoShrink.js';
+import { insertReportPhoto, getReportPhotoImage, deleteReportPhoto } from '../lib/reportPhotoStore.js';
 
 // Mounted at /ai/exam-media. The officer photographs the patient for an
 // examination; the vision model answers the questions it can see; the officer
@@ -154,8 +156,24 @@ examMediaRouter.post(
       aiAnswers: result.answers,
     });
 
+    // Keep a shrunk copy so the officer can attach this photo to the report
+    // PDF. Best effort: the analysis is the point of this endpoint, and must
+    // still answer when photo storage is unavailable (e.g. before migration 028).
+    let photoId: string | null = null;
+    try {
+      photoId = await insertReportPhoto({
+        userId,
+        conversationId: conversationId ?? null,
+        examMediaId: mediaId,
+        image: await shrinkPhoto(req.file.buffer),
+      });
+    } catch (err) {
+      console.error('[ai/exam-media/analyze] photo not stored:', (err as Error).message);
+    }
+
     res.json({
       mediaId,
+      photoId,
       examinationId,
       shotId,
       quality: result.quality.ok ? 'ok' : 'retake',
@@ -234,3 +252,126 @@ examMediaRouter.post(
     res.json({ mediaId: row.id, confirmed, officerEdited });
   },
 );
+
+// ---------------------------------------------------------------------------
+// Report photos — photos attached to the report PDF.
+//
+// POST   /ai/exam-media/photos       (multipart: image, conversationId?)
+// GET    /ai/exam-media/photos/:id   the stored JPEG
+// DELETE /ai/exam-media/photos/:id
+//
+// A plain photo, with no analysis: the officer takes a picture and it goes
+// into the report. Photos from /analyze are stored the same way and come back
+// there as `photoId`. Either id is then listed in `photoIds` on
+// /ai/generate-pdf, /ai/email-pdf or /ai/email-tmas.
+// Middleware order: requireAuth → examMediaRateLimit → requireVerifiedEmail → requireActiveUser → (upload) → handler
+// ---------------------------------------------------------------------------
+
+const PhotoFields = z.object({
+  conversationId: z.string().uuid().optional(),
+});
+
+examMediaRouter.post(
+  '/photos',
+  requireAuth,
+  examMediaRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  upload.single('image'),
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.file) {
+      res.status(400).json({ error: 'No image provided' });
+      return;
+    }
+    const parsed = PhotoFields.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+    let image: Buffer;
+    try {
+      image = await shrinkPhoto(req.file.buffer);
+    } catch {
+      res.status(400).json({ error: 'Could not read the image' });
+      return;
+    }
+
+    // Express 4 does not catch a rejected async handler — without this a
+    // database error (e.g. before migration 028) would leave the request hanging.
+    try {
+      const { conversationId } = parsed.data;
+      const userId = req.user!.id;
+      if (conversationId && !(await userOwnsConversation(conversationId, userId))) {
+        res.status(404).json({ error: 'Conversation not found' });
+        return;
+      }
+      const photoId = await insertReportPhoto({ userId, conversationId: conversationId ?? null, examMediaId: null, image });
+      res.status(201).json({ photoId, byteSize: image.length });
+    } catch (err) {
+      console.error('[ai/exam-media/photos] store error:', (err as Error).message);
+      res.status(500).json({ error: 'Photo could not be stored' });
+    }
+  },
+);
+
+examMediaRouter.get(
+  '/photos/:id',
+  requireAuth,
+  examMediaRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = z.string().uuid().safeParse(req.params.id);
+    let image: Buffer | null = null;
+    try {
+      image = id.success ? await getReportPhotoImage(id.data, req.user!.id) : null;
+    } catch (err) {
+      console.error('[ai/exam-media/photos/:id] load error:', (err as Error).message);
+      res.status(500).json({ error: 'Photo could not be loaded' });
+      return;
+    }
+    if (!image) {
+      res.status(404).json({ error: 'Photo not found' });
+      return;
+    }
+    // Patient health data: no shared or on-disk caches.
+    res.set({ 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, no-store' });
+    res.send(image);
+  },
+);
+
+examMediaRouter.delete(
+  '/photos/:id',
+  requireAuth,
+  examMediaRateLimit,
+  requireVerifiedEmail,
+  requireActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = z.string().uuid().safeParse(req.params.id);
+    let deleted = false;
+    try {
+      deleted = id.success && (await deleteReportPhoto(id.data, req.user!.id));
+    } catch (err) {
+      console.error('[ai/exam-media/photos/:id] delete error:', (err as Error).message);
+      res.status(500).json({ error: 'Photo could not be deleted' });
+      return;
+    }
+    if (!deleted) {
+      res.status(404).json({ error: 'Photo not found' });
+      return;
+    }
+    res.status(204).end();
+  },
+);
+
+// Upload errors (4-arg, after routes), as on the AI router. Without it the
+// global handler answered a wrong file type or an oversized photo with 500.
+examMediaRouter.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'Image too large (max 10MB)' });
+  }
+  if (err.status === 400) {
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});
