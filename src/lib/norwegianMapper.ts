@@ -217,6 +217,8 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
     // ---- C: Circulation ----
     cap_refill: str(summary.circulation_capillary_response),
     skin_feel: str(summary.circulation_skin_temp_and_humidity),
+    skin_colour: radio(({ pale: 'pale', reddish: 'reddish', bluish: 'bluish', normal: 'normal' } as Record<string, string>)[
+      str(summary.circulation_skin_colour).toLowerCase()]),
     heart_rate: hr,
     pulse_site: radio(summary.checkbox_circulation_temp_wrist === true ? 'wrist'
       : summary.checkbox_circulation_temp_neck === true ? 'neck'
@@ -228,6 +230,7 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
     consciousness: radio(({ alert: '1', voice: '2', pain: '3', unresponsive: '4' } as Record<string, string>)[avpu]),
     convulsions: yesNo(summary.checkbox_disability_convulsions_yes, summary.checkbox_disability_convulsions_no),
     paralysis: yesNo(summary.checkbox_disability_paralysis_yes, summary.checkbox_disability_paralysis_no),
+    pupils_normal: yesNo(summary.checkbox_disability_pupils_normal_yes, summary.checkbox_disability_pupils_normal_no),
     pupils_description: str(summary.disability_pupil_reaction_description),
 
     // ---- E: Expose ----

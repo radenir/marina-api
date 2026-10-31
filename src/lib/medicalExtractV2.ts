@@ -494,6 +494,14 @@ export function formatMedicationGiven(raw: unknown): string {
 const VITALS_V2_BATCH: BatchConfig = {
   name: 'vitalSignsSimple',
   prompt: forkPrompt('vitalSignsSimple', [
+    // The field is named "..._mouth" for the RMD form's history, and the model
+    // took the name literally: "34.5 measured in the ear" came back "", so the
+    // report had no temperature and M-EWS scored none — for a hypothermic
+    // patient. Where it was measured is captured by the A–E batch.
+    [
+      '- expose_temperature_measured_mouth: Temperature in Celsius (just the number, e.g., "37.5")',
+      '- expose_temperature_measured_mouth: Body temperature in Celsius, WHEREVER it was measured (mouth, ear, armpit, rectum, forehead) — despite the field name (just the number, e.g., "37.5")',
+    ],
     [
       '- avpu: Level of consciousness - ONLY one of: "Alert", "Voice", "Pain", "Unresponsive" (or "" if not mentioned)',
       `- avpu: Level of consciousness - ONLY one of: "Alert", "Voice", "Pain", "Unresponsive" (or "" if not mentioned)
@@ -505,6 +513,138 @@ const VITALS_V2_BATCH: BatchConfig = {
     ],
   ]),
 };
+
+// ---------------------------------------------------------------------------
+// A–E (ABCDE) assessment — the tick boxes and short fields of the RMD and
+// Norwegian forms, which no batch filled: a dictation of "airway clear, collar
+// fitted, no convulsions" reached the free-text exam and left every box blank.
+//
+// Two batches, A+B and C+D+E, so neither prompt carries thirty-odd fields. As
+// with the medication batch, the model answers in plain terms ("yes"/"no"/"",
+// short lists, short phrases) under one key of its own; abcdeFields() alone
+// writes the form's field names, and anything it does not recognise stays
+// empty. A box is only ever ticked on an explicit statement: an empty box says
+// "not reported", a wrong "no" would say something false.
+// ---------------------------------------------------------------------------
+const ABCDE_RULES = `OUTPUT LANGUAGE: English only (translate first if needed).
+
+RULES (follow strictly):
+1. Use ONLY what the transcript states explicitly. Never infer: a number is not a description (a breathing rate of 24 does NOT mean "fast" unless "fast" was said), and a normal finding elsewhere does not mean this one is normal.
+2. "yes"/"no" items: "yes" only if stated, "no" only if explicitly denied or stated as absent ("no convulsions", "airway is clear" → airwayClear "yes"). Not mentioned → "".
+3. Lists: only the listed words, only if stated. Not mentioned → [].
+4. Text items: a short phrase in plain words, only what was said. Not mentioned → "".
+5. Numbers as digits.`;
+
+const ABCDE_AB_V2_BATCH: BatchConfig = {
+  name: 'abcde_airway_breathing',
+  prompt: `You extract the A (Airway) and B (Breathing) part of a maritime medical report's A–E assessment from a transcript.
+
+${ABCDE_RULES}
+
+ITEMS:
+- airwayClear: are the airways clear? "yes" / "no" / "". Talking normally counts as "yes" only if the transcript says the airway is clear or the patient talks normally.
+- airwayManoeuvres: list of what was done to open the airway, from: "jaw lift", "suction", "guedel airway".
+- cprStartedAt: clock time CPR was started, "hh:mm", only if CPR was started.
+- oxygenLitresPerMin: oxygen given, in litres per minute, digits only (e.g. "4").
+- neckBackInjurySuspected: is a neck or back (spine) injury suspected? "yes" / "no" / "".
+- neckCollarFitted: was a neck (cervical) collar fitted? "yes" / "no" / "".
+  Example: "No neck or back injury suspected, so no collar." → neckBackInjurySuspected "no", neckCollarFitted "no".
+- breathingPattern: list of how the breathing was described, from: "fast", "slow", "shallow", "deep", "normal".
+- breathingOther: any other description of HOW the breathing sounds or looks that is not one of those words (e.g. "noisy, wheezing", "laboured"), or "". Never a number or rate: the breathing rate is recorded elsewhere.
+
+Return JSON:
+{"ab":{"airwayClear":"","airwayManoeuvres":[],"cprStartedAt":"","oxygenLitresPerMin":"","neckBackInjurySuspected":"","neckCollarFitted":"","breathingPattern":[],"breathingOther":""}}`,
+};
+
+const ABCDE_CDE_V2_BATCH: BatchConfig = {
+  name: 'abcde_circulation_disability_expose',
+  prompt: `You extract the C (Circulation), D (Disability) and E (Expose) part of a maritime medical report's A–E assessment from a transcript.
+
+${ABCDE_RULES}
+
+ITEMS:
+- capillaryRefillSeconds: capillary refill time in seconds, digits only (e.g. "3").
+- skinColour: one of "pale", "reddish", "bluish", "normal", or "".
+- skinFeel: how the skin feels — temperature and moisture (e.g. "cold and sweaty"), or "".
+- pulseMeasuredAt: where the pulse / heart rate was measured: "wrist", "neck", "groin", or "".
+- convulsions: "yes" / "no" / "".
+- paralysis: "yes" / "no" / "".
+- pupilsNormal: are the pupils normal (equal, reacting normally)? "yes" / "no" / "".
+- pupilsDescription: what was seen if the pupils are NOT normal (e.g. "left pupil larger, slow to react"), or "".
+  Example: "The left pupil is larger than the right and reacts slowly." → pupilsNormal "no", pupilsDescription "left pupil larger than right, reacts slowly".
+- topToToeDone: was a top-to-toe examination done? "yes" / "no" / "".
+- topToToeFindings: injuries or signs of illness found on it (e.g. "deformed right lower leg, possible fracture"), or "".
+- hypothermiaOrOverheating: signs of hypothermia or overheating? "yes" / "no" / "".
+- hypothermiaOrOverheatingFindings: what those signs are, or "".
+- temperatureMeasuredAt: where the body temperature was measured: e.g. "mouth", "ear", "armpit", "rectum", "forehead", or "".
+
+Return JSON:
+{"cde":{"capillaryRefillSeconds":"","skinColour":"","skinFeel":"","pulseMeasuredAt":"","convulsions":"","paralysis":"","pupilsNormal":"","pupilsDescription":"","topToToeDone":"","topToToeFindings":"","hypothermiaOrOverheating":"","hypothermiaOrOverheatingFindings":"","temperatureMeasuredAt":""}}`,
+};
+
+/**
+ * The form fields for the A–E answers, keyed by the names the RMD and Norwegian
+ * mappers read. Only what is unambiguous is written: a "yes"/"no" ticks one box
+ * of its pair, anything else ticks neither; list words outside the allowed set
+ * are dropped; numbers must look like numbers. Boxes are only ever `true`.
+ */
+export function abcdeFields(ab: unknown, cde: unknown, temperature = ''): Record<string, string | boolean> {
+  const a = (ab && typeof ab === 'object' ? ab : {}) as Record<string, unknown>;
+  const c = (cde && typeof cde === 'object' ? cde : {}) as Record<string, unknown>;
+  const out: Record<string, string | boolean> = {};
+  const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+  const word = (v: unknown) => text(v).toLowerCase();
+  const list = (v: unknown) => (Array.isArray(v) ? v.map(word) : []);
+  const number = (v: unknown) => (/^\d+(\.\d+)?$/.test(text(v)) ? text(v) : '');
+  const yesNo = (v: unknown, yesKey: string, noKey: string) => {
+    if (word(v) === 'yes') out[yesKey] = true;
+    else if (word(v) === 'no') out[noKey] = true;
+  };
+  const set = (key: string, v: string) => { if (v) out[key] = v; };
+
+  // A — Airway
+  yesNo(a.airwayClear, 'checkbox_airway_clear_yes', 'checkbox_airway_clear_no');
+  const manoeuvres = list(a.airwayManoeuvres);
+  if (manoeuvres.includes('jaw lift')) out.checkbox_airway_jaw_lift = true;
+  if (manoeuvres.includes('suction')) out.checkbox_airway_suction = true;
+  if (manoeuvres.includes('guedel airway')) out.checkbox_airway_guedal = true;
+  set('airway_cpr_start', /^\d{1,2}:\d{2}$/.test(text(a.cprStartedAt)) ? text(a.cprStartedAt) : '');
+  set('airway_admin_oxygen_liters_per_min', number(a.oxygenLitresPerMin));
+  yesNo(a.neckBackInjurySuspected, 'checkbox_airway_neck_back_injury_yes', 'checkbox_airway_neck_back_injury_no');
+  yesNo(a.neckCollarFitted, 'checkbox_airway_fitted_neck_collar_yes', 'checkbox_airway_fitted_neck_collar_no');
+
+  // B — Breathing. "normal" next to an abnormal word is a contradiction; the
+  // abnormal words were said explicitly, so they stand and "normal" goes.
+  const pattern = list(a.breathingPattern).filter((w) => ['fast', 'slow', 'shallow', 'deep', 'normal'].includes(w));
+  const abnormal = pattern.filter((w) => w !== 'normal');
+  for (const w of abnormal.length ? abnormal : pattern) out[`checkbox_breathing_${w}`] = true;
+  set('breathing_description', text(a.breathingOther));
+
+  // C — Circulation
+  set('circulation_capillary_response', number(c.capillaryRefillSeconds));
+  const colour = word(c.skinColour);
+  if (['pale', 'reddish', 'bluish', 'normal'].includes(colour)) out.circulation_skin_colour = colour;
+  set('circulation_skin_temp_and_humidity', text(c.skinFeel));
+  const site = word(c.pulseMeasuredAt);
+  if (['wrist', 'neck', 'groin'].includes(site)) out[`checkbox_circulation_temp_${site}`] = true;
+
+  // D — Disability (the level of consciousness is avpu, from the vitals batch)
+  yesNo(c.convulsions, 'checkbox_disability_convulsions_yes', 'checkbox_disability_convulsions_no');
+  yesNo(c.paralysis, 'checkbox_disability_paralysis_yes', 'checkbox_disability_paralysis_no');
+  yesNo(c.pupilsNormal, 'checkbox_disability_pupils_normal_yes', 'checkbox_disability_pupils_normal_no');
+  set('disability_pupil_reaction_description', text(c.pupilsDescription));
+
+  // E — Expose
+  yesNo(c.topToToeDone, 'expose_top_to_toe_examination_performed_yes', 'expose_top_to_toe_examination_performed_no');
+  set('expose_top_to_toe_examination_description', text(c.topToToeFindings));
+  yesNo(c.hypothermiaOrOverheating, 'expose_hypothermia_overheating_performed_yes', 'expose_hypothermia_overheating_performed_no');
+  set('expose_hypothermia_overheating_description', text(c.hypothermiaOrOverheatingFindings));
+  // A temperature on record means one was measured; where, only if said.
+  if (temperature.trim()) out.expose_temperature_performed_yes = true;
+  set('expose_temperature_measured_place', text(c.temperatureMeasuredAt));
+
+  return out;
+}
 
 // v2 batch set: v1 batches EXCEPT the ones forked/replaced above, plus the
 // v2 clinical split.
@@ -518,6 +658,8 @@ const BATCHES_V2: BatchConfig[] = [
   HISTORY_V2_BATCH,
   FINDINGS_V2_BATCH,
   MEDICATION_ON_BOARD_V2_BATCH,
+  ABCDE_AB_V2_BATCH,
+  ABCDE_CDE_V2_BATCH,
 ];
 
 // ---------------------------------------------------------------------------
@@ -581,6 +723,10 @@ export async function parallelExtractV2(
 
   merged.medicationGivenOnBoard = formatMedicationGiven(merged.medicationGiven);
   delete merged.medicationGiven;
+
+  Object.assign(merged, abcdeFields(merged.ab, merged.cde, String(merged.expose_temperature_measured_mouth ?? '')));
+  delete merged.ab;
+  delete merged.cde;
 
   if (photoExam) {
     const spoken = typeof merged.exam === 'string' ? merged.exam.trim() : '';
