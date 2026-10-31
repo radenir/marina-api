@@ -20,7 +20,7 @@ import { parallelExtract } from '../lib/medicalExtract.js';
 import type { UserProfile } from '../lib/medicalExtract.js';
 import { parallelExtractV2 } from '../lib/medicalExtractV2.js';
 import { fillRmdFormPdftk, fillGermanFormPdftk, checkPdftkAvailable } from '../lib/pdftk.js';
-import { mapSummaryToRmdFields, extractMedicationFields } from '../lib/rmdMapper.js';
+import { mapSummaryToRmdFields } from '../lib/rmdMapper.js';
 import { mapSummaryToSeafarerFields } from '../lib/seafarerMapper.js';
 import { mapSummaryToGermanFields } from '../lib/germanMapper.js';
 import { mapSummaryToNorwegianFields } from '../lib/norwegianMapper.js';
@@ -1216,8 +1216,7 @@ aiRouter.post(
       } else if (template === 'norwegian') {
         pdfBuffer = await fillNorwegianForm(mapSummaryToNorwegianFields(summary), outputPath);
       } else {
-        const medFields = extractMedicationFields(summary.currentMedications);
-        const rmdFields = mapSummaryToRmdFields({ ...summary, ...medFields });
+        const rmdFields = mapSummaryToRmdFields(summary);
         pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
       }
     } catch (err) {

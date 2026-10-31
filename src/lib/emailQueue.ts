@@ -4,7 +4,7 @@ import { config } from '../config';
 import { sendEmail, buildPdfReportEmail, buildTmasReportEmail } from './email';
 import { findTmas } from './tmas';
 import { fillRmdFormPdftk, fillGermanFormPdftk } from './pdftk';
-import { mapSummaryToRmdFields, extractMedicationFields } from './rmdMapper';
+import { mapSummaryToRmdFields } from './rmdMapper';
 import { mapSummaryToSeafarerFields } from './seafarerMapper';
 import { mapSummaryToGermanFields } from './germanMapper';
 import { mapSummaryToNorwegianFields } from './norwegianMapper';
@@ -116,8 +116,7 @@ export function createEmailWorker(): Worker<EmailJobData> {
         } else if (template === 'norwegian') {
           pdfBuffer = await fillNorwegianForm(mapSummaryToNorwegianFields(data.summary), outputPath);
         } else {
-          const medFields = extractMedicationFields(data.summary.currentMedications);
-          const rmdFields = mapSummaryToRmdFields({ ...data.summary, ...medFields });
+          const rmdFields = mapSummaryToRmdFields(data.summary);
           pdfBuffer = await fillRmdFormPdftk(rmdFields, outputPath);
         }
       } finally {

@@ -151,6 +151,7 @@ export function mapSummaryToSeafarerFields(summary: MedicalSummary): Record<stri
     associated_symptoms: (summary.associatedSymptoms as string) || '',
     past_medical_history: (summary.pastHistory as string) || '',
     medications: (summary.currentMedications as string) || '',
+    medication_given: (summary.medicationGivenOnBoard as string) || '',
     allergies: (summary.allergies as string) || '',
     physical_exam: (summary.exam as string) || '',
 

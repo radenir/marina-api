@@ -185,11 +185,14 @@ export function mapSummaryToGermanFields(summary: MedicalSummary): Record<string
     '18 Verdachtsdiagnose an Bord Suspected diagnosis': val(summary.chiefSymptom),
 
     // 19. Bisherige Maßnahmen (page 2)
-    '19 Bisherige Maßnahmen Treatment on board': summary.performedActions
-      ? str(summary.performedActions)
-      : joinSections([
-          ['Investigations', summary.investigations],
-          ['Physical examination', summary.exam],
-        ]),
+    '19 Bisherige Maßnahmen Treatment on board': joinSections([
+      ['Medication given on board', str(summary.medicationGivenOnBoard).replace(/\n+/g, '; ')],
+      ['', summary.performedActions
+        ? str(summary.performedActions)
+        : joinSections([
+            ['Investigations', summary.investigations],
+            ['Physical examination', summary.exam],
+          ])],
+    ]),
   };
 }

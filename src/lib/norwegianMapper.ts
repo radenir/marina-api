@@ -21,7 +21,7 @@
  */
 import { calculateMEWS, type MEWSInput, type MEWSResult } from './mewsCalculator.js';
 import {
-  type MedicalSummary, parseVitals, joinSections, portWithEta, getCurrentDateTime,
+  type MedicalSummary, parseVitals, joinSections, medicationLines, portWithEta, getCurrentDateTime,
 } from './rmdMapper.js';
 
 export type NorwegianFieldValue = string | boolean | { value: boolean; onValue: string };
@@ -93,6 +93,7 @@ function radioMedicoBands(result: MEWSResult, input: MEWSInput): MEWSResult {
 
 export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<string, NorwegianFieldValue> {
   const vitals = parseVitals(String(summary.vitals || ''));
+  const meds = medicationLines(summary);
   const dateTime = getCurrentDateTime();
 
   // ---- Vitals: discrete extract fields first, the parsed vitals string second ----
@@ -249,11 +250,11 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
     ]),
 
     // ---- Medication given before contact with Radio Medico ----
-    // Only explicit entries: the patient's regular medicines go in `medicines`.
-    premed_1: str(summary.medications_field1),
-    premed_2: str(summary.medications_field2),
-    premed_3: str(summary.medications_field3),
-    premed_4: str(summary.medications_field4),
+    // Only what was given on board: the patient's regular medicines go in `medicines`.
+    premed_1: meds[0],
+    premed_2: meds[1],
+    premed_3: meds[2],
+    premed_4: meds[3],
 
     // ---- Medical officer ----
     medical_officer: str(summary.preparedBy) || str(summary.medical_officer_name_and_title),

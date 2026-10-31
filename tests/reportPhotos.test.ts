@@ -19,7 +19,7 @@ import { fillRmdFormPdftk, fillGermanFormPdftk } from '../src/lib/pdftk.js';
 import { mapSummaryToSeafarerFields } from '../src/lib/seafarerMapper.js';
 import { mapSummaryToNorwegianFields } from '../src/lib/norwegianMapper.js';
 import { mapSummaryToGermanFields } from '../src/lib/germanMapper.js';
-import { mapSummaryToRmdFields, extractMedicationFields } from '../src/lib/rmdMapper.js';
+import { mapSummaryToRmdFields } from '../src/lib/rmdMapper.js';
 
 let failures = 0;
 function check(name: string, cond: boolean, detail?: unknown): void {
@@ -101,7 +101,7 @@ async function main() {
       ['norwegian', () => fillNorwegianForm(mapSummaryToNorwegianFields(summary), '/tmp/marina_test_photos_no.pdf')],
       ['german', () => fillGermanFormPdftk(mapSummaryToGermanFields(summary), '/tmp/marina_test_photos_de.pdf')],
       ['rmd', () => fillRmdFormPdftk(
-        mapSummaryToRmdFields({ ...summary, ...extractMedicationFields(undefined) }), '/tmp/marina_test_photos_rmd.pdf')],
+        mapSummaryToRmdFields(summary), '/tmp/marina_test_photos_rmd.pdf')],
     ];
 
     const photos = [asPdfPhoto(await shrinkPhoto(await phonePhoto())), asPdfPhoto(await noisyPhoto(), 'Photo taken 28 Oct 2026, 14:40 UTC'), asPdfPhoto(await noisyPhoto(900, 1200))];

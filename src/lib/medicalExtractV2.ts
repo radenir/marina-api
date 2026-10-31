@@ -440,6 +440,52 @@ VOYAGE INFO (if mentioned):
   ]),
 };
 
+// Medication given ON BOARD for this illness — what the doctor most needs to
+// know before advising more. v1 lumped it into performedActions; the v2 split
+// left it nowhere. A batch of its own so it cannot disturb currentMedications
+// (tuning that prompt to separate the two dropped or invented entries). The
+// model returns the parts of each drug; formatMedicationGiven() writes the
+// lines, so the format never drifts between runs.
+const MEDICATION_ON_BOARD_V2_BATCH: BatchConfig = {
+  name: 'medication_on_board',
+  prompt: `You extract one item of a maritime medical report from a transcript: the medicines GIVEN TO THE PATIENT ON BOARD for this illness or injury.
+
+OUTPUT LANGUAGE: English only (translate first if needed).
+
+RULES (follow strictly):
+1. Only medicines the transcript says WERE GIVEN or taken on board for this problem, by the crew or by the patient (e.g. "we gave him 1 gram of paracetamol", "he took two ibuprofen an hour ago").
+2. NOT the patient's own regular medicines from before this illness, unless the transcript says a dose was given for this problem.
+3. NOT medicines only considered, planned, recommended or asked about.
+4. NOT oxygen, and not procedures (cannula, neck collar, bandage, splint, CPR).
+5. Use ONLY what was said. Never guess a dose, route or time. Leave a part "" if it was not said.
+   - dose: an amount ("1 g") or a count ("2 tablets", "2 puffs").
+   - time: a clock time ("14:20") or, if that is how it was said, a relative one ("about 1 hour ago").
+6. Numbers as digits, units abbreviated: "g", "mg", "mcg", "ml", "units" (e.g. "1 gram" → "1 g", "5 milligrams" → "5 mg"). Route in plain words: "orally", "intramuscular", "intravenous", "subcutaneous", "rectal", "inhaled", "on the skin".
+7. If no medicine was given, or medication was not discussed, return an empty list.
+
+Return JSON:
+{"medicationGiven":[{"name":"","dose":"","route":"","time":""}]}`,
+};
+
+// One line per drug, "Paracetamol 1 g orally 14:20". Anything that is not a
+// list of drug objects counts as nothing given — an empty field is safe, a
+// malformed one is not.
+export function formatMedicationGiven(raw: unknown): string {
+  if (!Array.isArray(raw)) return '';
+  return raw
+    .map((d) => {
+      if (!d || typeof d !== 'object') return '';
+      const part = (k: string) => String((d as Record<string, unknown>)[k] ?? '').trim();
+      const name = part('name');
+      if (!name) return '';
+      return [name.charAt(0).toUpperCase() + name.slice(1), part('dose'), part('route'), part('time')]
+        .filter(Boolean)
+        .join(' ');
+    })
+    .filter(Boolean)
+    .join('\n');
+}
+
 // v2 batch set: v1 batches EXCEPT the ones forked/replaced above (only
 // vitalSignsSimple is still shared verbatim), plus the v2 clinical split.
 const V2_REPLACED = new Set(['problemAndActions', 'medical_history', 'core_identification', 'treatment_medications']);
@@ -450,6 +496,7 @@ const BATCHES_V2: BatchConfig[] = [
   MEDICAL_HISTORY_V2_BATCH,
   HISTORY_V2_BATCH,
   FINDINGS_V2_BATCH,
+  MEDICATION_ON_BOARD_V2_BATCH,
 ];
 
 // ---------------------------------------------------------------------------
@@ -510,6 +557,9 @@ export async function parallelExtractV2(
   ]);
   const merged: Record<string, string | boolean> = {};
   results.forEach(r => Object.assign(merged, r));
+
+  merged.medicationGivenOnBoard = formatMedicationGiven(merged.medicationGiven);
+  delete merged.medicationGiven;
 
   if (photoExam) {
     const spoken = typeof merged.exam === 'string' ? merged.exam.trim() : '';

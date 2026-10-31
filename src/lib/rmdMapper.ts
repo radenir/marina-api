@@ -165,6 +165,25 @@ export function joinSections(parts: Array<[string, unknown]>): string {
 }
 
 /**
+ * The four medication lines of the RMD and Norwegian forms.
+ *
+ * What the officer typed into the lines by hand wins, untouched. Otherwise they
+ * come from `medicationGivenOnBoard` (one drug per line, from the v2 extract or
+ * the report's own field); a fifth drug and beyond share the last line rather
+ * than being dropped.
+ */
+export function medicationLines(summary: MedicalSummary): [string, string, string, string] {
+  const typed = [1, 2, 3, 4].map((i) => String(summary[`medications_field${i}`] ?? '').trim());
+  if (typed.some(Boolean)) return typed as [string, string, string, string];
+  const given = String(summary.medicationGivenOnBoard ?? '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const lines = [...given.slice(0, 3), given.slice(3).join('; ')];
+  return [lines[0] ?? '', lines[1] ?? '', lines[2] ?? '', lines[3] ?? ''];
+}
+
+/**
  * A port and its ETA in one field, as `THBKK/13 days`.
  *
  * The RMD form has no ETA column, so the app's separate ETA would otherwise
@@ -190,6 +209,7 @@ export function getCurrentDateTime(): { date: string; time: string; utc: string 
 
 export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, unknown> {
   const vitals = parseVitals(String(summary.vitals || ''));
+  const meds = medicationLines(summary);
   const avpu = avpuFromSelection(summary.avpu) ?? extractAvpuFromExam(String(summary.exam || ''));
   const dateTime = getCurrentDateTime();
 
@@ -318,10 +338,10 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
           ['Investigations', summary.investigations],
           ['Physical examination', summary.exam],
         ]),
-    'Medicin1': summary.medications_field1 || '',
-    'medicin2': summary.medications_field2 || '',
-    'medicin3': summary.medications_field3 || '',
-    'medicin4': summary.medications_field4 || '',
+    'Medicin1': meds[0],
+    'medicin2': meds[1],
+    'medicin3': meds[2],
+    'medicin4': meds[3],
     'Dokumentation af ordination og handlinger': summary.documentation_of_prescriptions_and_actions || summary.plan || '',
 
     // Observation chart
@@ -335,27 +355,5 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
     'Text Field 2084': summary.observation_chart_urine_sticks || '',
     'Text Field 2085': summary.observation_chart_blood_sugar || '',
     'Text Field 2096': summary.observation_chart_malaria_test || '',
-  };
-}
-
-export function extractMedicationFields(medications: string | boolean | null | undefined): {
-  medications_field1?: string;
-  medications_field2?: string;
-  medications_field3?: string;
-  medications_field4?: string;
-} {
-  if (!medications || typeof medications !== 'string') return {};
-
-  const lines = medications
-    .split(/\n|•/)
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-    .slice(0, 4);
-
-  return {
-    medications_field1: lines[0] || '',
-    medications_field2: lines[1] || '',
-    medications_field3: lines[2] || '',
-    medications_field4: lines[3] || '',
   };
 }
