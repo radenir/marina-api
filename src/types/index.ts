@@ -74,6 +74,7 @@ export type AuditEventType =
   | 'vital_signs_score_generated'
   | 'field_revised_by_voice'
   | 'vitals_revised_by_voice'
+  | 'abcde_revised_by_voice'
   | 'pdf_generated'
   | 'pdf_emailed'
   | 'pdf_emailed_tmas'

@@ -10,7 +10,8 @@
  *     ./node_modules/.bin/tsx --env-file=.env tests/abcde.test.ts
  * Exits non-zero on any failure.
  */
-import { abcdeFields } from '../src/lib/medicalExtractV2.js';
+import { abcdeFields, abcdeAnswersFromFields, ABCDE_FIELD_KEYS } from '../src/lib/medicalExtractV2.js';
+import { completeAbcde } from '../src/lib/reviseAbcde.js';
 import { mapSummaryToNorwegianFields } from '../src/lib/norwegianMapper.js';
 import { mapSummaryToRmdFields } from '../src/lib/rmdMapper.js';
 
@@ -76,6 +77,19 @@ check('numbers must be numbers', abcdeFields({ oxygenLitresPerMin: 'a lot', cprS
 check('CPR time hh:mm kept', abcdeFields({ cprStartedAt: '14:05' }, {}), { airway_cpr_start: '14:05' });
 check('unknown skin colour / pulse site dropped', abcdeFields({}, { skinColour: 'grey', pulseMeasuredAt: 'ankle' }), {});
 check('no temperature, no "measured" tick', abcdeFields({}, { temperatureMeasuredAt: '' }, ''), {});
+
+console.log('round trip: fields → answers → fields (voice editing must not move anything untouched)');
+{
+  const full = completeAbcde(f);
+  check('the partner case survives unchanged', completeAbcde(abcdeFields(abcdeAnswersFromFields(full), abcdeAnswersFromFields(full), '')), full);
+  // Every box and text field on its own, so none is lost on the way.
+  for (const key of ABCDE_FIELD_KEYS) {
+    const one = completeAbcde({ [key]: key.startsWith('checkbox_') || key.includes('_performed_') ? true : key === 'circulation_skin_colour' ? 'pale' : key.includes('cpr') ? '10:42' : /oxygen|capillary/.test(key) ? '4' : 'x' });
+    const back = completeAbcde(abcdeFields(abcdeAnswersFromFields(one), abcdeAnswersFromFields(one), ''));
+    if (JSON.stringify(back) !== JSON.stringify(one)) check(`round trip of ${key}`, back, one);
+  }
+  check('all ' + ABCDE_FIELD_KEYS.length + ' fields round-trip', true, true);
+}
 
 console.log('Norwegian form');
 const no = mapSummaryToNorwegianFields({ ...f, expose_temperature_measured_mouth: '36.4' });

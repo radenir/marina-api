@@ -48,6 +48,7 @@ import { scorePhysicalExamination } from '../lib/physicalExaminationScore.js';
 import { scoreVitalSigns } from '../lib/vitalSignsScore.js';
 import { reviseField, REVISABLE_FIELDS } from '../lib/reviseField.js';
 import { reviseVitals } from '../lib/reviseVitals.js';
+import { reviseAbcde } from '../lib/reviseAbcde.js';
 import {
   createConversation,
   createNoteTakerConversation,
@@ -319,6 +320,13 @@ const reviseFieldRateLimit = rateLimit({
 
 const reviseVitalsRateLimit = rateLimit({
   prefix: 'ai-revise-vitals',
+  limit: 500,
+  windowSeconds: 60 * 60,
+  keyFn: principalRateLimitKey,
+});
+
+const reviseAbcdeRateLimit = rateLimit({
+  prefix: 'ai-revise-abcde',
   limit: 500,
   windowSeconds: 60 * 60,
   keyFn: principalRateLimitKey,
@@ -2331,6 +2339,54 @@ aiV2Router.post(
       had_unmapped: Boolean(result.unmapped),
       warnings: result.warnings.length,
       instruction_chars: d.instruction.length,
+    });
+
+    res.json(result);
+  }
+);
+
+// ---------------------------------------------------------------------------
+// POST /v2/ai/revise-abcde
+// The A–E counterpart of /v2/ai/revise-vitals: the officer dictates the whole
+// A–E assessment at once ("collar fitted, no convulsions, pupils normal") and
+// gets every A–E field back — boxes true/false, text "" when empty — plus which
+// changed. Applied by abcdeFields, the extract's own rules. Anything not A–E
+// comes back in `unmapped`. Accepts user JWT or partner API key.
+// ---------------------------------------------------------------------------
+
+const ReviseAbcdeSchema = z.object({
+  // The report's A–E fields as it holds them; other keys are ignored.
+  current: z.record(z.string(), z.union([z.string().max(2000), z.boolean(), z.null()])),
+  instruction: z.string().min(1).max(5000),
+});
+
+aiV2Router.post(
+  '/revise-abcde',
+  authenticate,
+  requireScope('extract:write'),
+  reviseAbcdeRateLimit,
+  requireVerifiedActiveUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = ReviseAbcdeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    let result;
+    try {
+      result = await reviseAbcde(parsed.data.current, parsed.data.instruction);
+    } catch (err) {
+      console.error('[v2/ai/revise-abcde] revision error:', (err as Error).message);
+      res.status(502).json({ error: 'A–E revision service unavailable' });
+      return;
+    }
+
+    // Which fields changed is safe to log; the values themselves are not.
+    await auditLog('abcde_revised_by_voice', req, attributionFromPrincipal(req), {
+      changed: result.changed,
+      had_unmapped: Boolean(result.unmapped),
+      instruction_chars: parsed.data.instruction.length,
     });
 
     res.json(result);

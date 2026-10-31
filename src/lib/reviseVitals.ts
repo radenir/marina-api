@@ -146,7 +146,7 @@ function asString(v: unknown): string {
  * failure here surfaces to the officer as "couldn't reach Marina" and loses a
  * recording he already made, so it is worth digging the object out.
  */
-function parseLooseJson(raw: string): Record<string, unknown> | null {
+export function parseLooseJson(raw: string): Record<string, unknown> | null {
   const attempts = [raw.trim()];
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fenced) attempts.push(fenced[1].trim());

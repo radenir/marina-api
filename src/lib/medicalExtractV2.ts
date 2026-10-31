@@ -639,11 +639,81 @@ export function abcdeFields(ab: unknown, cde: unknown, temperature = ''): Record
   set('expose_top_to_toe_examination_description', text(c.topToToeFindings));
   yesNo(c.hypothermiaOrOverheating, 'expose_hypothermia_overheating_performed_yes', 'expose_hypothermia_overheating_performed_no');
   set('expose_hypothermia_overheating_description', text(c.hypothermiaOrOverheatingFindings));
-  // A temperature on record means one was measured; where, only if said.
-  if (temperature.trim()) out.expose_temperature_performed_yes = true;
+  // Measured or not: as stated (voice editing sends it), else a temperature on
+  // record means one was measured. Where, only if said.
+  if (['yes', 'no'].includes(word(c.temperatureMeasured))) {
+    yesNo(c.temperatureMeasured, 'expose_temperature_performed_yes', 'expose_temperature_performed_no');
+  } else if (temperature.trim()) {
+    out.expose_temperature_performed_yes = true;
+  }
   set('expose_temperature_measured_place', text(c.temperatureMeasuredAt));
 
   return out;
+}
+
+/** Every field abcdeFields can write: the A–E part of the report. */
+export const ABCDE_FIELD_KEYS = [
+  'checkbox_airway_clear_yes', 'checkbox_airway_clear_no',
+  'checkbox_airway_jaw_lift', 'checkbox_airway_suction', 'checkbox_airway_guedal',
+  'airway_cpr_start', 'airway_admin_oxygen_liters_per_min',
+  'checkbox_airway_neck_back_injury_yes', 'checkbox_airway_neck_back_injury_no',
+  'checkbox_airway_fitted_neck_collar_yes', 'checkbox_airway_fitted_neck_collar_no',
+  'checkbox_breathing_fast', 'checkbox_breathing_slow', 'checkbox_breathing_shallow',
+  'checkbox_breathing_deep', 'checkbox_breathing_normal', 'breathing_description',
+  'circulation_capillary_response', 'circulation_skin_colour', 'circulation_skin_temp_and_humidity',
+  'checkbox_circulation_temp_wrist', 'checkbox_circulation_temp_neck', 'checkbox_circulation_temp_groin',
+  'checkbox_disability_convulsions_yes', 'checkbox_disability_convulsions_no',
+  'checkbox_disability_paralysis_yes', 'checkbox_disability_paralysis_no',
+  'checkbox_disability_pupils_normal_yes', 'checkbox_disability_pupils_normal_no',
+  'disability_pupil_reaction_description',
+  'expose_top_to_toe_examination_performed_yes', 'expose_top_to_toe_examination_performed_no',
+  'expose_top_to_toe_examination_description',
+  'expose_hypothermia_overheating_performed_yes', 'expose_hypothermia_overheating_performed_no',
+  'expose_hypothermia_overheating_description',
+  'expose_temperature_performed_yes', 'expose_temperature_performed_no', 'expose_temperature_measured_place',
+] as const;
+
+/** Tick boxes among them; the rest are text. */
+export const isAbcdeBox = (key: string) => key.startsWith('checkbox_') || key.includes('_performed_');
+
+/**
+ * The plain answers for what the report's A–E fields hold now — the inverse of
+ * abcdeFields, so voice editing can show the model the current state in the
+ * same terms extraction uses, and the answer goes back through abcdeFields.
+ */
+export function abcdeAnswersFromFields(f: Record<string, unknown>): Record<string, unknown> {
+  const on = (k: string) => f[k] === true;
+  const pair = (yes: string, no: string) => (on(yes) ? 'yes' : on(no) ? 'no' : '');
+  const text = (k: string) => (typeof f[k] === 'string' ? (f[k] as string).trim() : '');
+  const pick = (prefix: string, words: string[]) => words.filter((w) => on(prefix + w.replace(/ /g, '_')));
+  return {
+    airwayClear: pair('checkbox_airway_clear_yes', 'checkbox_airway_clear_no'),
+    airwayManoeuvres: [
+      ...(on('checkbox_airway_jaw_lift') ? ['jaw lift'] : []),
+      ...(on('checkbox_airway_suction') ? ['suction'] : []),
+      ...(on('checkbox_airway_guedal') ? ['guedel airway'] : []),
+    ],
+    cprStartedAt: text('airway_cpr_start'),
+    oxygenLitresPerMin: text('airway_admin_oxygen_liters_per_min'),
+    neckBackInjurySuspected: pair('checkbox_airway_neck_back_injury_yes', 'checkbox_airway_neck_back_injury_no'),
+    neckCollarFitted: pair('checkbox_airway_fitted_neck_collar_yes', 'checkbox_airway_fitted_neck_collar_no'),
+    breathingPattern: pick('checkbox_breathing_', ['fast', 'slow', 'shallow', 'deep', 'normal']),
+    breathingOther: text('breathing_description'),
+    capillaryRefillSeconds: text('circulation_capillary_response'),
+    skinColour: text('circulation_skin_colour'),
+    skinFeel: text('circulation_skin_temp_and_humidity'),
+    pulseMeasuredAt: pick('checkbox_circulation_temp_', ['wrist', 'neck', 'groin'])[0] ?? '',
+    convulsions: pair('checkbox_disability_convulsions_yes', 'checkbox_disability_convulsions_no'),
+    paralysis: pair('checkbox_disability_paralysis_yes', 'checkbox_disability_paralysis_no'),
+    pupilsNormal: pair('checkbox_disability_pupils_normal_yes', 'checkbox_disability_pupils_normal_no'),
+    pupilsDescription: text('disability_pupil_reaction_description'),
+    topToToeDone: pair('expose_top_to_toe_examination_performed_yes', 'expose_top_to_toe_examination_performed_no'),
+    topToToeFindings: text('expose_top_to_toe_examination_description'),
+    hypothermiaOrOverheating: pair('expose_hypothermia_overheating_performed_yes', 'expose_hypothermia_overheating_performed_no'),
+    hypothermiaOrOverheatingFindings: text('expose_hypothermia_overheating_description'),
+    temperatureMeasured: pair('expose_temperature_performed_yes', 'expose_temperature_performed_no'),
+    temperatureMeasuredAt: text('expose_temperature_measured_place'),
+  };
 }
 
 // v2 batch set: v1 batches EXCEPT the ones forked/replaced above, plus the
