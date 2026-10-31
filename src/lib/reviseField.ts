@@ -42,6 +42,7 @@ export const REVISABLE_FIELDS = [
   'currentMedications',
   'investigations',
   'exam',
+  'medicationGivenOnBoard',
 ] as const;
 
 export type RevisableField = (typeof REVISABLE_FIELDS)[number];
@@ -86,6 +87,8 @@ const FIELD_STYLE: Record<RevisableField, string> = {
     'Tests, measurements and checks performed on board and what they showed. One finding per line.',
   exam:
     'What the officer observed on physical examination, by body region. One finding per line.',
+  medicationGivenOnBoard:
+    'Medicines given to the patient on board for this illness. One per line, as "name dose route time" (e.g. "Paracetamol 1 g orally 14:20"), leaving out any part not said. Digits and abbreviated units ("1 g", "5 mg").',
 };
 
 const FIELD_LABEL: Record<RevisableField, string> = {
@@ -96,6 +99,7 @@ const FIELD_LABEL: Record<RevisableField, string> = {
   currentMedications: 'Current Medications',
   investigations: 'Investigations',
   exam: 'Physical Examination',
+  medicationGivenOnBoard: 'Medication Given on Board',
 };
 
 function buildPrompt(input: ReviseFieldInput): string {
