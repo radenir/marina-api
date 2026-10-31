@@ -93,6 +93,23 @@ async function main() {
     check('unknown examination falls back to plain', photoCaption(99999, at) === 'Photo taken 28 Oct 2026, 14:32 UTC', photoCaption(99999, at));
   }
 
+  console.log('appendPhotoPages: a small photo inside a larger Buffer');
+  {
+    // A near-black photo shrinks to a few KB, and Node keeps Buffers that small
+    // in a shared pool, so the bytes start at an offset into a larger memory
+    // block. pdf-lib once read from byte 0 of that block: "SOI not found".
+    const tiny = await shrinkPhoto(await sharp({ create: { width: 1600, height: 1200, channels: 3, background: '#050505' } }).jpeg().toBuffer());
+    const atOffset = Buffer.concat([randomBytes(64), tiny]).subarray(64);
+    const base = await fillSeafarerForm(mapSummaryToSeafarerFields({ patientFirstName: 'Jane' }), '/tmp/marina_test_photos_tiny.pdf');
+    const before = (await PDFDocument.load(base)).getPageCount();
+    let pages = -1;
+    try {
+      const out = await appendPhotoPages(base, [{ image: atOffset, sha256: createHash('sha256').update(tiny).digest('hex'), caption: 'x' }]);
+      pages = (await PDFDocument.load(out)).getPageCount();
+    } catch (e) { check('small photo at an offset embeds', false, (e as Error).message); }
+    check('small photo at an offset embeds', pages === before + 1, [tiny.length, atOffset.byteOffset, before, pages]);
+  }
+
   console.log('appendPhotoPages');
   {
     const summary = { patientFirstName: 'Jane', patientLastName: 'Doe', shipName: 'MV Northern Star', chiefComplaint: 'Red eye' };

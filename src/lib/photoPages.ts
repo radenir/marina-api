@@ -87,7 +87,11 @@ export async function appendPhotoPages(pdf: Buffer, photos: PdfPhoto[]): Promise
     page.drawText(HEADING, { x: MARGIN, y: pageH - MARGIN - HEADING_SIZE, size: HEADING_SIZE, font: bold });
 
     for (let slot = 0; slot < 2 && i + slot < list.length; slot++) {
-      const img = await doc.embedJpg(images[i + slot]);
+      // A copy, not the Buffer: pdf-lib reads `.buffer` from byte 0 and
+      // ignores the offset, and Node keeps small Buffers (a near-black photo
+      // can shrink to a few KB) inside a shared pool — so it would read the
+      // wrong bytes and fail with "SOI not found in JPEG".
+      const img = await doc.embedJpg(new Uint8Array(images[i + slot]));
       const scale = Math.min(maxImgW / img.width, maxImgH / img.height, 1);
       const w = img.width * scale;
       const h = img.height * scale;
