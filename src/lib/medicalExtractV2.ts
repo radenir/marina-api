@@ -2,9 +2,9 @@
 // medicalExtractV2.ts — versioned extractor powering POST /v2/ai/extract.
 //
 // v1 (medicalExtract.ts / POST /ai/extract) is frozen: other clients depend on
-// its exact shape, so it must NOT change. v2 reuses v1's vitals batch
-// verbatim, forks identification/treatment/medical-history with prompt fixes
-// for the weaker v2 model (same JSON shape), and replaces the
+// its exact shape, so it must NOT change. v2 forks identification/vitals/
+// treatment/medical-history with prompt fixes (same JSON shape), adds the
+// medication given on board, and replaces the
 // "problemAndActions" batch with a CLEAN SPLIT:
 //
 //   problemAndActions → { problemDescription, associatedSymptoms,
@@ -486,12 +486,33 @@ export function formatMedicationGiven(raw: unknown): string {
     .join('\n');
 }
 
-// v2 batch set: v1 batches EXCEPT the ones forked/replaced above (only
-// vitalSignsSimple is still shared verbatim), plus the v2 clinical split.
-const V2_REPLACED = new Set(['problemAndActions', 'medical_history', 'core_identification', 'treatment_medications']);
+// Consciousness: AVPU has no "confused", so "awake but confused" came back as
+// Alert — the Norwegian form then printed "Awake, alert and well orientated"
+// and M-EWS scored it 0. New confusion counts as not alert (ACVPU in NEWS2; the
+// Norwegian form's own M-EWS row) and scores as V, so it is extracted as Voice.
+// Clinical decision: Peter Biesenbach, 2026-10-31.
+const VITALS_V2_BATCH: BatchConfig = {
+  name: 'vitalSignsSimple',
+  prompt: forkPrompt('vitalSignsSimple', [
+    [
+      '- avpu: Level of consciousness - ONLY one of: "Alert", "Voice", "Pain", "Unresponsive" (or "" if not mentioned)',
+      `- avpu: Level of consciousness - ONLY one of: "Alert", "Voice", "Pain", "Unresponsive" (or "" if not mentioned)
+  If the patient is awake but CONFUSED — disoriented, unclear, muddled, not making sense, not knowing where they are or what happened — yet still responds to questions, use "Voice", NOT "Alert".
+  Use "Alert" only when the patient is awake and clear, or when only "awake"/"alert" was said and confusion was not mentioned.
+  Example: "He is awake but confused, responds to questions." → "avpu": "Voice"
+  Example: "She is awake, alert and orientated." → "avpu": "Alert"
+  Example: "He is awake and talking normally." → "avpu": "Alert"`,
+    ],
+  ]),
+};
+
+// v2 batch set: v1 batches EXCEPT the ones forked/replaced above, plus the
+// v2 clinical split.
+const V2_REPLACED = new Set(['problemAndActions', 'medical_history', 'core_identification', 'treatment_medications', 'vitalSignsSimple']);
 const BATCHES_V2: BatchConfig[] = [
   ...BATCHES.filter(b => !V2_REPLACED.has(b.name)),
   CORE_IDENTIFICATION_V2_BATCH,
+  VITALS_V2_BATCH,
   TREATMENT_V2_BATCH,
   MEDICAL_HISTORY_V2_BATCH,
   HISTORY_V2_BATCH,
