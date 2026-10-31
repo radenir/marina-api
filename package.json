@@ -21,7 +21,7 @@
     "revoke-partner-key": "tsx scripts/revoke-partner-key.ts"
   },
   "dependencies": {
-    "argon2": "^0.31.2",
+    "argon2": "^0.45.1",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.73.4",
     "cookie-parser": "^1.4.6",
@@ -33,12 +33,11 @@
     "jose": "^5.6.3",
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
-    "nodemailer": "^6.9.14",
     "openai": "^6.29.0",
     "pdf-lib": "^1.17.1",
     "pg": "^8.12.0",
-    "sharp": "^0.34.5",
-    "zod": "^3.23.8"
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -48,10 +47,12 @@
     "@types/morgan": "^1.9.9",
     "@types/multer": "^2.1.0",
     "@types/node": "^22.0.0",
-    "@types/nodemailer": "^6.4.15",
     "@types/pg": "^8.11.6",
     "playwright-core": "^1.61.0",
     "tsx": "^4.15.7",
     "typescript": "^5.5.3"
+  },
+  "overrides": {
+    "qs": "^6.16.2"
   }
 }

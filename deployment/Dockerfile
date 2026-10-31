@@ -1,5 +1,5 @@
 # Multi-stage build for marina-api production deployment
-FROM node:20-slim AS base
+FROM node:24-slim AS base
 
 # Install dependencies only
 FROM base AS deps

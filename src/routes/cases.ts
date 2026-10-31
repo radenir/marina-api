@@ -537,7 +537,7 @@ const eventSchema = z
   .object({
     event_type: z.enum(CLIENT_EVENT_TYPES),
     conversation_id: z.string().uuid().optional(),
-    payload: z.record(z.unknown()).optional(),
+    payload: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
 

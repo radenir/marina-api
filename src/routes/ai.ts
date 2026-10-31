@@ -1461,7 +1461,7 @@ const InterviewStateSchema = z.object({
   stage: z.number().int().min(1).max(9),
   done: z.boolean(),
   report: z.string().nullable(),
-  conversationHistory: z.array(z.record(z.unknown())).max(500),
+  conversationHistory: z.array(z.record(z.string(), z.unknown())).max(500),
   variables: InterviewVariablesSchema,
   data: InterviewDataSchema,
   conversationId: z.string().uuid().optional(),
@@ -1625,7 +1625,7 @@ aiRouter.post(
 // ---------------------------------------------------------------------------
 
 const InterviewExtractSchema = z.object({
-  conversationHistory: z.array(z.record(z.unknown())).min(1).max(500),
+  conversationHistory: z.array(z.record(z.string(), z.unknown())).min(1).max(500),
   conversationId: z.string().uuid().optional(),
 });
 
@@ -1688,7 +1688,7 @@ const ReportFollowupsSchema = z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string(),
   })).min(0).max(500),
-  summary: z.record(z.unknown()),
+  summary: z.record(z.string(), z.unknown()),
   medicalOfficerLanguage: z.string().min(2).max(20),
   patientLanguage: z.string().min(2).max(20),
   symptom: z.string().max(200).optional(),
@@ -1761,7 +1761,7 @@ const ExamFollowupsSchema = z.object({
     role: z.enum(['user', 'assistant']),
     content: z.string(),
   })).min(0).max(500),
-  summary: z.record(z.unknown()),
+  summary: z.record(z.string(), z.unknown()),
   medicalOfficerLanguage: z.string().min(2).max(20),
   patientLanguage: z.string().min(2).max(20),
   symptom: z.string().max(200).optional(),
