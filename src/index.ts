@@ -81,6 +81,15 @@ app.use('/v2/ai/extract', express.json({ limit: '1mb' }));
 // /v2/ai/revise-field — a long Investigations or Physical Examination draft
 //   plus the spoken instruction exceeds the 10kb default.
 app.use('/v2/ai/revise-field', express.json({ limit: '1mb' }));
+// /v2/ai/revise-abcde — `current` may carry ten text fields of up to 2 000
+//   characters each.
+app.use('/v2/ai/revise-abcde', express.json({ limit: '1mb' }));
+// The PDF routes take the whole report: since v2 also returns the 39 A–E
+//   fields and the medication given on board, a long dictated report passes
+//   10kb, and a 413 here means the officer gets no PDF at all.
+app.use('/ai/generate-pdf', express.json({ limit: '1mb' }));
+app.use('/ai/email-pdf', express.json({ limit: '1mb' }));
+app.use('/ai/email-tmas', express.json({ limit: '1mb' }));
 // Free, no-login Note Taker carries the same large extract/revise bodies.
 app.use('/free/ai/extract', express.json({ limit: '1mb' }));
 app.use('/free/ai/revise-field', express.json({ limit: '1mb' }));

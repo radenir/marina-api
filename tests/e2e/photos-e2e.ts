@@ -121,6 +121,31 @@ async function main() {
   job = await lastJob();
   check('email-tmas without photoIds → job has no photo fields', [job?.to, 'photoIds' in job], ['medico@tmas-germany.de', false]);
 
+  // ---- a long report: past the global 10 kB body limit ----------------------
+  // A v2 summary carries the 39 A–E fields and the medication given on board;
+  // a long dictation passes 10 kB, and a 413 there means no PDF at all.
+  const long = 'Deformed right lower leg, possible fracture. '.repeat(250);
+  const big: Record<string, string | boolean> = {
+    ...summary, problemDescription: long, exam: long, investigations: long,
+    medicationGivenOnBoard: 'Paracetamol 1 g orally 14:20\nMorphine 5 mg intramuscular 14:30',
+    checkbox_airway_clear_yes: true, checkbox_airway_fitted_neck_collar_yes: true,
+    checkbox_disability_convulsions_no: true, circulation_skin_colour: 'pale',
+    expose_top_to_toe_examination_description: long.slice(0, 2000),
+  };
+  check('the long report really is past 10 kB', JSON.stringify({ summary: big }).length > 30_000, true);
+  for (const template of ['marina', 'norwegian', 'rmd']) {
+    check(`generate-pdf (${template}) with a long report → 200`, (await api('POST', '/ai/generate-pdf', jwt, { summary: big, template })).status, 200);
+  }
+  check('email-pdf with a long report → accepted, not 413', (await api('POST', '/ai/email-pdf', jwt, { summary: big })).status, 200);
+  check('email-tmas with a long report → accepted, not 413', (await api('POST', '/ai/email-tmas', jwt, { summary: big, tmas: 'de' })).status, 200);
+  const abcdeCurrent = Object.fromEntries(
+    ['breathing_description', 'circulation_skin_temp_and_humidity', 'disability_pupil_reaction_description',
+      'expose_top_to_toe_examination_description', 'expose_hypothermia_overheating_description']
+      .map((k) => [k, long.slice(0, 2000)]),
+  );
+  check('revise-abcde with long A–E text → past the body limit (not 413)',
+    (await api('POST', '/v2/ai/revise-abcde', jwt, { current: abcdeCurrent, instruction: 'No convulsions.' })).status !== 413, true);
+
   // ---- validation, before any database access -------------------------------
   const fakeId = '00000000-0000-4000-8000-000000000000';
   check('partner with photoIds → 400', (await api('POST', '/ai/generate-pdf', key, { summary, photoIds: [fakeId] })).status, 400);
