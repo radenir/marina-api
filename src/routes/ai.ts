@@ -1188,6 +1188,8 @@ const GeneratePdfSchema = z.object({
   // Which PDF template to fill. Defaults to the RMD form for backward compatibility.
   template: z.enum(['rmd', 'marina', 'german', 'norwegian']).optional().default('rmd'),
   photoIds: PhotoIdsSchema,
+  /** The officer ticked the review checkbox (RCO-23); kept in the audit log. */
+  reviewConfirmed: z.literal(true).optional(),
 });
 
 aiRouter.post(
@@ -1256,6 +1258,7 @@ aiRouter.post(
     await auditLog('pdf_generated', req, attributionFromPrincipal(req), {
       fields_populated: fieldsPopulated,
       file_size_bytes: pdfBuffer.length,
+      review_confirmed: parsed.data.reviewConfirmed === true,
       ...(photoIds?.length ? { photos_requested: photoIds.length } : {}),
     });
 
@@ -1337,6 +1340,7 @@ aiRouter.post(
     await auditLog('pdf_emailed', req, attributionFromPrincipal(req), {
       fields_populated: fieldsPopulated,
       recipient_email: recipient,
+      review_confirmed: parsed.data.reviewConfirmed === true,
     });
 
     res.json({
