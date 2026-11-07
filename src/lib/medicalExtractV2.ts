@@ -20,6 +20,7 @@ import { chatWithFallback } from './llmFallback.js';
 import { ovh } from './ovh.js';
 import { calculateMEWS } from './mewsCalculator.js';
 import { searchPorts } from './portIndex.js';
+import { normalizePatientFields } from './patientFields.js';
 import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
 import { examinationInstructions } from './examinationInstructions.js';
 import {
@@ -852,6 +853,8 @@ export async function parallelExtractV2(
   if (typeof merged.chiefSymptom === 'string' && merged.chiefSymptom.trim()) {
     merged.chiefSymptom = canonicalPathway(merged.chiefSymptom) ?? '';
   }
+
+  normalizePatientFields(merged);
 
   return merged;
 }
