@@ -18,3 +18,8 @@ tests/runs/*/output/
 
 # Local dev/scratch scripts that may embed credentials — never commit
 score.mjs
+
+# Software test suite, results and evidence: local, the record is in Formwork.
+tests/swt/
+tests/screenshots/
+tests/usage-*.json
