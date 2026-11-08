@@ -123,7 +123,13 @@ async function extractBatchV2(text: string, batch: BatchConfig): Promise<Record<
   } catch (err) {
     const e = err as Error & { status?: number };
     console.error(`[v2/ai/extract] batch=${batch.name} failed: status=${e.status ?? 'n/a'} message=${e.message}`);
-    return {};
+    // Fail the whole extraction rather than return {}: an empty piece merged
+    // into the report made /v2/ai/extract and /free/ai/extract answer 200 with
+    // an empty or partial report when the AI providers (primary and backup)
+    // were down, and the officer could not tell (S13, SWT-19). The routes turn
+    // this into 502 "Extraction service unavailable", which the clients show
+    // with Retry. Retry resends the same conversation.
+    throw new Error(`extraction batch ${batch.name} failed: ${e.message}`);
   }
 }
 
