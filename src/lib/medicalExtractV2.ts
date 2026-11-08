@@ -91,7 +91,10 @@ async function extractBatchV2(text: string, batch: BatchConfig): Promise<Record<
   try {
     const completion = await chatWithFallback(
       {
-        temperature: 0.3,
+        // 0, not 0.3: at 0.3 the model left out a stated value at random (the
+        // temperature in 9 of 100 runs of one dictation, S19); at 0, 0 of 100.
+        // Wording can still vary slightly between runs.
+        temperature: 0,
         max_tokens: 1500,
         // gpt-oss-120b is a reasoning model; at the default (medium) effort most
         // of each batch's tokens are hidden chain-of-thought. Structured
