@@ -19,6 +19,7 @@
  * the body diagram, not by the summary — use `bodyNotes` for the description.
  */
 import { type MedicalSummary, parseVitals } from './rmdMapper.js';
+import { isUnder16, mewsForSummary } from './mewsCalculator.js';
 
 type FieldValue = string | { value: boolean; onValue: string };
 
@@ -135,10 +136,12 @@ export function mapSummaryToSeafarerFields(summary: MedicalSummary): Record<stri
     weight: str(summary.weight),
     gcs_total: str(summary.gcsTotal),
     pain_scale: str(summary.painScale),
-    mews_score:
-      summary.mewsScore !== null && summary.mewsScore !== undefined
-        ? String(summary.mewsScore)
-        : '',
+    // Recalculated from the vitals on this report, as the RMD and Norwegian
+    // forms do: the stored score is from extract time and goes stale when the
+    // officer corrects a vital (S2). None for a patient under 16 (RCO-37).
+    mews_score: isUnder16(summary.dateOfBirth, summary.date)
+      ? ''
+      : String(mewsForSummary(summary as unknown as Record<string, unknown>) ?? summary.mewsScore ?? ''),
 
     // ---- Body map ----
     body_notes: str(summary.bodyNotes) || str(summary.markedAreas),

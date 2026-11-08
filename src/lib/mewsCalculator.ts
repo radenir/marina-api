@@ -193,3 +193,73 @@ export function getMEWSHandbookReference(score: number): string {
 
   return 'Unable to calculate M-EWS'
 }
+
+// ---------------------------------------------------------------------------
+// The score for a report (S2)
+// ---------------------------------------------------------------------------
+
+/** A date as written in a report: dd/MM/yyyy (also . or -), or yyyy-MM-dd. */
+function parseReportDate(value: unknown): Date | null {
+  const s = String(value ?? '').trim()
+  let m = /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/.exec(s)
+  if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]))
+  m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s)
+  if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]))
+  return null
+}
+
+/**
+ * True only when the date of birth shows the patient is under 16 on the report
+ * date (today when the report has none). The M-EWS table is not validated for
+ * children (RCO-37). A missing or unreadable date of birth is not a reason to
+ * withhold the score: the officer often does not fill it in.
+ */
+export function isUnder16(dateOfBirth: unknown, onDate?: unknown): boolean {
+  const born = parseReportDate(dateOfBirth)
+  if (!born) return false
+  const on = parseReportDate(onDate) ?? new Date()
+  const sixteenth = new Date(Date.UTC(born.getUTCFullYear() + 16, born.getUTCMonth(), born.getUTCDate()))
+  return on.getTime() < sixteenth.getTime()
+}
+
+type Avpu = 'Alert' | 'Voice' | 'Pain' | 'Unresponsive'
+
+/**
+ * The M-EWS input from the vitals on a report, as the officer last left them.
+ * `fallback` supplies readings a form may carry elsewhere (the RMD vitals text).
+ */
+export function mewsInputFromSummary(
+  summary: Record<string, unknown>,
+  fallback: Partial<Record<'pulse' | 'respiratoryRate' | 'temperature' | 'systole' | 'oxygenSaturation', string>> = {},
+): MEWSInput {
+  const num = (v: unknown, alt?: string): number | null => {
+    const raw = v === undefined || v === null || v === '' || typeof v === 'boolean' ? alt : v
+    const n = parseFloat(String(raw ?? '').replace(',', '.').replace(/[^\d.-]/g, ''))
+    return Number.isFinite(n) ? n : null
+  }
+  const avpu = String(summary.avpu ?? '')
+  return {
+    pulse_per_min: num(summary.circulation_pulse_per_min, fallback.pulse),
+    respiration_per_min: num(summary.breathing_num_breaths_per_min, fallback.respiratoryRate),
+    temperature_celsius: num(summary.expose_temperature_measured_mouth, fallback.temperature),
+    blood_pressure_systolic: num(summary.circulation_systole, fallback.systole),
+    oxygen_saturation_percent: num(summary.breathing_oxygen_saturation, fallback.oxygenSaturation),
+    oxygen_requirements: null,
+    avpu: (['Alert', 'Voice', 'Pain', 'Unresponsive'].includes(avpu) ? avpu : null) as Avpu | null,
+  }
+}
+
+/**
+ * The M-EWS total for a report, recalculated from its vitals so it always
+ * matches the numbers printed beside it. Null when the patient is under 16, or
+ * when the report has no vitals at all.
+ */
+export function mewsForSummary(
+  summary: Record<string, unknown>,
+  fallback: Parameters<typeof mewsInputFromSummary>[1] = {},
+): number | null {
+  if (isUnder16(summary.dateOfBirth, summary.date)) return null
+  const input = mewsInputFromSummary(summary, fallback)
+  if (!Object.values(input).some((v) => v !== null)) return null
+  return calculateMEWS(input).total_score
+}

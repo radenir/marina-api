@@ -4,7 +4,7 @@
  * RMD (Radio Medical) is a standardized Danish maritime medical form.
  */
 
-import { calculateMEWS } from './mewsCalculator.js';
+import { isUnder16, mewsForSummary } from './mewsCalculator.js';
 
 export type MedicalSummary = Record<string, string | boolean | null | undefined>;
 
@@ -21,24 +21,11 @@ export type MedicalSummary = Record<string, string | boolean | null | undefined>
  * Falls back to the stored value when the report carries no vitals at all.
  */
 function mewsScore(summary: MedicalSummary, vitals: ReturnType<typeof parseVitals>): string {
-  const num = (v: unknown, fallback?: string): number | null => {
-    const n = parseFloat(String(v ?? fallback ?? '').replace(',', '.'));
-    return Number.isFinite(n) ? n : null;
-  };
-  const input = {
-    pulse_per_min: num(summary.circulation_pulse_per_min, vitals.pulse),
-    respiration_per_min: num(summary.breathing_num_breaths_per_min, vitals.respiratoryRate),
-    temperature_celsius: num(summary.expose_temperature_measured_mouth, vitals.temperature),
-    blood_pressure_systolic: num(summary.circulation_systole, vitals.systole),
-    oxygen_saturation_percent: num(summary.breathing_oxygen_saturation, vitals.oxygenSaturation),
-    oxygen_requirements: null,
-    avpu: (['Alert', 'Voice', 'Pain', 'Unresponsive'].includes(String(summary.avpu))
-      ? String(summary.avpu)
-      : null) as 'Alert' | 'Voice' | 'Pain' | 'Unresponsive' | null,
-  };
-  if (Object.values(input).some((v) => v !== null)) {
-    return String(calculateMEWS(input).total_score);
-  }
+  // Under 16, nothing: the table is not validated for children (RCO-37). The
+  // stored score is not a fallback there, or the child's score would return.
+  if (isUnder16(summary.dateOfBirth, summary.date)) return '';
+  const score = mewsForSummary(summary as unknown as Record<string, unknown>, vitals);
+  if (score !== null) return String(score);
   return String(summary.mewsScore ?? '').trim();
 }
 

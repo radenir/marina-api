@@ -18,7 +18,7 @@
 import { config } from '../config.js';
 import { chatWithFallback } from './llmFallback.js';
 import { ovh } from './ovh.js';
-import { calculateMEWS } from './mewsCalculator.js';
+import { calculateMEWS, isUnder16 } from './mewsCalculator.js';
 import { searchPorts } from './portIndex.js';
 import { normalizePatientFields } from './patientFields.js';
 import { verifyNegatives } from './negativeEvidence.js';
@@ -844,6 +844,8 @@ export async function parallelExtractV2(
   }
 
   // Expose M-EWS as its own field (clean split — never lumped into free text).
+  // None for a patient under 16: the table is not validated for children (RCO-37).
+  if (isUnder16(merged.dateOfBirth, merged.date)) finalMewsScore = null;
   if (finalMewsScore !== null) merged.mewsScore = String(finalMewsScore);
 
   // Pre-populate identity/vessel fields from the profile (shared with v1).

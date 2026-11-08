@@ -19,7 +19,7 @@
  * Left untouched: the body-map pin checkboxes (bm_*), driven by the body
  * diagram rather than the summary, and the signature box.
  */
-import { calculateMEWS, type MEWSInput, type MEWSResult } from './mewsCalculator.js';
+import { calculateMEWS, isUnder16, type MEWSInput, type MEWSResult } from './mewsCalculator.js';
 import {
   type MedicalSummary, parseVitals, joinSections, medicationLines, portWithEta, getCurrentDateTime,
 } from './rmdMapper.js';
@@ -130,7 +130,9 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
     temperature_celsius: num(temp),
   };
   const anyVital = Object.values(mewsInput).some((v) => v !== null);
-  const mews = anyVital ? radioMedicoBands(calculateMEWS(mewsInput), mewsInput) : null;
+  // None for a patient under 16: the table is not validated for children (RCO-37).
+  const child = isUnder16(summary.dateOfBirth, summary.date);
+  const mews = anyVital && !child ? radioMedicoBands(calculateMEWS(mewsInput), mewsInput) : null;
   const points = (present: boolean, score: number | undefined) => (present && mews ? String(score) : '');
 
   const ews: Record<string, NorwegianFieldValue | undefined> = {
@@ -148,7 +150,7 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
     ews_avpu_points: points(avpu !== '', mews?.consciousness_score),
     ews_temp_value: temp,
     ews_temp_points: points(mewsInput.temperature_celsius !== null, mews?.temperature_score),
-    ews_total: mews ? String(mews.total_score) : str(summary.mewsScore),
+    ews_total: mews ? String(mews.total_score) : child ? '' : str(summary.mewsScore),
     ews_status: radio(mews ? (mews.missing_values.length === 0 ? 'complete' : 'incomplete') : undefined),
   };
 
