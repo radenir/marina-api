@@ -12,6 +12,7 @@ import { fillSeafarerForm, fillNorwegianForm } from './seafarerPdf';
 import { appendPhotoPages } from './photoPages';
 import { getPhotosForPdf } from './reportPhotoStore';
 import * as fs from 'fs';
+import { reportFilename } from './reportFilename';
 
 export type PdfTemplate = 'rmd' | 'marina' | 'german' | 'norwegian';
 
@@ -129,11 +130,7 @@ export function createEmailWorker(): Worker<EmailJobData> {
         pdfBuffer = await appendPhotoPages(pdfBuffer, await getPhotosForPdf(data.photoIds, data.photoUserId));
       }
 
-      const filename =
-        template === 'marina' ? 'marina-seafarer-medical-report.pdf'
-        : template === 'german' ? 'tmas-germany-medical-report.pdf'
-        : template === 'norwegian' ? 'radio-medico-norway-medical-report.pdf'
-        : 'rmd-maritime-medical-report.pdf';
+      const filename = reportFilename(template, data.summary);
       const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       const tmas = data.tmasId ? findTmas(data.tmasId) : undefined;
       const str = (v: unknown) => (typeof v === 'string' ? v : undefined);

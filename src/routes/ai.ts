@@ -61,6 +61,7 @@ import { renderExamSentence, type MediaAnswer } from '../lib/examMediaProtocols.
 import { getConfirmedExamMedia, linkExamMediaToConversation } from '../lib/examMediaStore.js';
 import { getPhotosForPdf, MAX_REPORT_PHOTOS } from '../lib/reportPhotoStore.js';
 import { appendPhotoPages } from '../lib/photoPages.js';
+import { reportFilename } from '../lib/reportFilename';
 
 export const aiRouter = Router();
 
@@ -1262,11 +1263,7 @@ aiRouter.post(
       ...(photoIds?.length ? { photos_requested: photoIds.length } : {}),
     });
 
-    const filename = template === 'marina'
-      ? 'marina-seafarer-medical-report.pdf'
-      : template === 'norwegian'
-        ? 'radio-medico-norway-medical-report.pdf'
-        : 'rmd-maritime-medical-report.pdf';
+    const filename = reportFilename(template, summary);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${filename}"`,
