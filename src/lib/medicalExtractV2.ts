@@ -306,7 +306,7 @@ const MEDICAL_HISTORY_V2_BATCH: BatchConfig = {
   name: 'medical_history',
   prompt: `You extract three fields of a maritime medical report from a transcript. Return ONE JSON object with exactly these keys: "pastHistory", "allergies", "currentMedications", "allergiesEvidence", "currentMedicationsEvidence".
 
-OUTPUT LANGUAGE: English only (translate first if needed).
+OUTPUT LANGUAGE: "pastHistory", "allergies" and "currentMedications" are ALWAYS written in English, even when the whole transcript — the patient's answers and the interviewer's own questions and summaries — is in another language. Translate; never copy a sentence in another language into these fields. Only the two Evidence keys keep the language of the transcript.
 
 RULES (follow strictly):
 1. Use ONLY what is explicitly stated. Never guess or invent. No medical abbreviations. Numbers as digits.
@@ -323,7 +323,7 @@ Capture what was stated:
   • Occupation / job role and physically relevant work habits, if mentioned (e.g. heavy lifting, repetitive movements, prolonged standing, deck work) — for many complaints these are the risk factors the doctor needs
   • For women, pregnancy status or gynaecological history, if relevant and mentioned
 Only include a chronic condition if the patient stated it (or clearly stated a regular medicine for it).
-Use the patient's own plain words — never convert to medical terminology (write "gallbladder removed", not "cholecystectomy"; "appendix out", not "appendectomy"). The readers are ship officers, not doctors.
+Write it in plain everyday English — translate what the patient said, but never convert it to medical terminology (write "gallbladder removed", not "cholecystectomy"; "appendix out", not "appendectomy"). The readers are ship officers, not doctors.
 Record explicit DENIALS too: if the patient was asked about a past condition, surgery, or hospitalisation and said no, document it (e.g. "Denies diabetes and heart disease. No previous surgery."). A documented negative is as valuable as a positive. Never invent a denial for a topic that was never raised.
 "" if past medical history was not discussed at all.
 
