@@ -21,6 +21,7 @@ import { ovh } from './ovh.js';
 import { calculateMEWS } from './mewsCalculator.js';
 import { searchPorts } from './portIndex.js';
 import { normalizePatientFields } from './patientFields.js';
+import { verifyNegatives } from './negativeEvidence.js';
 import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
 import { examinationInstructions } from './examinationInstructions.js';
 import {
@@ -300,7 +301,7 @@ Return JSON:`;
 // v1's batch is untouched. Fields are left EMPTY when the topic was never raised.
 const MEDICAL_HISTORY_V2_BATCH: BatchConfig = {
   name: 'medical_history',
-  prompt: `You extract three fields of a maritime medical report from a transcript. Return ONE JSON object with exactly these keys: "pastHistory", "allergies", "currentMedications".
+  prompt: `You extract three fields of a maritime medical report from a transcript. Return ONE JSON object with exactly these keys: "pastHistory", "allergies", "currentMedications", "allergiesEvidence", "currentMedicationsEvidence".
 
 OUTPUT LANGUAGE: English only (translate first if needed).
 
@@ -332,8 +333,8 @@ If the patient named one or more allergies, for EACH give:
   • the reaction it causes (e.g. rash, swelling, difficulty breathing)
   • how severe it is, or whether it has happened more than once
   Example: "Penicillin (medicine) — skin rash, moderate. Shellfish (food) — throat swelling, severe."
-If the patient clearly has NO allergies, write "No known allergies."
-If allergies were not discussed at all, "".
+If the patient clearly has NO allergies, write "No known allergies." — and in "allergiesEvidence" copy, word for word and in the language spoken, the words of the transcript that say so (e.g. "I have no allergies"). If no words in the transcript say so, the topic was not discussed: write "".
+If allergies were not discussed at all, "". Saying nothing about allergies is NOT a denial.
 
 ────────────────────────────────────────────────────────
 currentMedications
@@ -346,11 +347,12 @@ If the patient named one or more of their own medicines, for EACH give:
   • what it is for, if stated
   Include tablets, inhalers, injections, and supplements.
   Example: "Metformin 500 mg twice daily for diabetes. Ibuprofen 400 mg as needed for pain."
-If the patient clearly takes NO regular medicines, write "No regular medications." — even if treatment was given on board.
-If medications were not discussed at all, "".
+If the patient clearly takes NO regular medicines, write "No regular medications." — even if treatment was given on board — and in "currentMedicationsEvidence" copy, word for word and in the language spoken, the words of the transcript that say so (e.g. "he takes no medicines"). If no words in the transcript say so, the topic was not discussed: write "".
+If medications were not discussed at all, "". Saying nothing about medicines is NOT a denial; an allergy to a medicine is NOT a statement about the medicines the patient takes.
+"allergiesEvidence" and "currentMedicationsEvidence" are "" unless the field above is the negative statement.
 
 Return JSON:
-{"pastHistory":"","allergies":"","currentMedications":""}`,
+{"pastHistory":"","allergies":"","currentMedications":"","allergiesEvidence":"","currentMedicationsEvidence":""}`,
 };
 
 // ---------------------------------------------------------------------------
@@ -855,6 +857,7 @@ export async function parallelExtractV2(
   }
 
   normalizePatientFields(merged);
+  verifyNegatives(merged, text);
 
   return merged;
 }
