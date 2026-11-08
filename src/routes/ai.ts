@@ -603,8 +603,9 @@ aiRouter.post(
           file,
           ...(language ? { language } : {}),
         });
-        if (!result.text) {
-          console.error('[ai/transcribe] empty response from Whisper');
+        // "" is silence, not a failure (see elevenLabsTranscribe).
+        if (typeof result.text !== 'string') {
+          console.error('[ai/transcribe] malformed response from Whisper');
           res.status(502).json({ error: 'Transcription service unavailable' });
           return;
         }
@@ -2464,7 +2465,8 @@ aiFreeRouter.post(
           file,
           ...(language ? { language } : {}),
         });
-        if (!result.text) {
+        // "" is silence, not a failure (see elevenLabsTranscribe).
+        if (typeof result.text !== 'string') {
           res.status(502).json({ error: 'Transcription service unavailable' });
           return;
         }

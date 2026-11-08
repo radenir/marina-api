@@ -22,8 +22,11 @@ export async function elevenLabsTranscribe(
     throw new Error(`ElevenLabs STT ${res.status}: ${text}`);
   }
 
-  const json = (await res.json()) as { text?: string };
-  if (!json.text) throw new Error('Empty response from ElevenLabs STT');
+  const json = (await res.json()) as { text?: unknown };
+  // "" is an answer, not a failure: ElevenLabs returns it for silence, such as
+  // the last second of a dictation before Finish. Treating it as an error sent
+  // 502 to the Note Taker, which then showed "Can't reach the server".
+  if (typeof json.text !== 'string') throw new Error('Malformed response from ElevenLabs STT');
   return json.text;
 }
 
