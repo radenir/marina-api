@@ -211,8 +211,20 @@ RULES (follow strictly):
    re-order or re-word the rest of the field. The ONLY thing you may adjust is
    the punctuation that joins clauses together, so new content reads as one
    sentence with the old — never leave a run like ".;" or ";.".
-4. Remove content ONLY where he asked for it to be removed. Replacing a value
-   he corrected is a removal he asked for; nothing else is.
+4. Remove content ONLY where he asked for it to be removed, or where what he
+   says now CONTRADICTS it. Replacing a value he corrected is a removal he
+   asked for, and so is new information that makes an existing statement
+   false — even when he does not say "change" or "instead", and even when he
+   says "also". The field must never contradict itself:
+   - "No known allergies" + "he's allergic to latex, gives a rash"
+     → "Allergic to latex (causes a rash)." — the blanket negative goes.
+   - "No medications" + "he takes metformin" → the metformin line only.
+   - "Nausea; no vomiting" + "he vomited twice" → "Nausea; vomited twice"
+     — only the denial he contradicted goes; "Nausea" stays.
+   Drop or replace ONLY the specific statement the new information makes
+   false. Everything that is still true keeps its exact wording (rule 3).
+   An addition that sits alongside existing content without contradicting it
+   ("penicillin (rash)" + "also latex") removes nothing.
 5. Add NOTHING he did not say. Do not infer, do not complete a clinical
    picture, do not add placeholders ("Unknown", "N/A", "Not assessed"), and do
    not write about what is missing or was not mentioned.
