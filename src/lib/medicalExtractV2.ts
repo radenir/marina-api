@@ -21,7 +21,7 @@ import { ovh } from './ovh.js';
 import { calculateMEWS, isUnder16 } from './mewsCalculator.js';
 import { searchPorts } from './portIndex.js';
 import { normalizePatientFields } from './patientFields.js';
-import { verifyNegatives } from './negativeEvidence.js';
+import { verifyAllergies, verifyNegatives } from './negativeEvidence.js';
 import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
 import { examinationInstructions } from './examinationInstructions.js';
 import {
@@ -310,9 +310,9 @@ Return JSON:`;
 // v1's batch is untouched. Fields are left EMPTY when the topic was never raised.
 const MEDICAL_HISTORY_V2_BATCH: BatchConfig = {
   name: 'medical_history',
-  prompt: `You extract three fields of a maritime medical report from a transcript. Return ONE JSON object with exactly these keys: "pastHistory", "allergies", "currentMedications", "allergiesEvidence", "currentMedicationsEvidence".
+  prompt: `You extract three fields of a maritime medical report from a transcript. Return ONE JSON object with exactly these keys: "pastHistory", "allergies", "allergyItems", "currentMedications", "allergiesEvidence", "currentMedicationsEvidence".
 
-OUTPUT LANGUAGE: "pastHistory", "allergies" and "currentMedications" are ALWAYS written in English, even when the whole transcript — the patient's answers and the interviewer's own questions and summaries — is in another language. Translate; never copy a sentence in another language into these fields. Only the two Evidence keys keep the language of the transcript.
+OUTPUT LANGUAGE: "pastHistory", "allergies" and "currentMedications" are ALWAYS written in English, even when the whole transcript — the patient's answers and the interviewer's own questions and summaries — is in another language. Translate; never copy a sentence in another language into these fields. Only the two Evidence keys and each "quote" in "allergyItems" keep the language of the transcript.
 
 RULES (follow strictly):
 1. Use ONLY what is explicitly stated. Never guess or invent. No medical abbreviations. Numbers as digits.
@@ -336,32 +336,40 @@ Record explicit DENIALS too: if the patient was asked about a past condition, su
 ────────────────────────────────────────────────────────
 allergies
 ────────────────────────────────────────────────────────
-If the patient named one or more allergies, for EACH give:
+Only something the transcript CALLS an allergy is an allergy ("allergic to", "allergy", "allergisk over for", "uczulony na", or the answer to a question about allergies). A side effect or something a medicine or food "does to" the patient is NOT an allergy unless it was called one: "codeine makes him drowsy" is not an allergy.
+Put each allergy in "allergyItems" as {"entry": ..., "quote": ...}:
+  • "entry": the allergy in English, as described below.
+  • "quote": copied word for word, in the language spoken, the shortest piece of the transcript that names this allergy (e.g. "allergic to penicillin, it gives him a rash"; in an interview the patient's answer, e.g. "penicillin").
+Leave "allergies" "" when there are allergyItems — the report builds it from them.
+For EACH allergy, the entry is what was SAID, and nothing more:
   • the substance (e.g. penicillin, peanuts, latex)
-  • what kind it is — medicine, food, or environmental
-  • the reaction it causes (e.g. rash, swelling, difficulty breathing)
-  • how severe it is, or whether it has happened more than once
-  Example: "Penicillin (medicine) — skin rash, moderate. Shellfish (food) — throat swelling, severe."
-If the patient clearly has NO allergies, write "No known allergies." — and in "allergiesEvidence" copy, word for word and in the language spoken, the words of the transcript that say so (e.g. "I have no allergies"). If no words in the transcript say so, the topic was not discussed: write "".
+  • the reaction it causes, ONLY if it was said (e.g. rash, swelling, difficulty breathing)
+  • how bad it is and how often it has happened, ONLY if said, and in the words that were said (translated to English if needed). Never turn them into a grade: "badly" stays "badly", it does NOT become "severe"; "a bit" does NOT become "mild".
+  Never add a severity, a category (medicine / food / environmental) or any other detail that was not said — not even one that seems obvious. A rash is not "mild" unless someone said mild.
+  Never drop a detail that WAS said about the allergy: keep every qualifier in the words used ("a little bit of", "really", "quite often", "every time", "twice").
+  If a part was not said, leave it out. Never write that it is missing: no "reaction not specified", "severity unknown", "not stated".
+  Examples: said "he is allergic to penicillin, it gives him a rash" → {"entry": "Penicillin — rash.", "quote": "allergic to penicillin, it gives him a rash"}. Said "allergic to iodine" → {"entry": "Iodine.", "quote": "allergic to iodine"}. Said "allergic to shellfish, his throat swells badly every time, it has happened twice" → {"entry": "Shellfish — throat swells badly every time; has happened twice.", "quote": "allergic to shellfish, his throat swells badly every time, it has happened twice"}.
+If the patient clearly has NO allergies, write "No known allergies." in "allergies" (and leave "allergyItems" []) — and in "allergiesEvidence" copy, word for word and in the language spoken, the words of the transcript that say so (e.g. "I have no allergies"). If no words in the transcript say so, the topic was not discussed: write "".
 If allergies were not discussed at all, "". Saying nothing about allergies is NOT a denial.
 
 ────────────────────────────────────────────────────────
 currentMedications
 ────────────────────────────────────────────────────────
 ONLY medicines the patient takes as their own, from before this illness. Medicine given ON BOARD to treat THIS illness ("I gave him 1 gram of paracetamol") is TREATMENT — never list it here, it is captured elsewhere.
-If the patient named one or more of their own medicines, for EACH give:
+If the patient named one or more of their own medicines, for EACH write what was SAID, and nothing more:
   • the name (e.g. paracetamol, metformin, amlodipine)
-  • the dose / strength (e.g. 500 mg, 10 units, one tablet)
-  • how often it is taken (e.g. twice daily, every 8 hours, as needed)
-  • what it is for, if stated
+  • the dose / strength, ONLY if it was said (e.g. 500 mg, 10 units, one tablet)
+  • how often it is taken, ONLY if it was said (e.g. twice daily, every 8 hours, as needed)
+  • what it is for, ONLY if it was said
   Include tablets, inhalers, injections, and supplements.
-  Example: "Metformin 500 mg twice daily for diabetes. Ibuprofen 400 mg as needed for pain."
+  If a part was not said, leave it out. Never write that it is missing: no "dose not specified", "frequency unknown", "not stated".
+  Examples: said "metformin 500 milligrams twice a day for his diabetes" → "Metformin 500 mg twice daily for diabetes." Said "he takes metformin twice a day" → "Metformin twice daily."
 If the patient clearly takes NO regular medicines, write "No regular medications." — even if treatment was given on board — and in "currentMedicationsEvidence" copy, word for word and in the language spoken, the words of the transcript that say so (e.g. "he takes no medicines"). If no words in the transcript say so, the topic was not discussed: write "".
 If medications were not discussed at all, "". Saying nothing about medicines is NOT a denial; an allergy to a medicine is NOT a statement about the medicines the patient takes.
 "allergiesEvidence" and "currentMedicationsEvidence" are "" unless the field above is the negative statement.
 
 Return JSON:
-{"pastHistory":"","allergies":"","currentMedications":"","allergiesEvidence":"","currentMedicationsEvidence":""}`,
+{"pastHistory":"","allergies":"","allergyItems":[],"currentMedications":"","allergiesEvidence":"","currentMedicationsEvidence":""}`,
 };
 
 // ---------------------------------------------------------------------------
@@ -868,6 +876,7 @@ export async function parallelExtractV2(
   }
 
   normalizePatientFields(merged);
+  verifyAllergies(merged, text);
   verifyNegatives(merged, text);
 
   return merged;
