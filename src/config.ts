@@ -74,9 +74,13 @@ export const config = {
     // fixed so grading stays reproducible when NEBIUS_MODEL is swapped for
     // interview tuning.
     problemScoreModel: optional_env('NEBIUS_PROBLEM_SCORE_MODEL', 'openai/gpt-oss-120b'),
-    // Model for /v2/ai/extract only — gpt-oss-120b is faster than the v1 model.
-    // v1 /ai/extract keeps using `model` above, unchanged.
-    extractV2Model: optional_env('NEBIUS_EXTRACT_V2_MODEL', 'openai/gpt-oss-120b'),
+    // Model for /v2/ai/extract (and /free/ai/extract). Qwen3-235B since
+    // 2026-11-10: in the model comparison (29 scenarios × 3 runs) it read Danish
+    // and Norwegian number words, kept pregnancy and added no body site, age or
+    // red flag that was not said, where gpt-oss-120b did not — at the same
+    // speed (median 1.6 s). The same model runs the interview. The OVH backup
+    // after a 10 s timeout is still gpt-oss-120b (`ovh.model`).
+    extractV2Model: optional_env('NEBIUS_EXTRACT_V2_MODEL', 'Qwen/Qwen3-235B-A22B-Instruct-2507'),
   },
 
   // Vision model for /ai/exam-media: reads an examination photo and answers the

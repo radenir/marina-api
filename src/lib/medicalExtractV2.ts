@@ -823,6 +823,10 @@ export async function parallelExtractV2(
     merged.exam = spoken ? `${photoExam} ${spoken}` : photoExam;
   }
 
+  // M-EWS comes from the calculator (or the caller), never from the model: no
+  // prompt asks for it, and a key the model adds on its own must not survive.
+  delete merged.mewsScore;
+
   // M-EWS: use the caller-supplied score, else compute it from extracted vitals.
   let finalMewsScore = (mewsScore !== null && mewsScore !== undefined) ? mewsScore : null;
   if (finalMewsScore === null) {
@@ -851,11 +855,6 @@ export async function parallelExtractV2(
     console.log(`[v2/ai/extract] M-EWS from request: ${finalMewsScore}`);
   }
 
-  // Expose M-EWS as its own field (clean split — never lumped into free text).
-  // None for a patient under 16: the table is not validated for children (RCO-37).
-  if (isUnder16(merged.dateOfBirth, merged.date)) finalMewsScore = null;
-  if (finalMewsScore !== null) merged.mewsScore = String(finalMewsScore);
-
   // Pre-populate identity/vessel fields from the profile (shared with v1).
   if (userProfile) applyUserProfile(merged, userProfile);
 
@@ -876,6 +875,16 @@ export async function parallelExtractV2(
   }
 
   normalizePatientFields(merged);
+
+  // Expose M-EWS as its own field (clean split — never lumped into free text).
+  // None for a patient under 16: the table is not validated for children (RCO-37).
+  // Decided here, on the final date of birth: only now is it dd/mm/yyyy, the
+  // one form isUnder16 reads, and the profile may have filled it. Before, it ran
+  // first, so a date of birth the model wrote as "12 January 2011" (Qwen3 does)
+  // was unreadable and a 14-year-old's report showed an M-EWS (2026-11-10).
+  if (isUnder16(merged.dateOfBirth, merged.date)) finalMewsScore = null;
+  if (finalMewsScore !== null) merged.mewsScore = String(finalMewsScore);
+
   verifyAllergies(merged, text);
   verifyNegatives(merged, text);
 
