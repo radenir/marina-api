@@ -193,7 +193,7 @@ Software column value: "${p.software}". Confirmed by the QMO (${QMO}) on ${today
 ${JSON.stringify(changes, null, 2)}` : ' No changes this time — do not touch it.'}
 
 2. Record "CHM - Bug Fixes Documentation List" (record id ${BUG_LIST_ID}).${bugs.length ? `
-   Read it and find the table for ${p.software} (the section for this software; if none exists, add a section "## ${p.software}" in the same table format at the end, before any closing notes). Append one row per bug fix below, numbering on from the highest existing bug ID in the whole record with the same ID format. Fill the columns the table has from the data below (date, commits, bug description, corrective action, area); leave columns you have no data for empty.
+   Read it. Insert one row per bug fix below directly after the last existing row for ${p.software} (by its Software column or its section; if there is none, after the last row of the table), numbering on from the highest existing bug ID in the whole record with the same ID format. Fill every column of the table: date, software, bug description, corrective action and commits from the data below; for "Preliminary Incident Assessment by PRRC" write "Open" (the PRRC assesses it later); any other column the existing rows fill with the same value gets that value too. Never leave a column empty that the existing rows fill.
    Save with update_formwork_resource and amendment_comment: "Change gate: ${bugs.length} bug fix(es) of ${p.software} added before release, confirmed by the QMO (${QMO}), ${today}."
    Bug fixes:
 ${JSON.stringify(bugs, null, 2)}` : ' No bug fixes this time — do not touch it.'}
