@@ -1,0 +1,4 @@
+#!/bin/sh
+# Marina change-record gate (see tools/change-gate/README.md).
+# Installed as .git/hooks/pre-push in the four Marina repositories.
+exec node "$HOME/Documents/marina-api/tools/change-gate/gate.ts" "$@"
