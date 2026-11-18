@@ -433,9 +433,28 @@ const CORE_IDENTIFICATION_V2_BATCH: BatchConfig = {
       `- location (the ship's position as COORDINATES ONLY — latitude/longitude in any spoken form, e.g. "55 degrees 30 minutes north, 012 degrees 10 minutes east" or "43 12 north, 005 22 east".
   If no coordinates were stated, leave "" — NEVER put a place name, sea area, port, heading, or phrases like "sailing to X" / "docked in X" here. Where the ship is GOING belongs in no field here (destination is captured elsewhere).)`,
     ],
+    // Pathway after an injury. gpt-oss-120b filed the partner's script 01 (a 2 m
+    // fall from a ladder, head strike, confusion, painful wrist and hip) under
+    // "Headache" or "Dizziness/Vertigo", so Marina asked about migraine and fever
+    // and never about blood thinners or the circulation of the injured wrist.
+    // Start from what happened, not from the first symptom named. A high-energy
+    // mechanism (fall > ~1 m, down ≥ 5 steps, from a ladder, crush) is Trauma even
+    // with one painful limb and no head strike: the Trauma checklist asks about
+    // blood thinners and the spine and checks limb circulation; the
+    // musculoskeletal one does not.
+    // Clinical decision: Peter Biesenbach, 2026-11-18.
     [
       '- chiefSymptom (primary symptom)',
-      `- chiefSymptom (the ONE entry from this list that best matches the main problem — copy it EXACTLY as written, or "" if nothing fits: ${PATHWAY_LIST})`,
+      `- chiefSymptom (the ONE entry from this list that best matches the main problem — copy it EXACTLY as written, or "" if nothing fits: ${PATHWAY_LIST})
+  When an INJURY caused the complaints (a fall, a blow, a crush, being struck by something), choose from WHAT HAPPENED, never from a symptom it caused (headache, dizziness, nausea, pain):
+    • "Trauma" — the head was hit, OR more than one body region is injured, OR a high-energy mechanism: a fall from more than about 1 metre, a fall down 5 or more steps, a fall from a ladder, a crush, a blow from something heavy. A high-energy mechanism is "Trauma" EVEN WHEN only one limb hurts and the head was not hit: the mechanism decides, not the number of painful places.
+    • "Musculoskeletal injuries" — a single limb or joint hurt by a LOW-energy mechanism, without a head strike (e.g. twisted an ankle on deck, slipped and fell on the same level onto a hand, strained the back lifting).
+    • "Laceration or Open Wounds", "Burns and Chemical Injuries", "Eye Foreign Body" — when that injury is the whole problem.
+  A symptom entry ("Headache", "Dizziness/Vertigo", …) only when no injury caused the complaint.
+  Example: "He fell two metres from the ladder, hit his head, now has a headache, feels dizzy, and his wrist hurts." → "Trauma"
+  Example: "He fell down the engine room stairs, about eight steps. Only his wrist hurts, he did not hit his head." → "Trauma"
+  Example: "She twisted her ankle stepping off the gangway, it is swollen." → "Musculoskeletal injuries"
+  Example: "He has had a headache since this morning, no injury." → "Headache")`,
     ],
     // Examples are load-bearing: instruction-only wordings ("a pronoun counts
     // as stated") still extracted "" for he/him 0/9 on gpt-oss-120b; with the
@@ -473,6 +492,62 @@ VOYAGE INFO (if mentioned):
     ],
   ]),
 };
+
+// ---------------------------------------------------------------------------
+// Injury mechanism → Trauma pathway (clinical decision: Peter Biesenbach,
+// 2026-11-18). After an injury the pathway follows WHAT HAPPENED, not the first
+// symptom named: a head strike, more than one injured body region, or a
+// high-energy mechanism (fall > about 1 m, down 5 or more steps, from a ladder,
+// crush, heavy blow) is "Trauma" even with one painful limb. The Trauma
+// checklist asks about blood thinners and the spine and checks limb
+// circulation; the headache and musculoskeletal ones do not.
+//
+// The prompt rule alone was not reliable: gpt-oss-120b chose "Trauma" for a fall
+// down eight steps in 2 of 5 runs. So the model only reports the facts of the
+// injury, as said, and the rule is applied in code.
+// ---------------------------------------------------------------------------
+const INJURY_V2_BATCH: BatchConfig = {
+  name: 'injury_mechanism',
+  prompt: `You read a maritime medical transcript and report the FACTS of an injury, if the patient was injured. Report only what was said; never guess.
+
+ITEMS:
+- injured: "yes" if an external force caused the patient's complaints (a fall, a slip, a blow, being struck or crushed, a cut, a burn), "no" if the complaints have no injury behind them, "" if unclear.
+- headHit: "yes" if the patient hit or was hit on the head, "no" if it was said they did not, "" if not said.
+- bodyRegions: how many separate body regions are injured or painful because of the injury (head, neck, back, chest, abdomen, pelvis/hip, each arm, each leg count as one each), as a number; 0 if no injury.
+- fallMetres: the height of a fall in metres, digits only, if a height was said ("two metres" → "2", "from the top bunk" → ""); "" if no fall or no height.
+- stepsFallen: how many steps or stairs the patient fell down, digits only, if said ("eight steps" → "8", "the whole flight" → "10"); "" otherwise.
+- fromLadder: "yes" if the patient fell from or off a ladder; "no" otherwise.
+- crushOrHeavyBlow: "yes" if crushed or struck by something heavy (cargo, a hatch, a swinging block, machinery); "no" otherwise.
+
+Return JSON:
+{"injury":{"injured":"","headHit":"","bodyRegions":0,"fallMetres":"","stepsFallen":"","fromLadder":"","crushOrHeavyBlow":""}}`,
+};
+
+/** Pathways a high-energy injury overrides: symptoms the injury caused, or the single-limb pathway. */
+const OVERRIDDEN_BY_TRAUMA = new Set([
+  'Musculoskeletal injuries', 'Headache', 'Dizziness/Vertigo', 'Back Pain', 'Joint Pain or Swelling',
+  'Nausea and Vomiting', 'Unspecific Symptoms', 'Neurological symptoms', 'Altered Consciousness or Confusion',
+]);
+
+/** True if the injury facts meet the Trauma rule. */
+export function traumaByMechanism(raw: unknown): boolean {
+  const i = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const yes = (k: string) => String(i[k] ?? '').trim().toLowerCase() === 'yes';
+  const n = (k: string) => {
+    const v = parseFloat(String(i[k] ?? '').replace(',', '.'));
+    return Number.isFinite(v) ? v : 0;
+  };
+  if (!yes('injured')) return false;
+  return yes('headHit') || n('bodyRegions') > 1 || n('fallMetres') > 1 || n('stepsFallen') >= 5
+    || yes('fromLadder') || yes('crushOrHeavyBlow');
+}
+
+/** The pathway after the Trauma rule: "Trauma" over a symptom or single-limb pathway, else unchanged. */
+export function pathwayAfterInjury(pathway: string | null, injury: unknown): string | null {
+  if (!traumaByMechanism(injury)) return pathway;
+  if (pathway === null || OVERRIDDEN_BY_TRAUMA.has(pathway)) return 'Trauma';
+  return pathway;
+}
 
 // Medication given ON BOARD for this illness — what the doctor most needs to
 // know before advising more. v1 lumped it into performedActions; the v2 split
@@ -820,16 +895,28 @@ export async function parallelExtractV2(
   // fully parallel from the start.
   const corePromise = extractBatchV2(text, CORE_IDENTIFICATION_V2_BATCH);
   // Facts only refine the pathway: if this batch fails, the model's own choice stands.
-  const pathwayPromise = corePromise.then((core) =>
-    canonicalPathway(String(core.chiefSymptom ?? '')) ??
-    canonicalPathway(String(core.chiefComplaint ?? '')),
-  );
+  const injuryPromise = extractBatchV2(text, INJURY_V2_BATCH).catch((err) => {
+    console.error(`[v2/ai/extract] injury_mechanism failed, pathway left as chosen: ${(err as Error).message}`);
+    return {} as Record<string, string | boolean>;
+  });
+  // The Trauma rule (Peter Biesenbach, 2026-11-18) is applied to the pathway the
+  // clinical batches are enriched with AND to the chief symptom on the report.
+  const pathwayPromise = Promise.all([corePromise, injuryPromise]).then(([core, injury]) => {
+    const chosen = canonicalPathway(String(core.chiefSymptom ?? '')) ??
+      canonicalPathway(String(core.chiefComplaint ?? ''));
+    const pathway = pathwayAfterInjury(chosen, injury.injury);
+    if (pathway !== chosen) {
+      console.log(`[v2/ai/extract] chiefSymptom: ${chosen ?? '(none)'} → ${pathway} (injury mechanism)`);
+      core.chiefSymptom = pathway ?? '';
+    }
+    return pathway;
+  });
   const PATHWAY_ENRICHED = new Set([FINDINGS_V2_BATCH, HISTORY_V2_BATCH, MEDICAL_HISTORY_V2_BATCH]);
   const parallelBatches = BATCHES_V2.filter(
     (b) => b !== CORE_IDENTIFICATION_V2_BATCH && !PATHWAY_ENRICHED.has(b),
   );
   const results = await Promise.all([
-    corePromise,
+    pathwayPromise.then(() => corePromise),
     ...parallelBatches.map((b) => extractBatchV2(text, b)),
     pathwayPromise.then((p) => extractBatchV2(text, withPhotoFindings(findingsBatchFor(p), photoExam))),
     pathwayPromise.then((p) => extractBatchV2(text, historyBatchFor(p))),
