@@ -18,10 +18,11 @@
 import { config } from '../config.js';
 import { chatWithFallback } from './llmFallback.js';
 import { ovh } from './ovh.js';
-import { calculateMEWS, isUnder16 } from './mewsCalculator.js';
+import { calculateMEWS, isUnder16, oxygenRequirement } from './mewsCalculator.js';
 import { searchPorts } from './portIndex.js';
 import { normalizePatientFields } from './patientFields.js';
-import { verifyAllergies, verifyNegatives, verifyStatedFields } from './negativeEvidence.js';
+import { roomAirStated, verifyAllergies, verifyNegatives, verifyStatedFields } from './negativeEvidence.js';
+import { normalizeCallSign } from './callSign.js';
 import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
 import { examinationInstructions } from './examinationInstructions.js';
 import {
@@ -159,7 +160,10 @@ ${SHARED_RULES}
 ────────────────────────────────────────────────────────
 problemDescription : the MAIN problem, as described
 ────────────────────────────────────────────────────────
-Write the story of the presenting complaint as prose, using ONLY what was said about it, plus anything asked about and explicitly denied. The list below is just a guide to WHAT to capture IF it came up — include only the points that were actually discussed, and never mention or list the ones that were not:
+Write the story of the presenting complaint as prose, using ONLY what was said about it, plus anything asked about and explicitly denied.
+Include EVERY complaint that was described — each pain or injury with its body site and its score — even when the pathway checklist below is about only one of them. After a fall with a headache AND a painful wrist and hip, all three are in the story; the wrist is never dropped because the checklist is about headache.
+Never describe how something started, feels or behaves unless those words were said: "suddenly", "gradually", "at the time of the fall", "constant", "throbbing", "severe" are claims, and a claim nobody made must not appear. A score stays a number: "seven out of ten" is "7/10", never "severe".
+The list below is just a guide to WHAT to capture IF it came up — include only the points that were actually discussed, and never mention or list the ones that were not:
   • Onset — when it started; sudden or gradual
   • Duration and pattern — how long; constant or comes and goes
   • Location — where it is; whether it spreads/radiates or has moved
@@ -276,6 +280,7 @@ PATHWAY CHECKLIST — "${pathway}" (recognition aid)
 The officer works through the "${pathway}" pathway, asking the questions below. Use them to RECOGNISE what a statement answers and WHICH field it belongs to. Work through BOTH lists ITEM BY ITEM, searching the ENTIRE transcript for each — early statements count exactly as much as the latest words.
 ${historyTaking.length ? `\nQuestions about the MAIN problem ("problemDescription"):\n${historyTaking.map((q) => `  • ${q}`).join('\n')}\n` : ''}${associated.length ? `\nSymptoms asked alongside it ("associatedSymptoms" — record present OR denied):\n${associated.map((q) => `  • ${q}`).join('\n')}\n` : ''}
 The checklist is what MIGHT have been asked, not what was asked: record only what the transcript actually states, stay silent about items it never mentions, and never note that something was not asked (rule 6 applies). A checklist symptom the transcript never mentions gets NO item — not "Denies …" either. Every item needs its quote.
+Never answer a checklist question yourself: if the transcript does not say whether the onset was sudden or gradual, write nothing about the onset; if it does not describe the quality of the pain, write nothing about it. The checklist never limits the story either — complaints it does not list are still part of "problemDescription".
 
 Return JSON:`;
 
@@ -485,16 +490,27 @@ RULES (follow strictly):
 1. Only medicines the transcript says WERE GIVEN or taken on board for this problem, by the crew or by the patient (e.g. "we gave him 1 gram of paracetamol", "he took two ibuprofen an hour ago").
 2. NOT the patient's own regular medicines from before this illness, unless the transcript says a dose was given for this problem.
 3. NOT medicines only considered, planned, recommended or asked about.
-4. NOT oxygen, and not procedures (cannula, neck collar, bandage, splint, CPR).
+4. NOT oxygen, and not procedures (cannula, neck collar, bandage, splint, CPR) — treatment that is not a medicine goes in "treatmentGiven" (rule 8).
 5. Use ONLY what was said. Never guess a dose, route or time. Leave a part "" if it was not said.
    - dose: an amount ("1 g") or a count ("2 tablets", "2 puffs").
    - time: a clock time ("14:20") or, if that is how it was said, a relative one ("about 1 hour ago").
 6. Numbers as digits, units abbreviated: "g", "mg", "mcg", "ml", "units" (e.g. "1 gram" → "1 g", "5 milligrams" → "5 mg"). Route in plain words: "orally", "intramuscular", "intravenous", "subcutaneous", "rectal", "inhaled", "on the skin".
 7. If no medicine was given, or medication was not discussed, return an empty list.
+8. "treatmentGiven": every treatment that is NOT a medicine and that the transcript says WAS DONE on board for this problem, one short phrase each, in English, with the body site if said: e.g. "Splint on the right wrist", "Cold pack applied", "Wound cleaned and dressed", "Arm in a sling". Use only what was said; never add a detail. NOT oxygen, neck collar, jaw lift, suction, airway or CPR (recorded in the A–E assessment), NOT examinations or measurements, NOT treatment only planned or recommended. Empty list if none.
 
 Return JSON:
-{"medicationGiven":[{"name":"","dose":"","route":"","time":""}]}`,
+{"medicationGiven":[{"name":"","dose":"","route":"","time":""}],"treatmentGiven":[]}`,
 };
+
+/** "Splint on the right wrist. Cold pack applied." Anything that is not a list of phrases counts as nothing done. */
+export function formatTreatmentGiven(raw: unknown): string {
+  if (!Array.isArray(raw)) return '';
+  const phrases = raw
+    .filter((t): t is string => typeof t === 'string' && t.trim() !== '')
+    .map((t) => t.trim().replace(/[.;,]+$/, ''))
+    .map((t) => `${t.charAt(0).toUpperCase()}${t.slice(1)}.`);
+  return [...new Set(phrases)].join(' ');
+}
 
 // One line per drug, "Paracetamol 1 g orally 14:20". Anything that is not a
 // list of drug objects counts as nothing given — an empty field is safe, a
@@ -574,7 +590,8 @@ ITEMS:
 - airwayClear: are the airways clear? "yes" / "no" / "". Talking normally counts as "yes" only if the transcript says the airway is clear or the patient talks normally.
 - airwayManoeuvres: list of what was done to open the airway, from: "jaw lift", "suction", "guedel airway".
 - cprStartedAt: clock time CPR was started, "hh:mm", only if CPR was started.
-- oxygenLitresPerMin: oxygen given, in litres per minute, digits only (e.g. "4").
+- oxygenLitresPerMin: oxygen given, in litres per minute, digits only (e.g. "4"). "0" ONLY when the transcript says the patient is on room air or breathing air, or that no oxygen is given ("95 percent on room air" → "0"). "" when oxygen was not mentioned — an oxygen saturation alone says nothing about air or oxygen.
+- oxygenEvidence: when oxygenLitresPerMin is "0", copy word for word, in the language spoken, the words of the transcript that say room air or no oxygen (e.g. "95 percent on room air"); otherwise ""
 - neckBackInjurySuspected: is a neck or back (spine) injury suspected? "yes" / "no" / "".
 - neckCollarFitted: was a neck (cervical) collar fitted? "yes" / "no" / "".
   Example: "No neck or back injury suspected, so no collar." → neckBackInjurySuspected "no", neckCollarFitted "no".
@@ -582,7 +599,7 @@ ITEMS:
 - breathingOther: any other description of HOW the breathing sounds or looks that is not one of those words (e.g. "noisy, wheezing", "laboured"), or "". Never a number or rate: the breathing rate is recorded elsewhere.
 
 Return JSON:
-{"ab":{"airwayClear":"","airwayManoeuvres":[],"cprStartedAt":"","oxygenLitresPerMin":"","neckBackInjurySuspected":"","neckCollarFitted":"","breathingPattern":[],"breathingOther":""}}`,
+{"ab":{"airwayClear":"","airwayManoeuvres":[],"cprStartedAt":"","oxygenLitresPerMin":"","oxygenEvidence":"","neckBackInjurySuspected":"","neckCollarFitted":"","breathingPattern":[],"breathingOther":""}}`,
 };
 
 const ABCDE_CDE_V2_BATCH: BatchConfig = {
@@ -802,6 +819,7 @@ export async function parallelExtractV2(
   // core batch, then run in parallel with each other; vitals/treatment stay
   // fully parallel from the start.
   const corePromise = extractBatchV2(text, CORE_IDENTIFICATION_V2_BATCH);
+  // Facts only refine the pathway: if this batch fails, the model's own choice stands.
   const pathwayPromise = corePromise.then((core) =>
     canonicalPathway(String(core.chiefSymptom ?? '')) ??
     canonicalPathway(String(core.chiefComplaint ?? '')),
@@ -823,7 +841,23 @@ export async function parallelExtractV2(
   merged.medicationGivenOnBoard = formatMedicationGiven(merged.medicationGiven);
   delete merged.medicationGiven;
 
+  // Treatment that is not a medicine (splint, cold pack) goes in `treatment`, a
+  // field all three apps already carry; it was dropped before (partner test,
+  // script 01). The PDFs print it first under performed actions.
+  merged.treatment = formatTreatmentGiven(merged.treatmentGiven);
+  delete merged.treatmentGiven;
+
   Object.assign(merged, abcdeFields(merged.ab, merged.cde, String(merged.expose_temperature_measured_mouth ?? '')));
+  // "0" litres means room air and scores M-EWS as Air. gpt-oss-120b wrote it when
+  // oxygen was never mentioned (3 of 3 runs with only "saturation 95 percent"),
+  // so it is kept only with words of the transcript that say air / no oxygen.
+  if (merged.airway_admin_oxygen_liters_per_min === '0') {
+    const ab = (merged.ab && typeof merged.ab === 'object' ? merged.ab : {}) as Record<string, unknown>;
+    if (!roomAirStated(ab.oxygenEvidence, text)) {
+      console.log('[v2/ai/extract] oxygen: room air without words that say so, left empty');
+      delete merged.airway_admin_oxygen_liters_per_min;
+    }
+  }
   delete merged.ab;
   delete merged.cde;
 
@@ -850,7 +884,7 @@ export async function parallelExtractV2(
       temperature_celsius: parseNum(merged.expose_temperature_measured_mouth),
       blood_pressure_systolic: parseNum(merged.circulation_systole),
       oxygen_saturation_percent: parseNum(merged.breathing_oxygen_saturation),
-      oxygen_requirements: null as null,
+      oxygen_requirements: oxygenRequirement(merged.airway_admin_oxygen_liters_per_min),
       avpu: (['Alert', 'Voice', 'Pain', 'Unresponsive'].includes(merged.avpu as string)
         ? merged.avpu as 'Alert' | 'Voice' | 'Pain' | 'Unresponsive'
         : null),
@@ -863,6 +897,10 @@ export async function parallelExtractV2(
   } else {
     console.log(`[v2/ai/extract] M-EWS from request: ${finalMewsScore}`);
   }
+
+  // A call sign spelled in the radio alphabet ("Lima X-ray Tango Victor Niner")
+  // is written as the code ("LXTV9"), in code so it never drifts between runs.
+  if (typeof merged.shipCallSign === 'string') merged.shipCallSign = normalizeCallSign(merged.shipCallSign);
 
   // Pre-populate identity/vessel fields from the profile (shared with v1).
   if (userProfile) applyUserProfile(merged, userProfile);

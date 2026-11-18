@@ -16,7 +16,7 @@
  *     ./node_modules/.bin/tsx tests/statedEvidence.test.ts
  * Exits non-zero on any failure.
  */
-import { hasNegation, isDenialEntry, statementStated, verifyStatedFields } from '../src/lib/negativeEvidence.js';
+import { hasNegation, isDenialEntry, statementStated, verifyNegatives, verifyStatedFields } from '../src/lib/negativeEvidence.js';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown): void {
@@ -35,6 +35,9 @@ check('German', hasNegation('kein Fieber'), true);
 check('Russian', hasNegation('температуры нет'), true);
 check('Chinese', hasNegation('没有发烧'), true);
 check('no negation', hasNegation('he threw up twice'), false);
+check('"haven\'t" (script 01)', hasNegation("I haven't vomited."), true);
+check('"doesn\'t" with a curly apostrophe', hasNegation('he doesn’t have a fever'), true);
+check('"it\'s" is not a negation', hasNegation("it's sore"), false);
 check('not a string', hasNegation(undefined), false);
 
 console.log('isDenialEntry');
@@ -139,6 +142,35 @@ check(
   'malformed items are ignored',
   run({ associatedSymptomItems: [null, { quote: 'no fever' }, { entry: '  ' }], pastHistoryItems: 'Hypertension' }, dictation),
   { associatedSymptoms: '', pastHistory: '' },
+);
+
+console.log('verifyNegatives: an empty field restored from its own evidence');
+const script01 = 'PATIENT: No regular medicines, and no known allergies.';
+const neg = (s: Record<string, string | boolean>, t: string) => (verifyNegatives(s, t), s);
+check(
+  'script 01: both fields empty, evidence given (gpt-oss, 1 in 8 runs)',
+  neg({ allergies: '', allergiesEvidence: 'no known allergies', currentMedications: '', currentMedicationsEvidence: 'No regular medicines' }, script01),
+  { allergies: 'No known allergies.', currentMedications: 'No regular medications.' },
+);
+check(
+  'the "no" belongs to the medicines, not to the allergy',
+  neg({ allergies: '', allergiesEvidence: 'No regular medicines, he is allergic to penicillin' }, 'USER: No regular medicines, he is allergic to penicillin.'),
+  { allergies: '' },
+);
+check(
+  'evidence not in the transcript restores nothing',
+  neg({ allergies: '', allergiesEvidence: 'no allergies' }, 'USER: He has a headache.'),
+  { allergies: '' },
+);
+check(
+  'evidence about allergies cannot restore the medicines',
+  neg({ currentMedications: '', currentMedicationsEvidence: 'no known allergies' }, script01),
+  { currentMedications: '' },
+);
+check(
+  'a field with text is left alone',
+  neg({ currentMedications: 'Metformin twice daily.', currentMedicationsEvidence: 'No regular medicines' }, script01),
+  { currentMedications: 'Metformin twice daily.' },
 );
 
 if (failures) {

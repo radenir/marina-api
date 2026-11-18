@@ -225,6 +225,21 @@ export function isUnder16(dateOfBirth: unknown, onDate?: unknown): boolean {
 type Avpu = 'Alert' | 'Voice' | 'Pain' | 'Unresponsive'
 
 /**
+ * Air or oxygen, from the report's oxygen field (litres per minute): more than 0
+ * is oxygen; "0" is air — the extract writes it when the officer says the patient
+ * is on room air ("95 percent on room air" left the M-EWS row empty, partner
+ * test script 01, 2026-11); empty is not known.
+ */
+export function oxygenRequirement(litresPerMin: unknown): 'air' | 'oxygen' | null {
+  if (litresPerMin === undefined || litresPerMin === null || typeof litresPerMin === 'boolean') return null
+  const raw = String(litresPerMin).trim()
+  if (!raw) return null
+  const n = parseFloat(raw.replace(',', '.'))
+  if (!Number.isFinite(n) || n < 0) return null
+  return n > 0 ? 'oxygen' : 'air'
+}
+
+/**
  * The M-EWS input from the vitals on a report, as the officer last left them.
  * `fallback` supplies readings a form may carry elsewhere (the RMD vitals text).
  */
@@ -244,7 +259,7 @@ export function mewsInputFromSummary(
     temperature_celsius: num(summary.expose_temperature_measured_mouth, fallback.temperature),
     blood_pressure_systolic: num(summary.circulation_systole, fallback.systole),
     oxygen_saturation_percent: num(summary.breathing_oxygen_saturation, fallback.oxygenSaturation),
-    oxygen_requirements: null,
+    oxygen_requirements: oxygenRequirement(summary.airway_admin_oxygen_liters_per_min),
     avpu: (['Alert', 'Voice', 'Pain', 'Unresponsive'].includes(avpu) ? avpu : null) as Avpu | null,
   }
 }

@@ -19,9 +19,10 @@
  * Left untouched: the body-map pin checkboxes (bm_*), driven by the body
  * diagram rather than the summary, and the signature box.
  */
-import { calculateMEWS, isUnder16, type MEWSInput, type MEWSResult } from './mewsCalculator.js';
+import { calculateMEWS, isUnder16, oxygenRequirement, type MEWSInput, type MEWSResult } from './mewsCalculator.js';
 import {
   type MedicalSummary, parseVitals, joinSections, medicationLines, portWithEta, getCurrentDateTime,
+  noMedicines, noAllergies,
 } from './rmdMapper.js';
 
 export type NorwegianFieldValue = string | boolean | { value: boolean; onValue: string };
@@ -116,14 +117,15 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
     : summary.checkbox_disability_avpu_unconscious === true ? 'unresponsive'
     : '';
 
-  // Air or oxygen is only known when oxygen is being given.
-  const onOxygen = (num(oxygenLpm) ?? 0) > 0;
+  // Air or oxygen: litres > 0 is oxygen; "0" is air (the extract writes it for
+  // "on room air"); empty is not known.
+  const o2 = oxygenRequirement(oxygenLpm);
 
   // ---- M-EWS: recomputed from the vitals on this form (see rmdMapper.mewsScore) ----
   const mewsInput: MEWSInput = {
     respiration_per_min: num(rr),
     oxygen_saturation_percent: num(spo2),
-    oxygen_requirements: onOxygen ? 'oxygen' : null,
+    oxygen_requirements: o2,
     blood_pressure_systolic: num(systolic),
     pulse_per_min: num(hr),
     avpu: avpu ? ((avpu[0].toUpperCase() + avpu.slice(1)) as 'Alert' | 'Voice' | 'Pain' | 'Unresponsive') : null,
@@ -140,8 +142,8 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
     ews_rr_points: points(mewsInput.respiration_per_min !== null, mews?.respiratory_rate_score),
     ews_spo2_value: spo2,
     ews_spo2_points: points(mewsInput.oxygen_saturation_percent !== null, mews?.spo2_score),
-    ews_o2_value: onOxygen ? 'Oxygen' : '',
-    ews_o2_points: points(onOxygen, mews?.oxygen_req_score),
+    ews_o2_value: o2 === 'oxygen' ? 'Oxygen' : o2 === 'air' ? 'Air' : '',
+    ews_o2_points: points(o2 !== null, mews?.oxygen_req_score),
     ews_sbp_value: systolic,
     ews_sbp_points: points(mewsInput.blood_pressure_systolic !== null, mews?.bp_score),
     ews_hr_value: hr,
@@ -176,10 +178,10 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
 
     // ---- Medicines & allergies ----
     medicines: str(summary.currentMedications),
-    medicines_status: radio(summary.no_medicine === true ? 'no'
+    medicines_status: radio(noMedicines(summary) ? 'no'
       : summary.dont_know_medicine === true ? 'unknown' : undefined),
     allergies: str(summary.allergies),
-    allergies_status: radio(summary.no_allergies === true ? 'no'
+    allergies_status: radio(noAllergies(summary) ? 'no'
       : summary.dont_know_allergies === true ? 'unknown' : undefined),
 
     // ---- Problem description ----
@@ -248,8 +250,10 @@ export function mapSummaryToNorwegianFields(summary: MedicalSummary): Record<str
 
     // ---- Performed actions ----
     // The vitals already sit in the M-EWS table on this form, so unlike the RMD
-    // box this one carries only the investigations and the examination.
+    // box this one carries the treatment that is not a medicine (what the box is
+    // for: splint, cold pack), then the investigations and the examination.
     performed_actions: str(summary.performedActions) || joinSections([
+      ['Treatment', summary.treatment],
       ['Investigations', summary.investigations],
       ['Physical examination', summary.exam],
     ]),

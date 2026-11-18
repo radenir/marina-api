@@ -178,6 +178,26 @@ export function medicationLines(summary: MedicalSummary): [string, string, strin
  * "Destination/ETA", so the value carries no prefix or brackets of its own —
  * spelling out "(ETA ...)" only pushed the text past the edge of the field.
  */
+/**
+ * The forms' "No" boxes next to medicines and allergies. The v2 extract never
+ * sets the old no_medicine / no_allergies flags; it writes the negative as text
+ * ("No regular medications." / "No known allergies."), kept only with words of
+ * the transcript that say so (negativeEvidence.ts). So the box is ticked from
+ * the flag, or from the field saying exactly that — and nothing else in it.
+ */
+const NO_MEDICINES = ['no regular medications', 'no regular medicines', 'no medications', 'no medicines', 'none'];
+const NO_ALLERGIES = ['no known allergies', 'no allergies', 'none'];
+const plain = (v: unknown) =>
+  typeof v === 'string' ? v.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim() : '';
+
+export function noMedicines(summary: MedicalSummary): boolean {
+  return summary.no_medicine === true || NO_MEDICINES.includes(plain(summary.currentMedications));
+}
+
+export function noAllergies(summary: MedicalSummary): boolean {
+  return summary.no_allergies === true || NO_ALLERGIES.includes(plain(summary.allergies));
+}
+
 export function portWithEta(port: unknown, eta: unknown): string {
   const name = String(port ?? '').trim();
   const arrival = String(eta ?? '').trim();
@@ -224,9 +244,9 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
     // Medical history
     'Text Field 23': summary.currentMedications || '',
     'Text Field 24': summary.allergies || '',
-    'Check Box 1789': summary.no_medicine || false,
+    'Check Box 1789': noMedicines(summary),
     'Check Box 1790': summary.dont_know_medicine || false,
-    'Check Box 1791': summary.no_allergies || false,
+    'Check Box 1791': noAllergies(summary),
     'Check Box 1792': summary.dont_know_allergies || false,
 
     // Chief complaint.
@@ -322,6 +342,7 @@ export function mapSummaryToRmdFields(summary: MedicalSummary): Record<string, u
       ? String(summary.performedActions)
       : joinSections([
           ['', mewsAndVitalsLine(summary, vitals)],
+          ['Treatment', summary.treatment],
           ['Investigations', summary.investigations],
           ['Physical examination', summary.exam],
         ]),

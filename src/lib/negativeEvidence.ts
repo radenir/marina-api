@@ -156,14 +156,44 @@ const isNegative = (value: unknown, text: string) =>
   typeof value === 'string' && normalizeForMatch(value) === normalizeForMatch(text);
 
 /**
+ * Medicine in the supported languages, as stems. Only used to restore "No regular
+ * medications." from its own evidence (below), so a missing language just means
+ * the field stays empty — the safe side.
+ */
+const MEDICINE_WORDS = [
+  'medic', 'medis', 'medik', 'medyk', 'médic', 'drug', 'pill', 'tablet', 'pastill', // en da no sv de nl fr pl ro …
+  'lægemid', 'legemid', 'läkemed', 'lakemed', 'arznei', 'geneesmid', 'farmac', 'fármac', 'lek', 'lijek', 'léky',
+  'obat', 'ubat', 'gamot', 'ilaç', 'ilac', 'lääk', 'gyógysz', 'gyogysz',
+  'лекар', 'ліки', 'препарат', 'φάρμακ', 'thuốc', '药', '藥', '薬', '약', 'दवा', 'மருந்து', 'دواء',
+].map(normalizeForMatch);
+const hasMedicineWord = (normalized: string) => MEDICINE_WORDS.some(w => normalized.includes(w));
+
+/**
  * Keep each negative only if its quote is in the transcript, and remove the
  * evidence keys so they never reach the report.
+ *
+ * The reverse also happens: gpt-oss-120b sometimes returns the right evidence
+ * ("No regular medicines, and no known allergies") but leaves the field itself
+ * "" (1 in 8 runs of the partner's script 01, 2026-11-18), so the report and the
+ * form's "No" box stayed empty. An empty field is filled with the negative when
+ * its evidence is in the transcript, says no, and names the topic.
  */
 export function verifyNegatives(summary: Record<string, string | boolean>, transcript: string): void {
   for (const n of NEGATIVES) {
-    if (isNegative(summary[n.field], n.text) && !quoteInTranscript(summary[n.evidence], transcript)) {
+    const evidence = summary[n.evidence];
+    const backed = quoteInTranscript(evidence, transcript);
+    if (isNegative(summary[n.field], n.text) && !backed) {
       console.log(`[v2/ai/extract] ${n.field}: negative without evidence in the transcript, left empty`);
       summary[n.field] = '';
+    } else if (summary[n.field] === '' && backed) {
+      // The "no" and the topic must be in the same clause: "No regular medicines,
+      // he is allergic to penicillin" is no evidence of "No known allergies."
+      const names = n.field === 'allergies' ? hasAllergyWord : hasMedicineWord;
+      const clauses = (evidence as string).split(/[,;.!?:]|\b(?:and|but|og|men|und|aber|i|ale|et|mais|y|pero)\b/i);
+      if (clauses.some(c => hasNegation(c) && names(normalizeForMatch(c)))) {
+        console.log(`[v2/ai/extract] ${n.field}: empty field with its negative evidence, negative restored`);
+        summary[n.field] = n.text;
+      }
     }
     delete summary[n.evidence];
   }
@@ -200,6 +230,9 @@ export function verifyNegatives(summary: Record<string, string | boolean>, trans
  */
 export const NEGATION_WORDS = new Set([
   'no', 'not', 'never', 'none', 'nothing', 'without', 'denies', 'denied', 'deny', 'negative', 'nor', // en
+  // "haven't", "doesn't", "can't" normalise to "haven t", "doesn t", "can t": the
+  // lone "t" is what is left of "n't" ("I haven't vomited" was dropped, 2026-11-18).
+  't',
   'nej', 'nei', 'ikke', 'ingen', 'inget', 'intet', 'aldrig', 'aldri', 'uden', 'uten', 'inte', 'utan', // da no sv
   'nein', 'nicht', 'kein', 'keine', 'keinen', 'keiner', 'keinem', 'nie', 'ohne', // de
   'nee', 'niet', 'geen', 'nooit', 'zonder', // nl
@@ -282,4 +315,29 @@ export function verifyStatedFields(summary: Record<string, unknown>, transcript:
 
     summary[field] = [...new Set(kept)].join(' ');
   }
+}
+
+// ---------------------------------------------------------------------------
+// Room air: "0" litres of oxygen needs words that say air or no oxygen.
+// ---------------------------------------------------------------------------
+
+/** "Air" in the supported languages: whole words, or stems for the longer ones. */
+const AIR_WORDS = new Set(['air', 'ar', 'aire', 'aria', 'luft', 'lucht', 'hava', 'udara', 'hangin', 'ilma', 'ilmaa']);
+const AIR_PARTS = ['romluft', 'raumluft', 'rumluft', 'powietrz', 'levegő', 'levego', 'воздух', 'повітр', 'въздух', 'αέρα', 'αερα',
+  'không khí', '空气', '空氣', '大気', '空気', '공기', 'हवा', 'காற்று', 'هواء'];
+/** Oxygen in the supported languages, as stems. */
+const OXYGEN_PARTS = ['oxyg', 'oksyg', 'ilt', 'syre', 'sauerstoff', 'zuurstof', 'tlen', 'kyslík', 'kisik', 'oxíg', 'ossigen',
+  'happi', 'oksijen', 'кислород', 'кисень', 'οξυγ', '氧', '酸素', '산소', 'ऑक्सीजन', 'ஆக்சிஜன்', 'أكسجين', 'oxi'];
+
+/**
+ * True if the quote is in the transcript and says room air (an air word) or no
+ * oxygen (a negation and an oxygen word). "Oxygen saturation is 95 percent" says
+ * neither.
+ */
+export function roomAirStated(quote: unknown, transcript: string): boolean {
+  if (!quoteInTranscript(quote, transcript.replace(ROLE_LABEL, '$1'))) return false;
+  const n = normalizeForMatch(quote as string);
+  const words = n.split(' ');
+  if (words.some(w => AIR_WORDS.has(w)) || AIR_PARTS.some(p => n.includes(p))) return true;
+  return hasNegation(quote) && OXYGEN_PARTS.some(p => n.includes(p));
 }

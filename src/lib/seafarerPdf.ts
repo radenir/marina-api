@@ -6,7 +6,7 @@
  * not the widget appearance state, so selections render invisible. pdf-lib's
  * select()/setText() set both value and appearance correctly and in-process.
  */
-import { PDFDocument, PDFName, PDFArray, PDFBool, type PDFForm } from 'pdf-lib';
+import { PDFDocument, PDFName, PDFArray, PDFBool, StandardFonts, type PDFForm, type PDFFont, type PDFTextField } from 'pdf-lib';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -95,6 +95,33 @@ export function fillNorwegianForm(
   return fillBuiltForm('radio-medical-record.pdf', data, outputPath, []);
 }
 
+/** Smallest font size a one-line field may shrink to before the text is left to clip. */
+const MIN_FONT_SIZE = 5;
+/** Inner padding viewers leave on each side of a text field, in points. */
+const FIELD_PADDING = 2;
+
+/**
+ * Shrink a one-line field's font so its value fits the box. The narrow boxes
+ * (date, UTC, call sign) were filled at 10 pt and viewers clipped the value:
+ * "2026-11-18" printed as "2026-11" (partner test, script 01). Only the size in
+ * the field's DA is changed — font and navy colour stay — and only when the
+ * text is too wide; multi-line boxes wrap and are left alone.
+ */
+function fitOneLine(field: PDFTextField, value: string, font: PDFFont): void {
+  if (field.isMultiline()) return;
+  const da = field.acroField.getDefaultAppearance() ?? '';
+  const m = da.match(/(\/\S+)\s+([\d.]+)\s+Tf/);
+  if (!m) return;
+  const size = parseFloat(m[2]);
+  const widget = field.acroField.getWidgets()[0];
+  if (!widget || !(size > 0)) return;
+  const room = widget.getRectangle().width - 2 * FIELD_PADDING;
+  const width = font.widthOfTextAtSize(value, size);
+  if (width <= room) return;
+  const fitted = Math.max(MIN_FONT_SIZE, Math.floor((size * room / width) * 10) / 10);
+  field.acroField.setDefaultAppearance(da.replace(m[0], `${m[1]} ${fitted} Tf`));
+}
+
 /** Fill a form built by scripts/build-seafarer-form.ts (in public/templates). */
 async function fillBuiltForm(
   templateFile: string,
@@ -115,10 +142,13 @@ async function fillBuiltForm(
   //    and bakes black text. Instead we set NeedAppearances below so viewers
   //    regenerate the text from the navy DA (the same path interactive typing
   //    uses) — keeping the filled values in the brand navy.
+  const helvetica = await doc.embedFont(StandardFonts.Helvetica);
   for (const [name, value] of Object.entries(data)) {
     if (typeof value !== 'string' || value === '') continue;
     try {
-      form.getTextField(name).setText(value);
+      const field = form.getTextField(name);
+      field.setText(value);
+      fitOneLine(field, value, helvetica);
     } catch (err) {
       console.warn(`[seafarerPdf] skipped text "${name}":`, (err as Error).message);
     }
