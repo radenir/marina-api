@@ -21,7 +21,7 @@ import { ovh } from './ovh.js';
 import { calculateMEWS, isUnder16 } from './mewsCalculator.js';
 import { searchPorts } from './portIndex.js';
 import { normalizePatientFields } from './patientFields.js';
-import { verifyAllergies, verifyNegatives } from './negativeEvidence.js';
+import { verifyAllergies, verifyNegatives, verifyStatedFields } from './negativeEvidence.js';
 import { symptomGuidelines as _symptomGuidelines } from './symptomGuidelines.js';
 import { examinationInstructions } from './examinationInstructions.js';
 import {
@@ -152,7 +152,7 @@ RULES (follow strictly):
 
 const HISTORY_V2_BATCH: BatchConfig = {
   name: 'historyV2',
-  prompt: `You extract two fields of a maritime medical report from a transcript in which a ship's officer describes a patient. Return ONE JSON object with keys: "problemDescription", "associatedSymptoms".
+  prompt: `You extract two fields of a maritime medical report from a transcript in which a ship's officer describes a patient. Return ONE JSON object with keys: "problemDescription", "associatedSymptoms", "associatedSymptomItems".
 
 ${SHARED_RULES}
 
@@ -176,16 +176,21 @@ If the main problem was never described, leave this "".
 ────────────────────────────────────────────────────────
 associatedSymptoms : OTHER symptoms, present OR denied
 ────────────────────────────────────────────────────────
-Symptoms besides the main complaint that were asked about or volunteered. For EACH, say whether present or explicitly denied — a documented "no" is as valuable as a "yes".
-Example: "Reports nausea and one episode of vomiting. Denies fever. Denies urinary symptoms."
+Symptoms besides the main complaint that were asked about or volunteered. For EACH, say whether present or explicitly denied — a documented "no" is as valuable as a "yes", but ONLY when the "no" was actually said.
+Put EACH symptom in "associatedSymptomItems" as {"entry": ..., "quote": ...}, one symptom per item:
+  • "entry": the symptom in English, present or denied: "Reports nausea.", "Reports one episode of vomiting.", "Denies fever."
+  • "quote": copied word for word, in the language spoken (NOT translated), the shortest piece of the transcript that states it. For a denial, the quote must contain the "no" that was said: "no fever", "he has not vomited", "nie ma gorączki". When the patient only answered "no" to a question, copy the question and the answer together: "Do you have a fever? No."
+  Examples: said "he also feels sick and threw up once, no fever" → [{"entry": "Reports nausea and one episode of vomiting.", "quote": "he also feels sick and threw up once"}, {"entry": "Denies fever.", "quote": "no fever"}].
+NEVER write an item you cannot quote. If no words of the transcript state a symptom or its denial, it was not discussed: leave it out. A symptom that nobody mentioned is NOT denied — silence is never a "no".
+Leave "associatedSymptoms" "" — the report builds it from the items.
 ONLY things the PATIENT feels or reports (or denies feeling) belong here. Do NOT put here:
   • past illnesses, conditions, operations or their denials ("denies diabetes", "no previous surgery" — that is past medical history, not a symptom)
   • allergies or medications (captured elsewhere, including their denials)
   • findings from the OFFICER's examination (pupil checks, strength or walking tests, swallow tests — those are examination findings, even when normal)
-Do not restate the main complaint. "" if none discussed.
+Do not restate the main complaint. [] if none discussed.
 
 Return JSON:
-{"problemDescription":"","associatedSymptoms":""}`,
+{"problemDescription":"","associatedSymptoms":"","associatedSymptomItems":[]}`,
 };
 
 const FINDINGS_V2_BATCH: BatchConfig = {
@@ -270,7 +275,7 @@ PATHWAY CHECKLIST — "${pathway}" (recognition aid)
 ────────────────────────────────────────────────────────
 The officer works through the "${pathway}" pathway, asking the questions below. Use them to RECOGNISE what a statement answers and WHICH field it belongs to. Work through BOTH lists ITEM BY ITEM, searching the ENTIRE transcript for each — early statements count exactly as much as the latest words.
 ${historyTaking.length ? `\nQuestions about the MAIN problem ("problemDescription"):\n${historyTaking.map((q) => `  • ${q}`).join('\n')}\n` : ''}${associated.length ? `\nSymptoms asked alongside it ("associatedSymptoms" — record present OR denied):\n${associated.map((q) => `  • ${q}`).join('\n')}\n` : ''}
-The checklist is what MIGHT have been asked, not what was asked: record only what the transcript actually states, stay silent about items it never mentions, and never note that something was not asked (rule 6 applies).
+The checklist is what MIGHT have been asked, not what was asked: record only what the transcript actually states, stay silent about items it never mentions, and never note that something was not asked (rule 6 applies). A checklist symptom the transcript never mentions gets NO item — not "Denies …" either. Every item needs its quote.
 
 Return JSON:`;
 
@@ -294,7 +299,7 @@ PATHWAY CHECKLIST — "${pathway}" (recognition aid)
 ────────────────────────────────────────────────────────
 For this complaint the officer is prompted to ask specifically about:
 ${focused.map((q) => `  • ${q}`).join('\n')}
-Work through these ITEM BY ITEM, searching the ENTIRE transcript for each — answers AND explicit denials both belong in "pastHistory". Record only what the transcript actually states; never mention items it is silent about.
+Work through these ITEM BY ITEM, searching the ENTIRE transcript for each — answers AND explicit denials both belong in "pastHistoryItems". Record only what the transcript actually states; never mention items it is silent about. A condition on this list is NOT the patient's condition: it gets an item only if the transcript says the patient has it or denied it, with the quote.
 
 Return JSON:`;
 
@@ -310,9 +315,9 @@ Return JSON:`;
 // v1's batch is untouched. Fields are left EMPTY when the topic was never raised.
 const MEDICAL_HISTORY_V2_BATCH: BatchConfig = {
   name: 'medical_history',
-  prompt: `You extract three fields of a maritime medical report from a transcript. Return ONE JSON object with exactly these keys: "pastHistory", "allergies", "allergyItems", "currentMedications", "allergiesEvidence", "currentMedicationsEvidence".
+  prompt: `You extract three fields of a maritime medical report from a transcript. Return ONE JSON object with exactly these keys: "pastHistory", "pastHistoryItems", "allergies", "allergyItems", "currentMedications", "allergiesEvidence", "currentMedicationsEvidence".
 
-OUTPUT LANGUAGE: "pastHistory", "allergies" and "currentMedications" are ALWAYS written in English, even when the whole transcript — the patient's answers and the interviewer's own questions and summaries — is in another language. Translate; never copy a sentence in another language into these fields. Only the two Evidence keys and each "quote" in "allergyItems" keep the language of the transcript.
+OUTPUT LANGUAGE: "pastHistory", "allergies" and "currentMedications" are ALWAYS written in English, even when the whole transcript — the patient's answers and the interviewer's own questions and summaries — is in another language. Translate; never copy a sentence in another language into these fields. Only the two Evidence keys and each "quote" in "pastHistoryItems" and "allergyItems" keep the language of the transcript.
 
 RULES (follow strictly):
 1. Use ONLY what is explicitly stated. Never guess or invent. No medical abbreviations. Numbers as digits.
@@ -331,7 +336,11 @@ Capture what was stated:
 Only include a chronic condition if the patient stated it (or clearly stated a regular medicine for it).
 Write it in plain everyday English — translate what the patient said, but never convert it to medical terminology (write "gallbladder removed", not "cholecystectomy"; "appendix out", not "appendectomy"). The readers are ship officers, not doctors.
 Record explicit DENIALS too: if the patient was asked about a past condition, surgery, or hospitalisation and said no, document it (e.g. "Denies diabetes and heart disease. No previous surgery."). A documented negative is as valuable as a positive. Never invent a denial for a topic that was never raised.
-"" if past medical history was not discussed at all.
+Put EACH statement in "pastHistoryItems" as {"entry": ..., "quote": ...}:
+  • "entry": the statement in English, as described above: "High blood pressure, takes tablets for it.", "Denies diabetes.", "No previous surgery.", "Works as an able seaman, lifts heavy loads."
+  • "quote": copied word for word, in the language spoken (NOT translated), the shortest piece of the transcript that states it. For a denial, the quote must contain the "no" that was said: "no diabetes", "never had an operation". When the patient only answered "no" to a question, copy the question and the answer together: "Have you had any operations? No."
+NEVER write an item you cannot quote. A condition nobody mentioned is neither present nor denied: leave it out.
+Leave "pastHistory" "" — the report builds it from the items. [] if past medical history was not discussed at all.
 
 ────────────────────────────────────────────────────────
 allergies
@@ -369,7 +378,7 @@ If medications were not discussed at all, "". Saying nothing about medicines is 
 "allergiesEvidence" and "currentMedicationsEvidence" are "" unless the field above is the negative statement.
 
 Return JSON:
-{"pastHistory":"","allergies":"","allergyItems":[],"currentMedications":"","allergiesEvidence":"","currentMedicationsEvidence":""}`,
+{"pastHistory":"","pastHistoryItems":[],"allergies":"","allergyItems":[],"currentMedications":"","allergiesEvidence":"","currentMedicationsEvidence":""}`,
 };
 
 // ---------------------------------------------------------------------------
@@ -885,6 +894,7 @@ export async function parallelExtractV2(
   if (isUnder16(merged.dateOfBirth, merged.date)) finalMewsScore = null;
   if (finalMewsScore !== null) merged.mewsScore = String(finalMewsScore);
 
+  verifyStatedFields(merged, text);
   verifyAllergies(merged, text);
   verifyNegatives(merged, text);
 
